@@ -1,0 +1,3 @@
+deployctl
+*.test
+coverage.out
