@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"errors"
+	"path/filepath"
 
 	"deployctl/internal"
 	internalgit "deployctl/internal/git"
+	"deployctl/internal/store"
+
 	"github.com/spf13/cobra"
 )
 
@@ -28,9 +31,23 @@ var createCmd = &cobra.Command{
 			return errors.New("repo URL is required")
 		}
 
-		if err := internalgit.CloneRepo(repoURL, name); err != nil {
+		location, err := internalgit.CloneRepo(repoURL, name)
+		if err != nil {
 			return err
 		}
+		if name == "" {
+			name = filepath.Base(location)
+		}
+
+		repositories := store.NewRepositoryStore()
+		if err := repositories.Insert(cmd.Context(), store.Repository{
+			Name:     name,
+			URL:      repoURL,
+			Location: location,
+		}); err != nil {
+			return err
+		}
+
 		internal.Info("Deployment created successfully")
 		return nil
 	},

@@ -9,7 +9,7 @@ import (
 	"github.com/go-git/go-git/v5"
 )
 
-func CloneRepo(repoURL string, name string) error {
+func CloneRepo(repoURL string, name string) (string, error) {
 	if name == "" {
 		name = repoNameFromURL(repoURL)
 	}
@@ -18,10 +18,10 @@ func CloneRepo(repoURL string, name string) error {
 		URL: repoURL,
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 	internal.Info("Repository cloned successfully into %s", repoPath)
-	return nil
+	return repoPath, nil
 }
 
 func repoNameFromURL(repoURL string) string {
