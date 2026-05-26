@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 
+	"deployctl/internal"
 	"deployctl/internal/docker"
 	"deployctl/internal/store"
 
