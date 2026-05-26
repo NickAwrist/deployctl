@@ -9,16 +9,16 @@ import (
 	"github.com/spf13/cobra"
 )
 /*
-deployctl deploy <repository-name>
+deployctl stop <repository-name>
 
-Deploys a deployment.
+Stops a deployment.
 
 Arguments:
-  <repository-name> The name of the deployment to deploy
+  <repository-name> The name of the deployment to stop
 */
-var deployCmd = &cobra.Command{
-	Use:   "deploy [repository-name]",
-	Short: "Deploy a deployment",
+var stopCmd = &cobra.Command{
+	Use:   "stop [repository-name]",
+	Short: "Stop a deployment",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Get the repository name from the command line arguments or flags
@@ -30,6 +30,10 @@ var deployCmd = &cobra.Command{
 			}
 		}
 
+		if repositoryName == "" {
+			return errors.New("repository name is required")
+		}
+
 		// Get the repository from the database
 		repositories := store.NewRepositoryStore()
 		repository, err := repositories.Get(cmd.Context(), repositoryName)
@@ -37,17 +41,17 @@ var deployCmd = &cobra.Command{
 			return err
 		}
 
-		// Deploy the repository
-		err = docker.ComposeUp(cmd.Context(), &repository)
+		// Stop the repository
+		err = docker.ComposeDown(cmd.Context(), &repository)
 		if err != nil {
 			return err
 		}
 
-		internal.Info("Deployment deployed successfully")
+		internal.Info("Deployment stopped successfully")
 		return nil
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(deployCmd)
+	rootCmd.AddCommand(stopCmd)
 }

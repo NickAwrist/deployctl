@@ -2,10 +2,13 @@ package docker
 
 import (
 	"context"
-	"log"
+	"errors"
+	"fmt"
 
+	"deployctl/internal"
 	"deployctl/internal/store"
 
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v5/pkg/api"
@@ -13,40 +16,72 @@ import (
 )
 
 func ComposeUp(ctx context.Context, repository *store.Repository) error {
-	// Initialize the Docker CLI
+	// Load the project
+	service, project, err := loadProject(ctx, repository)
+	if err != nil {
+		return err
+	}
+
+	// Start the project
+	if err := service.Up(ctx, project, api.UpOptions{
+		Create: api.CreateOptions{},
+		Start:  api.StartOptions{},
+	}); err != nil {
+		return fmt.Errorf("start compose project: %w", err)
+	}
+
+	return nil
+}
+
+func ComposeDown(ctx context.Context, repository *store.Repository) error {
+	// Load the project
+	service, project, err := loadProject(ctx, repository)
+	if err != nil {
+		return err
+	}
+
+	// Stop the project
+	if err := service.Down(ctx, project.Name, api.DownOptions{
+		Project: project,
+	}); err != nil {
+		return fmt.Errorf("stop compose project: %w", err)
+	}
+
+	return nil
+}
+
+func loadProject(ctx context.Context, repository *store.Repository) (api.Compose, *types.Project, error) {
+	// Check if the repository has a compose file configured
+	if repository.ComposePath == "" {
+		return nil, nil, errors.New("repository does not have a compose file configured")
+	}
+
+	// Create a new docker CLI
 	dockerCLI, err := command.NewDockerCli()
 	if err != nil {
-		log.Fatalf("Failed to create docker CLI: %v", err)
-	}
-	err = dockerCLI.Initialize(&flags.ClientOptions{})
-	if err != nil {
-		log.Fatalf("Failed to initialize docker CLI: %v", err)
+		return nil, nil, fmt.Errorf("create docker CLI: %w", err)
 	}
 
-	// Create a new Compose service instance
+	// Initialize the docker CLI
+	if err := dockerCLI.Initialize(&flags.ClientOptions{}); err != nil {
+		return nil, nil, fmt.Errorf("initialize docker CLI: %w", err)
+	}
+
+	// Create a new compose service
 	service, err := compose.NewComposeService(dockerCLI)
 	if err != nil {
-		log.Fatalf("Failed to create compose service: %v", err)
+		return nil, nil, fmt.Errorf("create compose service: %w", err)
 	}
 
-	// Load the project from the Compose file
+	// Load the project
 	project, err := service.LoadProject(ctx, api.ProjectLoadOptions{
-		ConfigPaths: []string{repository.Location+"/docker-compose.yml"},
+		ConfigPaths: []string{repository.ComposePath},
+		WorkingDir:  repository.Location,
 		ProjectName: repository.Name,
 	})
 	if err != nil {
-		log.Fatalf("Failed to load project: %v", err)
+		return nil, nil, fmt.Errorf("load compose project: %w", err)
 	}
 
-	// Start the services defined in the Compose file
-	err = service.Up(ctx, project, api.UpOptions{
-		Create: api.CreateOptions{},
-		Start:  api.StartOptions{},
-	})
-	if err != nil {
-		log.Fatalf("Failed to start services: %v", err)
-	}
-
-	log.Printf("Successfully started project: %s", project.Name)
-	return nil
+	return service, project, nil
 }

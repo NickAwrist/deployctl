@@ -3,12 +3,14 @@ package store
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 type Repository struct {
-	Name     string
-	URL      string
-	Location string
+	Name        string
+	URL         string
+	Location    string
+	ComposePath string
 }
 
 type RepositoryStore struct {
@@ -44,10 +46,11 @@ func (s *RepositoryStore) Insert(ctx context.Context, repository Repository) err
 
 	_, err = db.ExecContext(
 		ctx,
-		"INSERT INTO repositories (name, url, location) VALUES (?, ?, ?)",
+		"INSERT INTO repositories (name, url, location, compose_path) VALUES (?, ?, ?, ?)",
 		repository.Name,
 		repository.URL,
 		repository.Location,
+		repository.ComposePath,
 	)
 	return err
 }
@@ -61,9 +64,10 @@ func (s *RepositoryStore) Update(ctx context.Context, repository Repository) err
 
 	result, err := db.ExecContext(
 		ctx,
-		"UPDATE repositories SET url = ?, location = ? WHERE name = ?",
+		"UPDATE repositories SET url = ?, location = ?, compose_path = ? WHERE name = ?",
 		repository.URL,
 		repository.Location,
+		repository.ComposePath,
 		repository.Name,
 	)
 	if err != nil {
@@ -98,9 +102,9 @@ func (s *RepositoryStore) Get(ctx context.Context, name string) (Repository, err
 	var repository Repository
 	err = db.QueryRowContext(
 		ctx,
-		"SELECT name, url, location FROM repositories WHERE name = ?",
+		"SELECT name, url, location, compose_path FROM repositories WHERE name = ?",
 		name,
-	).Scan(&repository.Name, &repository.URL, &repository.Location)
+	).Scan(&repository.Name, &repository.URL, &repository.Location, &repository.ComposePath)
 	if err != nil {
 		return Repository{}, err
 	}
@@ -115,7 +119,7 @@ func (s *RepositoryStore) GetAll(ctx context.Context) ([]Repository, error) {
 	}
 	defer db.Close()
 
-	rows, err := db.QueryContext(ctx, "SELECT name, url, location FROM repositories ORDER BY name")
+	rows, err := db.QueryContext(ctx, "SELECT name, url, location, compose_path FROM repositories ORDER BY name")
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +128,7 @@ func (s *RepositoryStore) GetAll(ctx context.Context) ([]Repository, error) {
 	var repositories []Repository
 	for rows.Next() {
 		var repository Repository
-		if err := rows.Scan(&repository.Name, &repository.URL, &repository.Location); err != nil {
+		if err := rows.Scan(&repository.Name, &repository.URL, &repository.Location, &repository.ComposePath); err != nil {
 			return nil, err
 		}
 		repositories = append(repositories, repository)
@@ -144,7 +148,7 @@ func (s *RepositoryStore) List(ctx context.Context) ([]Repository, error) {
 	}
 	defer db.Close()
 
-	rows, err := db.QueryContext(ctx, "SELECT name, url, location FROM repositories ORDER BY name")
+	rows, err := db.QueryContext(ctx, "SELECT name, url, location, compose_path FROM repositories ORDER BY name")
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +157,7 @@ func (s *RepositoryStore) List(ctx context.Context) ([]Repository, error) {
 	var repositories []Repository
 	for rows.Next() {
 		var repository Repository
-		if err := rows.Scan(&repository.Name, &repository.URL, &repository.Location); err != nil {
+		if err := rows.Scan(&repository.Name, &repository.URL, &repository.Location, &repository.ComposePath); err != nil {
 			return nil, err
 		}
 		repositories = append(repositories, repository)
@@ -167,14 +171,27 @@ func (s *RepositoryStore) List(ctx context.Context) ([]Repository, error) {
 }
 
 func migrateRepositories(db *sql.DB) error {
-	_, err := db.Exec(`
+	if _, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS repositories (
 			name TEXT PRIMARY KEY,
 			url TEXT NOT NULL,
-			location TEXT NOT NULL
+			location TEXT NOT NULL,
+			compose_path TEXT NOT NULL DEFAULT ''
 		)
-	`)
-	return err
+	`); err != nil {
+		return err
+	}
+
+	_, err := db.Exec(`ALTER TABLE repositories ADD COLUMN compose_path TEXT NOT NULL DEFAULT ''`)
+	if err != nil && !isDuplicateColumnError(err) {
+		return err
+	}
+
+	return nil
+}
+
+func isDuplicateColumnError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "duplicate column name: compose_path")
 }
 
 func requireRowsAffected(result sql.Result) error {
