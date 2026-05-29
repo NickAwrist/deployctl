@@ -136,6 +136,38 @@ func TestEnvCommandsSetListAndUnsetVariables(t *testing.T) {
 	}
 }
 
+func TestEnvSetCopiesEnvFile(t *testing.T) {
+	setupTestHome(t)
+	location := t.TempDir()
+	insertRepository(t, store.Repository{Name: "api", URL: "https://example.test/api.git", Location: location})
+
+	envPath := filepath.Join(t.TempDir(), ".env")
+	envContents := "# production\nFOO=bar\nBAZ='qux'\n"
+	if err := os.WriteFile(envPath, []byte(envContents), 0600); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+
+	if _, err := executeRoot(t, []string{"env", "set", "api", envPath}, ""); err != nil {
+		t.Fatalf("env set file command: %v", err)
+	}
+
+	repository, err := store.NewRepositoryStore().Get(context.Background(), "api")
+	if err != nil {
+		t.Fatalf("get repository: %v", err)
+	}
+	if repository.EnvPath != filepath.Join(location, ".env") {
+		t.Fatalf("env path = %q", repository.EnvPath)
+	}
+
+	got, err := os.ReadFile(repository.EnvPath)
+	if err != nil {
+		t.Fatalf("read copied env file: %v", err)
+	}
+	if string(got) != envContents {
+		t.Fatalf("copied env file = %q, want %q", got, envContents)
+	}
+}
+
 func TestDeleteCommandCancelsAndForceDeletesDeployment(t *testing.T) {
 	setupTestHome(t)
 	location := filepath.Join(internal.GetRepositoryDirectory(), "api")

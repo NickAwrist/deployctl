@@ -44,6 +44,7 @@ Manage env variables after creation:
 
 ```sh
 deployctl env set my-deployment ENV_VARIABLE_ONE=123 ENV_VARIABLE_TWO=234
+deployctl env set my-deployment .env
 deployctl env list my-deployment
 deployctl env unset my-deployment ENV_VARIABLE_ONE
 ```

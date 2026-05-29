@@ -2,11 +2,15 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"deployctl/internal"
 	"deployctl/internal/envfile"
+	internalfile "deployctl/internal/file"
 	"deployctl/internal/store"
 
 	"github.com/spf13/cobra"
@@ -18,7 +22,7 @@ var envCmd = &cobra.Command{
 }
 
 var envSetCmd = &cobra.Command{
-	Use:               "set [repository-name] KEY=VALUE...",
+	Use:               "set [repository-name] KEY=VALUE...|ENV_FILE",
 	Aliases:           []string{"add"},
 	Short:             "Set deployment env variables",
 	Args:              cobra.MinimumNArgs(2),
@@ -33,6 +37,21 @@ var envSetCmd = &cobra.Command{
 		repository, err := repositories.Get(cmd.Context(), repositoryName)
 		if err != nil {
 			return err
+		}
+
+		if len(args) == 2 && !strings.Contains(args[1], "=") {
+			source, ok := internalfile.ExistingFile(args[1])
+			if ok {
+				if err := copyEnvFile(&repository, source); err != nil {
+					return err
+				}
+				if err := repositories.Update(cmd.Context(), repository); err != nil {
+					return err
+				}
+
+				internal.Info("Updated env file for %s", repository.Name)
+				return nil
+			}
 		}
 
 		variables, err := envfile.Read(repository.EnvPath)
@@ -158,4 +177,20 @@ func init() {
 
 func defaultEnvPath(repositoryLocation string) string {
 	return filepath.Join(repositoryLocation, ".env")
+}
+
+func copyEnvFile(repository *store.Repository, source string) error {
+	if repository.EnvPath == "" {
+		repository.EnvPath = defaultEnvPath(repository.Location)
+	}
+
+	contents, err := os.ReadFile(source)
+	if err != nil {
+		return fmt.Errorf("read env file: %w", err)
+	}
+	if err := os.WriteFile(repository.EnvPath, contents, 0600); err != nil {
+		return fmt.Errorf("copy env file: %w", err)
+	}
+
+	return nil
 }
