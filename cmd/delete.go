@@ -14,18 +14,21 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
 /*
 deployctl delete <repository-name>
 
 Deletes a deployment.
 
 Arguments:
-  <repository-name> The name of the deployment to delete
+
+	<repository-name> The name of the deployment to delete
 */
 var deleteCmd = &cobra.Command{
-	Use:   "delete [repository-name]",
-	Short: "Delete a deployment",
-	Args:  cobra.MaximumNArgs(2),
+	Use:               "delete [repository-name]",
+	Short:             "Delete a deployment",
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Get the repository name from the command line arguments or flags
 		repositoryName := ""

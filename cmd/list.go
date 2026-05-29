@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
 /*
 deployctl list
 
@@ -34,7 +35,11 @@ var listCmd = &cobra.Command{
 			if composePath == "" {
 				composePath = "none"
 			}
-			internal.Info("%s: \n-%s\n-%s\n-%s", repo.Name, repo.URL, repo.Location, composePath)
+			envPath := repo.EnvPath
+			if envPath == "" {
+				envPath = "none"
+			}
+			internal.Info("%s: \n-%s\n-%s\n-%s\n-%s", repo.Name, repo.URL, repo.Location, composePath, envPath)
 		}
 		return nil
 	},

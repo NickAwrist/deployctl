@@ -7,21 +7,25 @@ import (
 	"strings"
 
 	"deployctl/internal"
+	"deployctl/internal/envfile"
 	internalfile "deployctl/internal/file"
 	internalgit "deployctl/internal/git"
 	"deployctl/internal/store"
 
 	"github.com/spf13/cobra"
 )
+
 /*
 deployctl create <repo-url> [--name <name>] [--compose-file <compose-file>]
 
 Creates a new deployment from a repository URL.
 
 Arguments:
-  <repo-url>   The URL of the repository to create a new deployment from
-  --name <name> The name of the deployment
-  --compose-file <compose-file> The compose file name in the repository or a local compose file path to copy into the repository
+
+	<repo-url>   The URL of the repository to create a new deployment from
+	--name <name> The name of the deployment
+	--compose-file <compose-file> The compose file name in the repository or a local compose file path to copy into the repository
+	--env-file <env-file> The env file name in the repository or a local env file path to copy into the repository
 */
 var createCmd = &cobra.Command{
 	Use:   "create [repo-url]",
@@ -61,6 +65,12 @@ var createCmd = &cobra.Command{
 			name = filepath.Base(location)
 		}
 
+		// Get the env file name from the command line arguments or flags
+		envFile, err := cmd.Flags().GetString("env-file")
+		if err != nil {
+			return err
+		}
+
 		// Resolve the compose file path
 		composePath, err := resolveComposePath(location, composeFile)
 		if err != nil {
@@ -68,8 +78,12 @@ var createCmd = &cobra.Command{
 		}
 		if composePath == "" {
 			internal.Warning("No compose file found. Deployment will not work until a compose file is configured.")
-		} else {
-			internal.Info("Compose file configured at %s", composePath)
+		}
+
+		// Resolve the env file path
+		envFilePath, err := resolveEnvFile(location, envFile)
+		if err != nil {
+			return err
 		}
 
 		// Insert the repository into the database
@@ -79,6 +93,7 @@ var createCmd = &cobra.Command{
 			URL:         repoURL,
 			Location:    location,
 			ComposePath: composePath,
+			EnvPath:     envFilePath,
 		}); err != nil {
 			return err
 		}
@@ -94,6 +109,7 @@ func init() {
 	createCmd.Flags().StringP("name", "n", "", "The name of the deployment")
 	createCmd.Flags().StringP("repo-url", "r", "", "The URL of the repository to create a new deployment from")
 	createCmd.Flags().String("compose-file", "", "The compose file name in the repository or a local compose file path to copy into the repository")
+	createCmd.Flags().String("env-file", "", "The env file name in the repository or a local env file path to copy into the repository")
 }
 
 var composeFileNames = []string{
@@ -148,4 +164,37 @@ func resolveComposePath(repositoryLocation string, composeFile string) (string, 
 	}
 
 	return "", nil
+}
+
+func resolveEnvFile(repositoryLocation string, envFile string) (string, error) {
+	if envFile == "" {
+		return "", nil
+	}
+
+	source, ok := resolveRepositoryOrLocalFile(repositoryLocation, envFile)
+	if !ok {
+		internal.Warning("Env file %q was not found in the repository or on disk.", envFile)
+		return "", nil
+	}
+
+	destination := defaultEnvPath(repositoryLocation)
+	variables, err := envfile.Read(source)
+	if err != nil {
+		return "", fmt.Errorf("read env file: %w", err)
+	}
+	if err := envfile.Write(destination, variables); err != nil {
+		return "", fmt.Errorf("copy env file: %w", err)
+	}
+
+	return destination, nil
+}
+
+func resolveRepositoryOrLocalFile(repositoryLocation string, name string) (string, bool) {
+	if !filepath.IsAbs(name) {
+		if path, ok := internalfile.ExistingFile(filepath.Join(repositoryLocation, name)); ok {
+			return path, true
+		}
+	}
+
+	return internalfile.ExistingFile(name)
 }

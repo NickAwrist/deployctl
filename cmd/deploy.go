@@ -9,18 +9,21 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
 /*
 deployctl deploy <repository-name>
 
 Deploys a deployment.
 
 Arguments:
-  <repository-name> The name of the deployment to deploy
+
+	<repository-name> The name of the deployment to deploy
 */
 var deployCmd = &cobra.Command{
-	Use:   "deploy [repository-name]",
-	Short: "Deploy a deployment",
-	Args:  cobra.ExactArgs(1),
+	Use:               "deploy [repository-name]",
+	Short:             "Deploy a deployment",
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Get the repository name from the command line arguments or flags
 		repositoryName := ""
