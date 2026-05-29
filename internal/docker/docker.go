@@ -37,6 +37,21 @@ func ComposeUp(ctx context.Context, repository *store.Repository) error {
 	return nil
 }
 
+func ComposeBuild(ctx context.Context, repository *store.Repository) error {
+	// Load the project
+	service, project, err := loadProject(ctx, repository)
+	if err != nil {
+		return err
+	}
+
+	// Rebuild project images
+	if err := service.Build(ctx, project, api.BuildOptions{}); err != nil {
+		return fmt.Errorf("build compose project: %w", err)
+	}
+
+	return nil
+}
+
 func ComposeDown(ctx context.Context, repository *store.Repository) error {
 	// Load the project
 	service, project, err := loadProject(ctx, repository)

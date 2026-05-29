@@ -32,6 +32,15 @@ exec zsh
 
 Deployment-name arguments complete from your saved deployments.
 
+## Updating deployments
+
+Pull the latest changes for a saved deployment and rebuild its Compose images:
+
+```sh
+deployctl update my-deployment
+deployctl deploy my-deployment
+```
+
 ## Environment variables
 
 Import an env file when you create a deployment:
