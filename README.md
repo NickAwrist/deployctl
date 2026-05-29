@@ -18,14 +18,18 @@ go build -o deployctl .
 
 ## Private repositories
 
-For HTTPS repository URLs, set a token with repository access:
+deployctl clones repositories by running `git clone`, so it uses the same local Git, SSH, and credential configuration as cloning manually in your terminal.
+
+For HTTPS repository URLs, authenticate Git with GitHub CLI or Git Credential Manager before running deployctl:
 
 ```sh
-DEPLOYCTL_GIT_TOKEN=github_pat_... deployctl create https://github.com/owner/repo.git
+gh auth login
+gh auth setup-git
+deployctl create https://github.com/owner/repo.git
 ```
 
-For SSH repository URLs, deployctl uses your SSH agent, `~/.ssh/config` `IdentityFile` entries, and standard private key paths. You can also point deployctl at a specific private key:
+For SSH repository URLs, deployctl uses your on-device SSH configuration through Git, including your SSH agent and `~/.ssh/config`:
 
 ```sh
-DEPLOYCTL_SSH_KEY=~/.ssh/id_ed25519 deployctl create git@github.com:owner/repo.git
+deployctl create git@github.com:owner/repo.git
 ```
