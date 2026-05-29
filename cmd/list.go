@@ -40,7 +40,7 @@ var listCmd = &cobra.Command{
 			if envPath == "" {
 				envPath = "none"
 			}
-			internal.Info("%s: \n-%s\n-%s\n-%s\n-%s", repo.Name, repo.URL, repo.Location, composePath, envPath)
+			internal.Info("%s:\n- %s\n- %s\n- %s\n- %s", repo.Name, repo.URL, repo.Location, composePath, envPath)
 		}
 		return nil
 	},
