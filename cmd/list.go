@@ -13,8 +13,9 @@ deployctl list
 Lists all deployments.
 */
 var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List all deployments",
+	Use:     "list",
+	Short:   "List all deployments",
+	Aliases: []string{"ls"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Get all repositories from the database
 		repositories := store.NewRepositoryStore()

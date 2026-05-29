@@ -27,6 +27,7 @@ Arguments:
 var deleteCmd = &cobra.Command{
 	Use:               "delete [repository-name]",
 	Short:             "Delete a deployment",
+	Aliases:           []string{"remove", "rm"},
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
