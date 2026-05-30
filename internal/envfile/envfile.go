@@ -3,6 +3,7 @@ package envfile
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -58,6 +59,10 @@ func Read(path string) (map[string]string, error) {
 }
 
 func Write(path string, variables map[string]string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return err
+	}
+
 	names := make([]string, 0, len(variables))
 	for name := range variables {
 		names = append(names, name)

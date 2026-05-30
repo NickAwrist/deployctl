@@ -22,6 +22,7 @@ Arguments:
 var deployCmd = &cobra.Command{
 	Use:               "deploy [repository-name]",
 	Short:             "Deploy a deployment",
+	Aliases:           []string{"start"},
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {

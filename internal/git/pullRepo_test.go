@@ -30,7 +30,7 @@ func TestPullRepoFastForwardsCheckout(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read checkout file: %v", err)
 	}
-	if string(got) != "v2\n" {
+	if strings.ReplaceAll(string(got), "\r\n", "\n") != "v2\n" {
 		t.Fatalf("checkout file = %q, want v2", got)
 	}
 }

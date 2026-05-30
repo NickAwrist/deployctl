@@ -16,20 +16,6 @@ go run .
 go build -o deployctl .
 ```
 
-## Shell completion
-
-deployctl can generate shell completion scripts. For zsh:
-
-```sh
-deployctl completion zsh > "${fpath[1]}/_deployctl"
-```
-
-Then restart your shell, or run:
-
-```sh
-exec zsh
-```
-
 Deployment-name arguments complete from your saved deployments.
 
 ## Updating deployments
@@ -58,9 +44,8 @@ deployctl env list my-deployment
 deployctl env unset my-deployment ENV_VARIABLE_ONE
 ```
 
-`env list` only shows variable names and masks values as `*****`.
-
-For Compose files, you can either use the common `.env` convention:
+When no env file is specified, `env set`, `env list`, and `env unset` use the deployment's default `.env` file.
+This is ideal for basic compose env setups like:
 
 ```yaml
 services:
@@ -69,14 +54,26 @@ services:
       - .env
 ```
 
-Or make the deployctl file explicit while keeping a local fallback:
+For Compose files with multiple service env files, pass the env file path exactly as it appears in the Compose file:
 
 ```yaml
 services:
-  app:
+  my-app:
     env_file:
-      - ${DEPLOYCTL_ENV_FILE:-.env.production}
+      - app.env
+  backend:
+    env_file:
+      - backend.env
 ```
+
+```sh
+deployctl env set my-deployment app.env APP_PORT=8080 DEBUG=false
+deployctl env set my-deployment backend.env ./local-backend.env
+deployctl env list my-deployment app.env
+deployctl env unset my-deployment backend.env DATABASE_URL
+```
+
+`env list` only shows variable names and masks values as `*****`.
 
 ## Private repositories
 
@@ -94,4 +91,18 @@ For SSH repository URLs, deployctl uses your on-device SSH configuration through
 
 ```sh
 deployctl create git@github.com:owner/repo.git
+```
+
+## Shell completion
+
+deployctl can generate shell completion scripts. For zsh:
+
+```sh
+deployctl completion zsh > "${fpath[1]}/_deployctl"
+```
+
+Then restart your shell, or run:
+
+```sh
+exec zsh
 ```

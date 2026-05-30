@@ -11,6 +11,7 @@ import (
 func TestRepositoryStoreCRUD(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 	if err := os.MkdirAll(filepath.Join(home, ".deployctl"), 0755); err != nil {
 		t.Fatalf("create deployctl directory: %v", err)
 	}

@@ -168,6 +168,97 @@ func TestEnvSetCopiesEnvFile(t *testing.T) {
 	}
 }
 
+func TestEnvSetUpdatesExplicitComposeEnvFile(t *testing.T) {
+	setupTestHome(t)
+	location := t.TempDir()
+	insertRepository(t, store.Repository{
+		Name:        "api",
+		URL:         "https://example.test/api.git",
+		Location:    location,
+		ComposePath: filepath.Join(location, "compose.yml"),
+	})
+
+	if _, err := executeRoot(t, []string{"env", "set", "api", "app.env", "FOO=bar", "BAZ=qux"}, ""); err != nil {
+		t.Fatalf("env set explicit file command: %v", err)
+	}
+
+	variables, err := envfile.Read(filepath.Join(location, "app.env"))
+	if err != nil {
+		t.Fatalf("read app env file: %v", err)
+	}
+	if variables["FOO"] != "bar" || variables["BAZ"] != "qux" {
+		t.Fatalf("variables after set = %#v", variables)
+	}
+
+	repository, err := store.NewRepositoryStore().Get(context.Background(), "api")
+	if err != nil {
+		t.Fatalf("get repository: %v", err)
+	}
+	if repository.EnvPath != "" {
+		t.Fatalf("default env path = %q, want empty", repository.EnvPath)
+	}
+}
+
+func TestEnvSetCopiesExplicitComposeEnvFile(t *testing.T) {
+	setupTestHome(t)
+	location := t.TempDir()
+	insertRepository(t, store.Repository{
+		Name:        "api",
+		URL:         "https://example.test/api.git",
+		Location:    location,
+		ComposePath: filepath.Join(location, "compose.yml"),
+	})
+
+	source := filepath.Join(t.TempDir(), "backend.env")
+	contents := "DATABASE_URL=postgres://example\n"
+	if err := os.WriteFile(source, []byte(contents), 0600); err != nil {
+		t.Fatalf("write source env file: %v", err)
+	}
+
+	if _, err := executeRoot(t, []string{"env", "set", "api", "backend.env", source}, ""); err != nil {
+		t.Fatalf("env set explicit file copy command: %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(location, "backend.env"))
+	if err != nil {
+		t.Fatalf("read backend env file: %v", err)
+	}
+	if string(got) != contents {
+		t.Fatalf("copied env file = %q, want %q", got, contents)
+	}
+}
+
+func TestEnvListAndUnsetUseExplicitComposeEnvFile(t *testing.T) {
+	setupTestHome(t)
+	location := t.TempDir()
+	insertRepository(t, store.Repository{Name: "api", URL: "https://example.test/api.git", Location: location})
+
+	if _, err := executeRoot(t, []string{"env", "set", "api", "app.env", "FOO=bar", "BAZ=qux"}, ""); err != nil {
+		t.Fatalf("env set explicit file command: %v", err)
+	}
+
+	output := captureStdout(t, func() {
+		if _, err := executeRoot(t, []string{"env", "list", "api", "app.env"}, ""); err != nil {
+			t.Fatalf("env list explicit file command: %v", err)
+		}
+	})
+	if !strings.Contains(output, "BAZ=*****") || !strings.Contains(output, "FOO=*****") {
+		t.Fatalf("env list output = %q", output)
+	}
+
+	if _, err := executeRoot(t, []string{"env", "unset", "api", "app.env", "FOO"}, ""); err != nil {
+		t.Fatalf("env unset explicit file command: %v", err)
+	}
+
+	variables, err := envfile.Read(filepath.Join(location, "app.env"))
+	if err != nil {
+		t.Fatalf("read app env file: %v", err)
+	}
+	if _, ok := variables["FOO"]; ok || variables["BAZ"] != "qux" {
+		t.Fatalf("variables after unset = %#v", variables)
+	}
+}
+
 func TestDeleteCommandCancelsAndForceDeletesDeployment(t *testing.T) {
 	setupTestHome(t)
 	location := filepath.Join(internal.GetRepositoryDirectory(), "api")
@@ -239,7 +330,9 @@ func executeRoot(t *testing.T, args []string, input string) (string, error) {
 func setupTestHome(t *testing.T) {
 	t.Helper()
 
-	t.Setenv("HOME", t.TempDir())
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 	internal.InitializeDirectoryStructure()
 }
 
