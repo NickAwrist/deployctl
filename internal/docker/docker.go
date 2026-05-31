@@ -1,10 +1,12 @@
 package docker
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -76,7 +78,7 @@ func ComposeStatus(ctx context.Context, repository *store.Repository) (Deploymen
 		return DeploymentStatus{}, err
 	}
 
-	result, err := dockerCLI.Client().ContainerList(ctx, client.ContainerListOptions{
+	containers, err := dockerCLI.Client().ContainerList(ctx, client.ContainerListOptions{
 		All: true,
 		Filters: make(client.Filters).
 			Add("label", api.ProjectLabel+"="+project.Name).
@@ -87,39 +89,37 @@ func ComposeStatus(ctx context.Context, repository *store.Repository) (Deploymen
 		return DeploymentStatus{}, fmt.Errorf("list compose containers: %w", err)
 	}
 
-	runningServices := map[string]struct{}{}
-	status := DeploymentStatus{}
-	for _, item := range result.Items {
+	var status DeploymentStatus
+	running := make(map[string]bool)
+
+	for _, item := range containers.Items {
 		serviceName := item.Labels[api.ServiceLabel]
-		if serviceName == "" {
+		if serviceName == "" || item.State != container.StateRunning {
 			continue
 		}
-		if item.State == container.StateRunning {
-			runningServices[serviceName] = struct{}{}
-			status.Containers = append(status.Containers, ContainerStatus{
-				Service: serviceName,
-				Name:    containerName(item.Names),
-				Status:  item.Status,
-				State:   string(item.State),
-			})
-		}
+
+		running[serviceName] = true
+		status.Containers = append(status.Containers, ContainerStatus{
+			Service: serviceName,
+			Name:    containerName(item.Names),
+			Status:  item.Status,
+			State:   string(item.State),
+		})
 	}
 
 	for serviceName, service := range project.Services {
-		if service.Provider != nil {
-			continue
-		}
-		if _, ok := runningServices[serviceName]; !ok {
+		if service.Provider == nil && !running[serviceName] {
 			status.Missing = append(status.Missing, serviceName)
 		}
 	}
 
-	sort.Slice(status.Containers, func(i, j int) bool {
-		if status.Containers[i].Service == status.Containers[j].Service {
-			return status.Containers[i].Name < status.Containers[j].Name
-		}
-		return status.Containers[i].Service < status.Containers[j].Service
+	slices.SortFunc(status.Containers, func(a, b ContainerStatus) int {
+		return cmp.Or(
+			cmp.Compare(a.Service, b.Service),
+			cmp.Compare(a.Name, b.Name),
+		)
 	})
+
 	sort.Strings(status.Missing)
 	return status, nil
 }
