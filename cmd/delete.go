@@ -95,6 +95,6 @@ func confirmDelete(input io.Reader, repositoryName string, force bool) (bool, er
 		return false, err
 	}
 
-	answer = strings.TrimSpace(answer)
-	return answer == "Y", nil
+	answer = strings.ToLower(strings.TrimSpace(answer))
+	return answer == "y" || answer == "yes", nil
 }

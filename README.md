@@ -4,6 +4,14 @@
 
 deployctl is a cli tool to quickly create and run deployments
 
+## Requirements
+
+- Go 1.25 or newer to build from source. The module currently targets `go 1.25.0`.
+- Git installed and working from your terminal. deployctl runs `git clone` and `git pull --ff-only` directly.
+- Docker Engine or Docker Desktop installed, running, and reachable by the current user.
+- Docker Engine 19.03 or newer. deployctl uses the Docker Go SDK, and the current Docker Engine API compatibility floor is API v1.40, which maps to Docker Engine 19.03. For alpha testing, Docker Engine 25 or newer is recommended because older Docker releases are outside current support.
+- Docker Compose-compatible projects.
+
 ## Run
 
 ```sh
@@ -14,6 +22,62 @@ go run .
 
 ```sh
 go build -o deployctl .
+```
+
+On Windows PowerShell, build an `.exe`:
+
+```powershell
+go build -o deployctl.exe .
+```
+
+## Install
+
+For local use, build the binary and put it in a directory that is already on your system `PATH`, or add the build directory to `PATH`.
+
+### Windows PowerShell
+
+Build and move the executable into a user-local tools directory:
+
+```powershell
+go build -o deployctl.exe .
+New-Item -ItemType Directory -Force "$env:USERPROFILE\bin"
+Move-Item -Force .\deployctl.exe "$env:USERPROFILE\bin\deployctl.exe"
+```
+
+Add that directory to your user `PATH` if it is not already there:
+
+```powershell
+[Environment]::SetEnvironmentVariable(
+  "Path",
+  [Environment]::GetEnvironmentVariable("Path", "User") + ";$env:USERPROFILE\bin",
+  "User"
+)
+```
+
+Open a new terminal and verify the install:
+
+```powershell
+deployctl --help
+```
+
+### macOS and Linux
+
+Build and install into `/usr/local/bin`:
+
+```sh
+go build -o deployctl .
+sudo install -m 0755 deployctl /usr/local/bin/deployctl
+deployctl --help
+```
+
+If you prefer a user-local install, use `~/.local/bin` and make sure it is on your `PATH`:
+
+```sh
+go build -o deployctl .
+mkdir -p "$HOME/.local/bin"
+install -m 0755 deployctl "$HOME/.local/bin/deployctl"
+export PATH="$HOME/.local/bin:$PATH"
+deployctl --help
 ```
 
 Deployment-name arguments complete from your saved deployments.

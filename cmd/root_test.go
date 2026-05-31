@@ -328,6 +328,35 @@ func TestConfirmBuild(t *testing.T) {
 	}
 }
 
+func TestConfirmDelete(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		input string
+		want  bool
+	}{
+		{name: "lowercase y", input: "y\n", want: true},
+		{name: "uppercase y", input: "Y\n", want: true},
+		{name: "yes", input: "yes\n", want: true},
+		{name: "mixed case yes", input: "YeS\n", want: true},
+		{name: "default no", input: "\n", want: false},
+		{name: "no", input: "n\n", want: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var got bool
+			var err error
+			captureStdout(t, func() {
+				got, err = confirmDelete(strings.NewReader(tc.input), "api", false)
+			})
+			if err != nil {
+				t.Fatalf("confirm delete: %v", err)
+			}
+			if got != tc.want {
+				t.Fatalf("confirm delete = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestCompleteDeploymentNamesFiltersByPrefix(t *testing.T) {
 	setupTestHome(t)
 	insertRepository(t, store.Repository{Name: "api", URL: "https://example.test/api.git", Location: "/tmp/api"})
