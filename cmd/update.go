@@ -14,7 +14,7 @@ import (
 /*
 deployctl update <repository-name>
 
-Pulls the latest repository changes and rebuilds deployment images.
+Pulls the latest repository changes. Use --build to rebuild images after pulling.
 
 Arguments:
 
@@ -22,7 +22,7 @@ Arguments:
 */
 var updateCmd = &cobra.Command{
 	Use:               "update [repository-name]",
-	Short:             "Pull latest changes and rebuild deployment images",
+	Short:             "Pull latest deployment changes",
 	Aliases:           []string{"upgrade", "pull"},
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
@@ -45,8 +45,14 @@ var updateCmd = &cobra.Command{
 			return err
 		}
 
-		if err := docker.ComposeBuild(cmd.Context(), &repository); err != nil {
+		build, err := cmd.Flags().GetBool("build")
+		if err != nil {
 			return err
+		}
+		if build {
+			if err := docker.ComposeBuild(cmd.Context(), &repository); err != nil {
+				return err
+			}
 		}
 
 		internal.Info("Deployment updated successfully")
@@ -56,4 +62,6 @@ var updateCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(updateCmd)
+
+	updateCmd.Flags().Bool("build", false, "Build deployment images after pulling")
 }

@@ -300,6 +300,32 @@ func TestDeployAndStopReportMissingComposeFile(t *testing.T) {
 	}
 }
 
+func TestConfirmBuild(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		input string
+		want  bool
+	}{
+		{name: "default yes", input: "\n", want: true},
+		{name: "yes", input: "yes\n", want: true},
+		{name: "no", input: "n\n", want: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var got bool
+			var err error
+			captureStdout(t, func() {
+				got, err = confirmBuild(strings.NewReader(tc.input), []string{"api-web"})
+			})
+			if err != nil {
+				t.Fatalf("confirm build: %v", err)
+			}
+			if got != tc.want {
+				t.Fatalf("confirm build = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestCompleteDeploymentNamesFiltersByPrefix(t *testing.T) {
 	setupTestHome(t)
 	insertRepository(t, store.Repository{Name: "api", URL: "https://example.test/api.git", Location: "/tmp/api"})

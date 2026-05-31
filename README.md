@@ -18,13 +18,37 @@ go build -o deployctl .
 
 Deployment-name arguments complete from your saved deployments.
 
+## Deployment flow
+
+Create a deployment from a repository without building images immediately. This lets you configure env files or variables before the first build:
+
+```sh
+deployctl create https://github.com/owner/repo.git --name my-deployment
+deployctl env set my-deployment APP_TAG=1.2.3
+deployctl build my-deployment
+deployctl deploy my-deployment
+```
+
+`deploy` starts the deployment with the existing local build. If every service is already running, deployctl reports the running containers and their Docker status instead of running Compose again. If the Compose build image is already cached, deployctl prints the cached image tag it will use. If no cached build exists, deployctl asks whether to build before starting.
+
+You can also build as part of deploy when you want a fresh image:
+
+```sh
+deployctl deploy my-deployment --build
+```
+
 ## Updating deployments
 
-Pull the latest changes for a saved deployment and rebuild its Compose images:
+Pull the latest changes for a saved deployment without rebuilding images:
 
 ```sh
 deployctl update my-deployment
-deployctl deploy my-deployment
+```
+
+Pull and rebuild in one command when you want the new source reflected in the local image:
+
+```sh
+deployctl update my-deployment --build
 ```
 
 ## Environment variables
@@ -53,6 +77,21 @@ services:
     env_file:
       - .env
 ```
+
+Compose also reads this default `.env` file when it interpolates values in the Compose file itself. If your Compose file uses an env variable for an image tag, build arg, port, volume, or other Compose field, set that variable in the default `.env` setup:
+
+```yaml
+services:
+  app:
+    image: ghcr.io/owner/app:${APP_TAG}
+```
+
+```sh
+deployctl env set my-deployment APP_TAG=1.2.3
+deployctl deploy my-deployment
+```
+
+Do not put Compose interpolation variables only in a service-specific `env_file` such as `app.env`. Service `env_file` entries are passed to the container environment after Compose has already resolved fields like `image: ...:${APP_TAG}`. Variables needed by the Compose file must be present in the deployment's default `.env` file, either with `deployctl create --env-file .env`, `deployctl env set my-deployment .env`, or `deployctl env set my-deployment APP_TAG=1.2.3`.
 
 For Compose files with multiple service env files, pass the env file path exactly as it appears in the Compose file:
 
