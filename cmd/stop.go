@@ -45,6 +45,15 @@ var stopCmd = &cobra.Command{
 			return err
 		}
 
+		status, err := docker.ComposeStatus(cmd.Context(), &repository)
+		if err != nil {
+			return err
+		}
+		if !status.AnyRunning() {
+			internal.Info("Deployment is not running")
+			return nil
+		}
+
 		// Stop the repository
 		err = docker.ComposeDown(cmd.Context(), &repository)
 		if err != nil {

@@ -45,6 +45,10 @@ func (s DeploymentStatus) AllRunning() bool {
 	return len(s.Containers) > 0 && len(s.Missing) == 0
 }
 
+func (s DeploymentStatus) AnyRunning() bool {
+	return len(s.Containers) > 0
+}
+
 func (s DeploymentStatus) Summary() string {
 	parts := make([]string, 0, len(s.Containers))
 	for _, container := range s.Containers {

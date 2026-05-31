@@ -13,6 +13,9 @@ func TestDeploymentStatusAllRunningAndSummary(t *testing.T) {
 	if !status.AllRunning() {
 		t.Fatal("status should be running when containers exist and no services are missing")
 	}
+	if !status.AnyRunning() {
+		t.Fatal("status should have running containers")
+	}
 
 	want := "api-web-1 (Up 20 minutes), api-worker-1 (Up 10 minutes)"
 	if got := status.Summary(); got != want {
@@ -28,5 +31,14 @@ func TestDeploymentStatusAllRunningWithMissingService(t *testing.T) {
 
 	if status.AllRunning() {
 		t.Fatal("status should not be running when a service is missing")
+	}
+	if !status.AnyRunning() {
+		t.Fatal("status should still have a running container")
+	}
+}
+
+func TestDeploymentStatusAnyRunningWithNoContainers(t *testing.T) {
+	if (DeploymentStatus{}).AnyRunning() {
+		t.Fatal("empty status should not have running containers")
 	}
 }
