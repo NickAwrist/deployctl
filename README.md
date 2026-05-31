@@ -37,6 +37,18 @@ You can also build as part of deploy when you want a fresh image:
 deployctl deploy my-deployment --build
 ```
 
+Restart a running deployment with the existing local build:
+
+```sh
+deployctl restart my-deployment
+```
+
+Rebuild images before restarting when you want fresh containers:
+
+```sh
+deployctl restart my-deployment --build
+```
+
 ## Updating deployments
 
 Pull the latest changes for a saved deployment without rebuilding images:

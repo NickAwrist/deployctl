@@ -285,13 +285,15 @@ func TestDeleteCommandCancelsAndForceDeletesDeployment(t *testing.T) {
 	}
 }
 
-func TestDeployAndStopReportMissingComposeFile(t *testing.T) {
+func TestDeploymentCommandsReportMissingComposeFile(t *testing.T) {
 	setupTestHome(t)
 	insertRepository(t, store.Repository{Name: "api", URL: "https://example.test/api.git", Location: t.TempDir()})
 
 	for _, args := range [][]string{
 		{"deploy", "api"},
 		{"stop", "api"},
+		{"restart", "api"},
+		{"restart", "api", "--build"},
 	} {
 		_, err := executeRoot(t, args, "")
 		if err == nil || !strings.Contains(err.Error(), "compose file") {
