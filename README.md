@@ -6,7 +6,7 @@ deployctl is a cli tool to quickly create and run deployments
 
 ## Requirements
 
-- Go 1.25 or newer to build from source. The module currently targets `go 1.25.0`.
+- Go 1.25 or newer to build from source. The module currently targets `go 1.25.0`. On Linux, the installer can also build with Docker using the `golang:1.25` image when local `go` is unavailable.
 - Git installed and working from your terminal. deployctl runs `git clone` and `git pull --ff-only` directly.
 - Docker Engine or Docker Desktop installed, running, and reachable by the current user.
 - Docker Engine 19.03 or newer. deployctl uses the Docker Go SDK, and the current Docker Engine API compatibility floor is API v1.40, which maps to Docker Engine 19.03. For alpha testing, Docker Engine 25 or newer is recommended because older Docker releases are outside current support.
@@ -63,7 +63,30 @@ sudo ./scripts/install-linux.sh
 ```
 
 Re-running the installer rebuilds the binaries, replaces them, reloads systemd,
-and restarts `deployctld`.
+and restarts `deployctld`. For a user service install, run it without `sudo`:
+
+```sh
+git pull
+./scripts/install-linux.sh
+```
+
+You can also update from GitHub without keeping a checkout on the server:
+
+```sh
+curl -fsSL 'https://github.com/NickAwrist/deployctl/blob/main/scripts/install-linux.sh?raw=1' | bash
+```
+
+That downloaded installer clones the repo, builds the binaries, installs them,
+and restarts the service. Set `DEPLOYCTL_REF` to pin a branch, tag, or commit:
+
+```sh
+curl -fsSL 'https://github.com/NickAwrist/deployctl/blob/main/scripts/install-linux.sh?raw=1' | DEPLOYCTL_REF=1f0c104 bash
+```
+
+When updating a user install, the installer also updates other writable
+`deployctl` client copies it finds in common locations such as `/usr/local/bin`
+and `~/.local/bin`, so an older binary earlier in `PATH` does not keep shadowing
+the updated one.
 
 To uninstall:
 
