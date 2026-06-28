@@ -24,6 +24,15 @@ import (
 	"github.com/moby/moby/client"
 )
 
+type ConnectionStatus struct {
+	Connected     bool
+	Host          string
+	ServerVersion string
+	APIVersion    string
+	OSType        string
+	Error         string
+}
+
 type BuildCache struct {
 	Tags    []string
 	Missing []string
@@ -58,6 +67,45 @@ func (s DeploymentStatus) Summary() string {
 	return strings.Join(parts, ", ")
 }
 
+func CheckConnection(ctx context.Context) ConnectionStatus {
+	dockerCLI, err := command.NewDockerCli()
+	if err != nil {
+		return ConnectionStatus{Error: fmt.Sprintf("create Docker CLI: %v", err)}
+	}
+
+	if err := dockerCLI.Initialize(&flags.ClientOptions{}); err != nil {
+		return ConnectionStatus{Error: fmt.Sprintf("initialize Docker CLI: %v", err)}
+	}
+
+	host := dockerCLI.Client().DaemonHost()
+	ping, err := dockerCLI.Client().Ping(ctx, client.PingOptions{})
+	if err != nil {
+		return ConnectionStatus{
+			Host:  host,
+			Error: fmt.Sprintf("ping Docker daemon: %v", err),
+		}
+	}
+
+	version, err := dockerCLI.Client().ServerVersion(ctx, client.ServerVersionOptions{})
+	if err != nil {
+		return ConnectionStatus{
+			Connected:  true,
+			Host:       host,
+			APIVersion: ping.APIVersion,
+			OSType:     ping.OSType,
+			Error:      fmt.Sprintf("read Docker server version: %v", err),
+		}
+	}
+
+	return ConnectionStatus{
+		Connected:     true,
+		Host:          host,
+		ServerVersion: version.Version,
+		APIVersion:    firstNonEmpty(version.APIVersion, ping.APIVersion),
+		OSType:        firstNonEmpty(version.Os, ping.OSType),
+	}
+}
+
 func ComposeUp(ctx context.Context, repository *store.Repository) error {
 	// Load the project
 	service, project, _, err := loadProject(ctx, repository)
@@ -74,6 +122,16 @@ func ComposeUp(ctx context.Context, repository *store.Repository) error {
 	}
 
 	return nil
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+
+	return ""
 }
 
 func ComposeStatus(ctx context.Context, repository *store.Repository) (DeploymentStatus, error) {

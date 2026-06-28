@@ -31,6 +31,53 @@ func TestRootCommandPrintsName(t *testing.T) {
 	}
 }
 
+func TestDaemonStatusShowsDaemonAndDockerSections(t *testing.T) {
+	setupTestHome(t)
+
+	output, err := executeRoot(t, []string{"daemon", "status"}, "")
+	if err != nil {
+		t.Fatalf("daemon status command: %v", err)
+	}
+
+	for _, want := range []string{"Daemon", "  Status: reachable", "  Socket:", "Docker", "  Status:"} {
+		if !strings.Contains(output, want) {
+			t.Fatalf("daemon status output %q does not contain %q", output, want)
+		}
+	}
+}
+
+func TestDaemonRestartUsesUserSystemdService(t *testing.T) {
+	binDir := t.TempDir()
+	marker := filepath.Join(t.TempDir(), "restart-called")
+	systemctl := filepath.Join(binDir, "systemctl")
+	script := fmt.Sprintf(`#!/bin/sh
+if [ "$1" = "--user" ] && [ "$2" = "show" ]; then
+  echo loaded
+  exit 0
+fi
+if [ "$1" = "--user" ] && [ "$2" = "restart" ]; then
+  touch %q
+  exit 0
+fi
+exit 1
+`, marker)
+	if err := os.WriteFile(systemctl, []byte(script), 0755); err != nil {
+		t.Fatalf("write fake systemctl: %v", err)
+	}
+	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	output, err := executeRoot(t, []string{"daemon", "restart", "--user"}, "")
+	if err != nil {
+		t.Fatalf("daemon restart command: %v", err)
+	}
+	if !strings.Contains(output, "deployctld restart requested via systemd user service") {
+		t.Fatalf("daemon restart output = %q", output)
+	}
+	if _, err := os.Stat(marker); err != nil {
+		t.Fatalf("fake systemctl restart was not called: %v", err)
+	}
+}
+
 func TestCreateCommandClonesRepoAndStoresDeployment(t *testing.T) {
 	setupTestHome(t)
 	sourceRepo := createGitRepository(t, map[string]string{

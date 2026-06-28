@@ -453,8 +453,9 @@ func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc
 	return jobToRPC(job), nil
 }
 
-func (s *Server) Health(context.Context, *rpc.HealthRequest) (*rpc.HealthResponse, error) {
-	return &rpc.HealthResponse{Status: "ok"}, nil
+func (s *Server) Health(ctx context.Context, req *rpc.HealthRequest) (*rpc.HealthResponse, error) {
+	_ = req
+	return &rpc.HealthResponse{Status: dockerStatusReport(docker.CheckConnection(ctx))}, nil
 }
 
 func (s *Server) Version(context.Context, *rpc.VersionRequest) (*rpc.VersionResponse, error) {
@@ -597,6 +598,38 @@ func jobToRPC(job store.Job) *rpc.Job {
 
 func isTerminal(status string) bool {
 	return status == store.JobStatusSucceeded || status == store.JobStatusFailed || status == store.JobStatusCancelled
+}
+
+func dockerStatusReport(status docker.ConnectionStatus) string {
+	var builder strings.Builder
+	if status.Connected && status.Error == "" {
+		builder.WriteString("Docker\n")
+		builder.WriteString("  Status: connected\n")
+	} else if status.Connected {
+		builder.WriteString("Docker\n")
+		builder.WriteString("  Status: partially connected\n")
+	} else {
+		builder.WriteString("Docker\n")
+		builder.WriteString("  Status: unavailable\n")
+	}
+
+	if status.Host != "" {
+		fmt.Fprintf(&builder, "  Host: %s\n", status.Host)
+	}
+	if status.ServerVersion != "" {
+		fmt.Fprintf(&builder, "  Server version: %s\n", status.ServerVersion)
+	}
+	if status.APIVersion != "" {
+		fmt.Fprintf(&builder, "  API version: %s\n", status.APIVersion)
+	}
+	if status.OSType != "" {
+		fmt.Fprintf(&builder, "  OS type: %s\n", status.OSType)
+	}
+	if status.Error != "" {
+		fmt.Fprintf(&builder, "  Error: %s\n", status.Error)
+	}
+
+	return builder.String()
 }
 
 func unix(t time.Time) int64 {

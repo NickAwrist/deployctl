@@ -95,6 +95,17 @@ Check daemon health:
 deployctl daemon status
 ```
 
+The status command reports whether the CLI can reach `deployctld`, which socket
+it used, and whether the daemon can reach Docker. For systemd installs, restart
+the daemon service with:
+
+```sh
+deployctl daemon restart
+```
+
+Use `deployctl daemon restart --user` or `deployctl daemon restart --system` to
+target a specific installer mode.
+
 Deployment mutations run as daemon jobs. By default, the CLI follows the job
 until it finishes; pass `--detach` to return immediately after the job starts.
 
