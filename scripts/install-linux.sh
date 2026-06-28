@@ -48,13 +48,19 @@ cleanup() {
   rm -rf "$tmp_dir"
 }
 trap cleanup EXIT
+build_dir="$tmp_dir/build"
+mkdir -p "$build_dir"
 
 DEFAULT_DEPLOYCTL_REPO_URL="https://github.com/NickAwrist/deployctl.git"
 DEPLOYCTL_GO_IMAGE="${DEPLOYCTL_GO_IMAGE:-golang:1.25}"
 DEPLOYCTL_REPO_URL="${DEPLOYCTL_REPO_URL:-$DEFAULT_DEPLOYCTL_REPO_URL}"
 DEPLOYCTL_REF="${DEPLOYCTL_REF:-main}"
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd || true)"
+script_path="${BASH_SOURCE[0]:-}"
+script_dir=""
+if [[ -n "$script_path" ]]; then
+  script_dir="$(cd "$(dirname "$script_path")" >/dev/null 2>&1 && pwd || true)"
+fi
 repo_root=""
 if [[ -n "$script_dir" && -f "$script_dir/../go.mod" && -f "$script_dir/../main.go" ]]; then
   repo_root="$(cd "$script_dir/.." && pwd)"
@@ -64,7 +70,7 @@ else
     exit 1
   fi
 
-  repo_root="$tmp_dir/deployctl"
+  repo_root="$tmp_dir/source"
   echo "Downloading deployctl source from $DEPLOYCTL_REPO_URL ($DEPLOYCTL_REF)"
   git clone --quiet --depth 1 "$DEPLOYCTL_REPO_URL" "$repo_root"
   (
@@ -121,14 +127,14 @@ echo "Building deployctl from $repo_root"
 if command -v go >/dev/null 2>&1; then
   (
     cd "$repo_root"
-    go build -trimpath -ldflags "-s -w" -o "$tmp_dir/deployctl" .
-    go build -trimpath -ldflags "-s -w" -o "$tmp_dir/deployctld" ./cmd/deployctld
+    go build -trimpath -ldflags "-s -w" -o "$build_dir/deployctl" .
+    go build -trimpath -ldflags "-s -w" -o "$build_dir/deployctld" ./cmd/deployctld
   )
 elif command -v docker >/dev/null 2>&1; then
   echo "Local go was not found; building with Docker image $DEPLOYCTL_GO_IMAGE"
   docker run --rm \
     -v "$repo_root:/src" \
-    -v "$tmp_dir:/out" \
+    -v "$build_dir:/out" \
     -w /src \
     "$DEPLOYCTL_GO_IMAGE" \
     sh -c 'git config --global --add safe.directory /src && go build -trimpath -ldflags "-s -w" -o /out/deployctl . && go build -trimpath -ldflags "-s -w" -o /out/deployctld ./cmd/deployctld'
@@ -139,8 +145,8 @@ fi
 
 echo "Installing binaries to $PREFIX"
 mkdir -p "$PREFIX"
-install -m 0755 "$tmp_dir/deployctl" "$PREFIX/deployctl"
-install -m 0755 "$tmp_dir/deployctld" "$PREFIX/deployctld"
+install -m 0755 "$build_dir/deployctl" "$PREFIX/deployctl"
+install -m 0755 "$build_dir/deployctld" "$PREFIX/deployctld"
 
 sync_existing_clients() {
   if [[ "${SYNC_EXISTING_CLIENTS:-1}" == "0" ]]; then
@@ -174,7 +180,7 @@ sync_existing_clients() {
     fi
 
     if [[ -w "$path" ]]; then
-      install -m 0755 "$tmp_dir/deployctl" "$path"
+      install -m 0755 "$build_dir/deployctl" "$path"
       echo "Updated existing deployctl client at $path"
     else
       echo "Notice: existing deployctl client at $path was not updated because it is not writable." >&2
