@@ -31,6 +31,52 @@ On Windows PowerShell, build an `.exe`:
 go build -o deployctl.exe .
 ```
 
+## Install on a Linux server
+
+Clone the repo on the server, then run the installer:
+
+```sh
+git clone https://github.com/NickAwrist/deployctl.git
+cd deployctl
+sudo ./scripts/install-linux.sh
+```
+
+The installer builds `deployctl` and `deployctld`, installs them to
+`/usr/local/bin`, writes `/etc/systemd/system/deployctld.service`, enables the
+daemon, starts it, and checks `deployctl daemon status`.
+
+By default the system service runs as the sudo user. To choose a different
+service user:
+
+```sh
+sudo DEPLOYCTL_USER=deploy ./scripts/install-linux.sh
+```
+
+The service user needs access to Docker, Git credentials, and any SSH keys used
+for private repositories.
+
+To update from the same checkout:
+
+```sh
+git pull
+sudo ./scripts/install-linux.sh
+```
+
+Re-running the installer rebuilds the binaries, replaces them, reloads systemd,
+and restarts `deployctld`.
+
+To uninstall:
+
+```sh
+sudo ./scripts/uninstall-linux.sh
+```
+
+To remove deployment state too:
+
+```sh
+sudo REMOVE_DATA=1 ./scripts/uninstall-linux.sh
+```
+
 ## Daemon
 
 deployctl runs as a client/server tool. Start the local daemon before running
