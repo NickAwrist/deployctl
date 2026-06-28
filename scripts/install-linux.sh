@@ -182,6 +182,8 @@ sync_existing_clients() {
     if [[ -w "$path" ]]; then
       if install -m 0755 "$build_dir/deployctl" "$path"; then
         echo "Updated existing deployctl client at $path"
+      elif cat "$build_dir/deployctl" >"$path" && chmod 0755 "$path"; then
+        echo "Updated existing deployctl client at $path"
       else
         echo "Notice: existing deployctl client at $path could not be updated." >&2
         echo "        Re-run with PREFIX=$(dirname "$path") using an account that can write there, or remove the stale copy from PATH." >&2
