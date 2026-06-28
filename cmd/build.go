@@ -3,9 +3,7 @@ package cmd
 import (
 	"errors"
 
-	"deployctl/internal"
-	"deployctl/internal/docker"
-	"deployctl/internal/store"
+	"deployctl/internal/rpc"
 
 	"github.com/spf13/cobra"
 )
@@ -25,29 +23,22 @@ var buildCmd = &cobra.Command{
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName := ""
-		if len(args) > 0 {
-			repositoryName = args[0]
-			if repositoryName == "" {
-				return errors.New("repository name is required")
+		repositoryName := args[0]
+		if repositoryName == "" {
+			return errors.New("repository name is required")
+		}
+
+		return runWithClient(cmd, func(client *daemonClient) error {
+			response, err := client.Deployment.BuildDeployment(cmd.Context(), &rpc.BuildDeploymentRequest{Name: repositoryName})
+			if err != nil {
+				return err
 			}
-		}
-
-		repositories := store.NewRepositoryStore()
-		repository, err := repositories.Get(cmd.Context(), repositoryName)
-		if err != nil {
-			return err
-		}
-
-		if err := docker.ComposeBuild(cmd.Context(), &repository); err != nil {
-			return err
-		}
-
-		internal.Info("Deployment built successfully")
-		return nil
+			return handleJob(cmd, client, response, "Deployment built successfully")
+		})
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(buildCmd)
+	addJobFlags(buildCmd)
 }

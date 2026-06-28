@@ -112,6 +112,9 @@ deployctl daemon start
 The CLI talks to the daemon over a local Unix socket. Override the socket path
 with `DEPLOYCTL_SOCKET_PATH` when needed.
 
+Daemon logs are written to `~/.deployctl/deployctld.log` by default. Override
+the log path with `DEPLOYCTL_LOG_PATH`.
+
 Check daemon health:
 
 ```sh
@@ -131,6 +134,8 @@ target a specific installer mode.
 
 Deployment mutations run as daemon jobs. By default, the CLI follows the job
 until it finishes; pass `--detach` to return immediately after the job starts.
+The CLI only parses arguments and calls the daemon; cloning, pulling, env-file
+updates, Docker Compose builds, starts, stops, and deletes happen in the daemon.
 
 ## Shell completion
 
@@ -197,7 +202,7 @@ deployctl build my-deployment
 deployctl deploy my-deployment
 ```
 
-`deploy` starts the deployment with the existing local build. If every service is already running, deployctl reports the running containers and their Docker status instead of running Compose again. If the Compose build image is already cached, deployctl prints the cached image tag it will use. If no cached build exists, deployctl asks whether to build before starting.
+`deploy` starts the deployment with the existing local build. If every service is already running, deployctl reports the running containers and their Docker status instead of running Compose again. If the Compose build image is already cached, deployctl prints the cached image tag it will use. If no cached build exists, the daemon builds before starting.
 
 You can also build as part of deploy when you want a fresh image:
 

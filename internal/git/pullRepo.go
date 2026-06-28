@@ -1,19 +1,12 @@
 package git
 
 import (
+	"context"
 	"fmt"
-	"os"
-	"os/exec"
 )
 
-func PullRepo(repoPath string) error {
-	cmd := exec.Command("git", "pull", "--ff-only")
-	cmd.Dir = repoPath
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
+func PullRepo(ctx context.Context, repoPath string, log func(string)) error {
+	if err := runGitCommand(ctx, repoPath, log, "pull", "--ff-only"); err != nil {
 		return fmt.Errorf("git pull failed: %w", err)
 	}
 	return nil

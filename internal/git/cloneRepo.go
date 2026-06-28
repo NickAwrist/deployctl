@@ -1,8 +1,9 @@
 package git
 
 import (
+	"bufio"
+	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -10,30 +11,20 @@ import (
 	"deployctl/internal"
 )
 
-func CloneRepo(repoURL string, name string) (string, error) {
+func CloneRepo(ctx context.Context, repoURL string, name string, log func(string)) (string, error) {
 	if name == "" {
 		name = repoNameFromURL(repoURL)
 	}
 	repoPath := filepath.Join(internal.GetRepositoryDirectory(), name)
 
-	if err := cloneWithGit(repoURL, repoPath); err != nil {
+	if err := runGitCommand(ctx, "", log, "clone", repoURL, repoPath); err != nil {
 		return "", cloneError(repoURL, err)
 	}
 
-	internal.Info("Repository cloned successfully into %s", repoPath)
-	return repoPath, nil
-}
-
-func cloneWithGit(repoURL string, repoPath string) error {
-	cmd := exec.Command("git", "clone", repoURL, repoPath)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("git clone failed: %w", err)
+	if log != nil {
+		log(fmt.Sprintf("Repository cloned into %s", repoPath))
 	}
-	return nil
+	return repoPath, nil
 }
 
 func isSSHURL(repoURL string) bool {
@@ -63,4 +54,34 @@ func repoNameFromURL(repoURL string) string {
 	}
 
 	return filepath.Base(repoURL)
+}
+
+func runGitCommand(ctx context.Context, directory string, log func(string), args ...string) error {
+	cmd := exec.CommandContext(ctx, "git", args...)
+	if directory != "" {
+		cmd.Dir = directory
+	}
+
+	output, err := cmd.CombinedOutput()
+	for _, line := range outputLines(string(output)) {
+		if log != nil {
+			log(line)
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("git %s failed: %w", strings.Join(args, " "), err)
+	}
+	return nil
+}
+
+func outputLines(output string) []string {
+	scanner := bufio.NewScanner(strings.NewReader(output))
+	var lines []string
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" {
+			lines = append(lines, line)
+		}
+	}
+	return lines
 }

@@ -9,6 +9,7 @@ service DeploymentService {
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment);
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
   rpc DeleteDeployment(DeleteDeploymentRequest) returns (JobResponse);
+  rpc BuildDeployment(BuildDeploymentRequest) returns (JobResponse);
   rpc UpdateDeployment(UpdateDeploymentRequest) returns (JobResponse);
   rpc DeployDeployment(DeployDeploymentRequest) returns (JobResponse);
   rpc RestartDeployment(RestartDeploymentRequest) returns (JobResponse);
@@ -53,7 +54,8 @@ message CreateDeploymentRequest {
 message GetDeploymentRequest { string name = 1; }
 message ListDeploymentsRequest {}
 message ListDeploymentsResponse { repeated Deployment deployments = 1; }
-message DeleteDeploymentRequest { string name = 1; bool force = 2; }
+message DeleteDeploymentRequest { string name = 1; }
+message BuildDeploymentRequest { string name = 1; }
 message UpdateDeploymentRequest { string name = 1; bool build = 2; }
 message DeployDeploymentRequest { string name = 1; bool build = 2; }
 message RestartDeploymentRequest { string name = 1; bool build = 2; }

@@ -16,14 +16,6 @@ func CheckError(err error) {
 	os.Exit(1)
 }
 
-func Info(format string, args ...any) {
-	fmt.Printf("\x1b[34;1m%s\x1b[0m\n", fmt.Sprintf(format, args...))
-}
-
-func Warning(format string, args ...any) {
-	fmt.Printf("\x1b[36;1m%s\x1b[0m\n", fmt.Sprintf(format, args...))
-}
-
 func GetMainDirectory() string {
 	home, err := os.UserHomeDir()
 	CheckError(err)

@@ -61,6 +61,20 @@ func (s *Server) DeleteDeployment(ctx context.Context, req *rpc.DeleteDeployment
 	})
 }
 
+func (s *Server) BuildDeployment(ctx context.Context, req *rpc.BuildDeploymentRequest) (*rpc.JobResponse, error) {
+	if req.Name == "" {
+		return nil, errors.New("deployment name is required")
+	}
+	return s.runner.Enqueue(ctx, "build", req.Name, func(ctx context.Context, log func(string)) error {
+		repository, err := s.repositories.Get(ctx, req.Name)
+		if err != nil {
+			return err
+		}
+		log("Building Compose images")
+		return docker.ComposeBuild(ctx, &repository)
+	})
+}
+
 func (s *Server) UpdateDeployment(ctx context.Context, req *rpc.UpdateDeploymentRequest) (*rpc.JobResponse, error) {
 	if req.Name == "" {
 		return nil, errors.New("deployment name is required")
@@ -71,12 +85,11 @@ func (s *Server) UpdateDeployment(ctx context.Context, req *rpc.UpdateDeployment
 			return err
 		}
 		log("Pulling latest repository changes")
-		if err := internalgit.PullRepo(repository.Location); err != nil {
+		if err := internalgit.PullRepo(ctx, repository.Location, log); err != nil {
 			return err
 		}
 		if req.Build {
-			log("Building Compose images")
-			return docker.ComposeBuild(ctx, &repository)
+			return buildComposeImages(ctx, &repository, log)
 		}
 		return nil
 	})
@@ -101,23 +114,12 @@ func (s *Server) DeployDeployment(ctx context.Context, req *rpc.DeployDeployment
 				return nil
 			}
 
-			cache, err := docker.ComposeBuildCache(ctx, &repository)
-			if err != nil {
+			if err := ensureBuildAvailable(ctx, &repository, log); err != nil {
 				return err
-			}
-			if len(cache.Tags) > 0 && len(cache.Missing) == 0 {
-				log(fmt.Sprintf("Using cached build: %s", strings.Join(cache.Tags, ", ")))
-			}
-			if len(cache.Missing) > 0 {
-				log(fmt.Sprintf("No cached build found for %s. Building now.", strings.Join(cache.Missing, ", ")))
-				if err := docker.ComposeBuild(ctx, &repository); err != nil {
-					return err
-				}
 			}
 		}
 		if req.Build {
-			log("Building Compose images")
-			if err := docker.ComposeBuild(ctx, &repository); err != nil {
+			if err := buildComposeImages(ctx, &repository, log); err != nil {
 				return err
 			}
 		}
@@ -143,23 +145,12 @@ func (s *Server) RestartDeployment(ctx context.Context, req *rpc.RestartDeployme
 			log("Deployment is not running. Starting it now.")
 		}
 		if req.Build {
-			log("Building Compose images")
-			if err := docker.ComposeBuild(ctx, &repository); err != nil {
+			if err := buildComposeImages(ctx, &repository, log); err != nil {
 				return err
 			}
 		} else {
-			cache, err := docker.ComposeBuildCache(ctx, &repository)
-			if err != nil {
+			if err := ensureBuildAvailable(ctx, &repository, log); err != nil {
 				return err
-			}
-			if len(cache.Tags) > 0 && len(cache.Missing) == 0 {
-				log(fmt.Sprintf("Using cached build: %s", strings.Join(cache.Tags, ", ")))
-			}
-			if len(cache.Missing) > 0 {
-				log(fmt.Sprintf("No cached build found for %s. Building now.", strings.Join(cache.Missing, ", ")))
-				if err := docker.ComposeBuild(ctx, &repository); err != nil {
-					return err
-				}
 			}
 		}
 		log("Stopping Compose project")
@@ -195,7 +186,7 @@ func (s *Server) StopDeployment(ctx context.Context, req *rpc.StopDeploymentRequ
 
 func (s *Server) createDeployment(ctx context.Context, req *rpc.CreateDeploymentRequest, log func(string)) error {
 	log("Cloning repository")
-	location, err := internalgit.CloneRepo(req.RepoUrl, req.Name)
+	location, err := internalgit.CloneRepo(ctx, req.RepoUrl, req.Name, log)
 	if err != nil {
 		return err
 	}
@@ -224,6 +215,26 @@ func (s *Server) createDeployment(ctx context.Context, req *rpc.CreateDeployment
 		ComposePath: composePath,
 		EnvPath:     envPath,
 	})
+}
+
+func buildComposeImages(ctx context.Context, repository *store.Repository, log func(string)) error {
+	log("Building Compose images")
+	return docker.ComposeBuild(ctx, repository)
+}
+
+func ensureBuildAvailable(ctx context.Context, repository *store.Repository, log func(string)) error {
+	cache, err := docker.ComposeBuildCache(ctx, repository)
+	if err != nil {
+		return err
+	}
+	if len(cache.Tags) > 0 && len(cache.Missing) == 0 {
+		log(fmt.Sprintf("Using cached build: %s", strings.Join(cache.Tags, ", ")))
+	}
+	if len(cache.Missing) > 0 {
+		log(fmt.Sprintf("No cached build found for %s. Building now.", strings.Join(cache.Missing, ", ")))
+		return buildComposeImages(ctx, repository, log)
+	}
+	return nil
 }
 
 func deploymentFromRepository(repository store.Repository) *rpc.Deployment {

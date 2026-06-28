@@ -35,7 +35,7 @@ var daemonStartCmd = &cobra.Command{
 			return err
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "deployctld listening on %s\n", socketPath)
-		return service.NewServer().Serve(listener)
+		return service.NewServerWithLogger(service.NewDaemonLogger()).Serve(listener)
 	},
 }
 

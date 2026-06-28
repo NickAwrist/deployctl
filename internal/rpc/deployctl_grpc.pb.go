@@ -23,6 +23,7 @@ const (
 	DeploymentService_GetDeployment_FullMethodName     = "/deployctl.v1.DeploymentService/GetDeployment"
 	DeploymentService_ListDeployments_FullMethodName   = "/deployctl.v1.DeploymentService/ListDeployments"
 	DeploymentService_DeleteDeployment_FullMethodName  = "/deployctl.v1.DeploymentService/DeleteDeployment"
+	DeploymentService_BuildDeployment_FullMethodName   = "/deployctl.v1.DeploymentService/BuildDeployment"
 	DeploymentService_UpdateDeployment_FullMethodName  = "/deployctl.v1.DeploymentService/UpdateDeployment"
 	DeploymentService_DeployDeployment_FullMethodName  = "/deployctl.v1.DeploymentService/DeployDeployment"
 	DeploymentService_RestartDeployment_FullMethodName = "/deployctl.v1.DeploymentService/RestartDeployment"
@@ -37,6 +38,7 @@ type DeploymentServiceClient interface {
 	GetDeployment(ctx context.Context, in *GetDeploymentRequest, opts ...grpc.CallOption) (*Deployment, error)
 	ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error)
 	DeleteDeployment(ctx context.Context, in *DeleteDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
+	BuildDeployment(ctx context.Context, in *BuildDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	UpdateDeployment(ctx context.Context, in *UpdateDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	DeployDeployment(ctx context.Context, in *DeployDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	RestartDeployment(ctx context.Context, in *RestartDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
@@ -91,6 +93,16 @@ func (c *deploymentServiceClient) DeleteDeployment(ctx context.Context, in *Dele
 	return out, nil
 }
 
+func (c *deploymentServiceClient) BuildDeployment(ctx context.Context, in *BuildDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(JobResponse)
+	err := c.cc.Invoke(ctx, DeploymentService_BuildDeployment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *deploymentServiceClient) UpdateDeployment(ctx context.Context, in *UpdateDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(JobResponse)
@@ -139,6 +151,7 @@ type DeploymentServiceServer interface {
 	GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error)
 	ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
 	DeleteDeployment(context.Context, *DeleteDeploymentRequest) (*JobResponse, error)
+	BuildDeployment(context.Context, *BuildDeploymentRequest) (*JobResponse, error)
 	UpdateDeployment(context.Context, *UpdateDeploymentRequest) (*JobResponse, error)
 	DeployDeployment(context.Context, *DeployDeploymentRequest) (*JobResponse, error)
 	RestartDeployment(context.Context, *RestartDeploymentRequest) (*JobResponse, error)
@@ -164,6 +177,9 @@ func (UnimplementedDeploymentServiceServer) ListDeployments(context.Context, *Li
 }
 func (UnimplementedDeploymentServiceServer) DeleteDeployment(context.Context, *DeleteDeploymentRequest) (*JobResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteDeployment not implemented")
+}
+func (UnimplementedDeploymentServiceServer) BuildDeployment(context.Context, *BuildDeploymentRequest) (*JobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method BuildDeployment not implemented")
 }
 func (UnimplementedDeploymentServiceServer) UpdateDeployment(context.Context, *UpdateDeploymentRequest) (*JobResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateDeployment not implemented")
@@ -270,6 +286,24 @@ func _DeploymentService_DeleteDeployment_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DeploymentService_BuildDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BuildDeploymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeploymentServiceServer).BuildDeployment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeploymentService_BuildDeployment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeploymentServiceServer).BuildDeployment(ctx, req.(*BuildDeploymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DeploymentService_UpdateDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateDeploymentRequest)
 	if err := dec(in); err != nil {
@@ -364,6 +398,10 @@ var DeploymentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteDeployment",
 			Handler:    _DeploymentService_DeleteDeployment_Handler,
+		},
+		{
+			MethodName: "BuildDeployment",
+			Handler:    _DeploymentService_BuildDeployment_Handler,
 		},
 		{
 			MethodName: "UpdateDeployment",

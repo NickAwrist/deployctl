@@ -73,10 +73,29 @@ func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc
 	if isTerminal(job.Status) {
 		return jobToRPC(job), nil
 	}
-	job.Status = store.JobStatusCancelled
-	job.Error = "cancel requested"
-	job.FinishedAt = time.Now()
-	if err := s.jobs.Update(ctx, job); err != nil {
+
+	if !s.runner.Cancel(req.Id) {
+		return jobToRPC(job), nil
+	}
+
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		job, err = s.jobs.Get(ctx, req.Id)
+		if err != nil {
+			return nil, err
+		}
+		if isTerminal(job.Status) {
+			return jobToRPC(job), nil
+		}
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(50 * time.Millisecond):
+		}
+	}
+
+	job, err = s.jobs.Get(ctx, req.Id)
+	if err != nil {
 		return nil, err
 	}
 	return jobToRPC(job), nil

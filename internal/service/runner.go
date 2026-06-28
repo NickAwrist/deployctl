@@ -13,12 +13,14 @@ import (
 )
 
 type Runner struct {
-	jobs  *store.JobStore
-	locks sync.Map
+	jobs    *store.JobStore
+	logger  *Logger
+	locks   sync.Map
+	running sync.Map
 }
 
-func NewRunner(jobs *store.JobStore) *Runner {
-	return &Runner{jobs: jobs}
+func NewRunner(jobs *store.JobStore, logger *Logger) *Runner {
+	return &Runner{jobs: jobs, logger: logger}
 }
 
 type jobFunc func(context.Context, func(string)) error
@@ -36,18 +38,21 @@ func (r *Runner) Enqueue(ctx context.Context, jobType string, deploymentName str
 		return nil, err
 	}
 
-	go r.run(job, fn)
+	ctx, cancel := context.WithCancel(context.Background())
+	r.running.Store(id, cancel)
+	go r.run(ctx, job, fn)
 	return &rpc.JobResponse{JobId: id}, nil
 }
 
-func (r *Runner) run(job store.Job, fn jobFunc) {
-	ctx := context.Background()
+func (r *Runner) run(ctx context.Context, job store.Job, fn jobFunc) {
+	defer r.running.Delete(job.ID)
+
 	unlock := r.lock(job.DeploymentName)
 	defer unlock()
 
 	job.Status = store.JobStatusRunning
 	job.StartedAt = time.Now()
-	_ = r.jobs.Update(ctx, job)
+	_ = r.jobs.Update(context.Background(), job)
 	r.log(ctx, job.ID, fmt.Sprintf("Started %s job", job.Type))
 
 	err := fn(ctx, func(message string) {
@@ -55,7 +60,11 @@ func (r *Runner) run(job store.Job, fn jobFunc) {
 	})
 
 	job.FinishedAt = time.Now()
-	if err != nil {
+	if ctx.Err() != nil {
+		job.Status = store.JobStatusCancelled
+		job.Error = ctx.Err().Error()
+		r.log(context.Background(), job.ID, fmt.Sprintf("Cancelled: %s", ctx.Err()))
+	} else if err != nil {
 		job.Status = store.JobStatusFailed
 		job.Error = err.Error()
 		r.log(ctx, job.ID, fmt.Sprintf("Failed: %s", err))
@@ -63,7 +72,17 @@ func (r *Runner) run(job store.Job, fn jobFunc) {
 		job.Status = store.JobStatusSucceeded
 		r.log(ctx, job.ID, "Succeeded")
 	}
-	_ = r.jobs.Update(ctx, job)
+	_ = r.jobs.Update(context.Background(), job)
+}
+
+func (r *Runner) Cancel(id string) bool {
+	value, ok := r.running.Load(id)
+	if !ok {
+		return false
+	}
+	cancel := value.(context.CancelFunc)
+	cancel()
+	return true
 }
 
 func (r *Runner) lock(deploymentName string) func() {
@@ -78,4 +97,5 @@ func (r *Runner) lock(deploymentName string) func() {
 
 func (r *Runner) log(ctx context.Context, jobID string, message string) {
 	_, _ = r.jobs.AddLog(ctx, jobID, message)
+	r.logger.Printf("[job:%s] %s", jobID, message)
 }

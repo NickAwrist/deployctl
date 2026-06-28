@@ -1,6 +1,7 @@
 package git
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -22,7 +23,7 @@ func TestPullRepoFastForwardsCheckout(t *testing.T) {
 	runGit(t, source, "add", ".")
 	runGit(t, source, "-c", "user.name=deployctl", "-c", "user.email=deployctl@example.test", "commit", "-m", "update")
 
-	if err := PullRepo(checkout); err != nil {
+	if err := PullRepo(context.Background(), checkout, nil); err != nil {
 		t.Fatalf("pull repo: %v", err)
 	}
 

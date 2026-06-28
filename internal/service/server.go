@@ -20,14 +20,20 @@ type Server struct {
 	repositories *store.RepositoryStore
 	jobs         *store.JobStore
 	runner       *Runner
+	logger       *Logger
 }
 
 func NewServer() *Server {
+	return NewServerWithLogger(NewDaemonLogger())
+}
+
+func NewServerWithLogger(logger *Logger) *Server {
 	jobs := store.NewJobStore()
 	return &Server{
 		repositories: store.NewRepositoryStore(),
 		jobs:         jobs,
-		runner:       NewRunner(jobs),
+		runner:       NewRunner(jobs, logger),
+		logger:       logger,
 	}
 }
 
@@ -59,5 +65,10 @@ func ListenUnix(socketPath string) (net.Listener, error) {
 }
 
 func (s *Server) Serve(listener net.Listener) error {
-	return NewGRPCServer(s).Serve(listener)
+	s.logger.Printf("serving deployctld on %s", listener.Addr().String())
+	err := NewGRPCServer(s).Serve(listener)
+	if err != nil {
+		s.logger.Printf("deployctld stopped with error: %v", err)
+	}
+	return err
 }

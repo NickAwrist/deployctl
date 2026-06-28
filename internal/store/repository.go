@@ -144,35 +144,6 @@ func (s *RepositoryStore) GetAll(ctx context.Context) ([]Repository, error) {
 	return repositories, nil
 }
 
-func (s *RepositoryStore) List(ctx context.Context) ([]Repository, error) {
-	db, err := s.openDatabase()
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	rows, err := db.QueryContext(ctx, "SELECT name, url, location, compose_path, env_path FROM repositories ORDER BY name")
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var repositories []Repository
-	for rows.Next() {
-		var repository Repository
-		if err := rows.Scan(&repository.Name, &repository.URL, &repository.Location, &repository.ComposePath, &repository.EnvPath); err != nil {
-			return nil, err
-		}
-		repositories = append(repositories, repository)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return repositories, nil
-}
-
 func migrateRepositories(db *sql.DB) error {
 	if _, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS repositories (

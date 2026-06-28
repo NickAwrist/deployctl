@@ -1,12 +1,7 @@
 package cmd
 
 import (
-	"bufio"
 	"errors"
-	"fmt"
-	"io"
-	"os"
-	"strings"
 
 	"deployctl/internal/rpc"
 
@@ -56,17 +51,4 @@ func init() {
 	rootCmd.AddCommand(deployCmd)
 	deployCmd.Flags().Bool("build", false, "Build deployment images before starting")
 	addJobFlags(deployCmd)
-}
-
-func confirmBuild(input io.Reader, missingTags []string) (bool, error) {
-	fmt.Fprintf(os.Stdout, "No cached build found for %s. Build now? (Y/n) ", strings.Join(missingTags, ", "))
-
-	reader := bufio.NewReader(input)
-	answer, err := reader.ReadString('\n')
-	if err != nil && !(errors.Is(err, io.EOF) && answer != "") {
-		return false, err
-	}
-
-	answer = strings.ToLower(strings.TrimSpace(answer))
-	return answer == "" || answer == "y" || answer == "yes", nil
 }

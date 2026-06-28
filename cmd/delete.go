@@ -54,7 +54,7 @@ var deleteCmd = &cobra.Command{
 		}
 
 		return runWithClient(cmd, func(client *daemonClient) error {
-			response, err := client.Deployment.DeleteDeployment(cmd.Context(), &rpc.DeleteDeploymentRequest{Name: repositoryName, Force: force})
+			response, err := client.Deployment.DeleteDeployment(cmd.Context(), &rpc.DeleteDeploymentRequest{Name: repositoryName})
 			if err != nil {
 				return err
 			}

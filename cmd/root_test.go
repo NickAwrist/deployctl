@@ -353,6 +353,7 @@ func TestDeploymentCommandsReportMissingComposeFile(t *testing.T) {
 	insertRepository(t, store.Repository{Name: "api", URL: "https://example.test/api.git", Location: t.TempDir()})
 
 	for _, args := range [][]string{
+		{"build", "api"},
 		{"deploy", "api"},
 		{"stop", "api"},
 		{"restart", "api"},
@@ -362,32 +363,6 @@ func TestDeploymentCommandsReportMissingComposeFile(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), "compose file") {
 			t.Fatalf("%v error = %v, want missing compose file", args, err)
 		}
-	}
-}
-
-func TestConfirmBuild(t *testing.T) {
-	for _, tc := range []struct {
-		name  string
-		input string
-		want  bool
-	}{
-		{name: "default yes", input: "\n", want: true},
-		{name: "yes", input: "yes\n", want: true},
-		{name: "no", input: "n\n", want: false},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			var got bool
-			var err error
-			captureStdout(t, func() {
-				got, err = confirmBuild(strings.NewReader(tc.input), []string{"api-web"})
-			})
-			if err != nil {
-				t.Fatalf("confirm build: %v", err)
-			}
-			if got != tc.want {
-				t.Fatalf("confirm build = %v, want %v", got, tc.want)
-			}
-		})
 	}
 }
 
@@ -405,11 +380,7 @@ func TestConfirmDelete(t *testing.T) {
 		{name: "no", input: "n\n", want: false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			var got bool
-			var err error
-			captureStdout(t, func() {
-				got, err = confirmDelete(strings.NewReader(tc.input), io.Discard, "api", false)
-			})
+			got, err := confirmDelete(strings.NewReader(tc.input), io.Discard, "api", false)
 			if err != nil {
 				t.Fatalf("confirm delete: %v", err)
 			}
@@ -519,29 +490,4 @@ func runGit(t *testing.T, directory string, args ...string) {
 	if err != nil {
 		t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, output)
 	}
-}
-
-func captureStdout(t *testing.T, fn func()) string {
-	t.Helper()
-
-	original := os.Stdout
-	reader, writer, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("create stdout pipe: %v", err)
-	}
-	os.Stdout = writer
-
-	fn()
-
-	if err := writer.Close(); err != nil {
-		t.Fatalf("close stdout writer: %v", err)
-	}
-	os.Stdout = original
-
-	output, err := io.ReadAll(reader)
-	if err != nil {
-		t.Fatalf("read stdout: %v", err)
-	}
-
-	return string(output)
 }

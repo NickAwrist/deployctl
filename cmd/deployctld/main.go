@@ -16,13 +16,16 @@ func main() {
 		socketPath = os.Args[1]
 	}
 
+	logger := service.NewDaemonLogger()
 	listener, err := service.ListenUnix(socketPath)
 	if err != nil {
+		logger.Printf("listen on %s failed: %v", socketPath, err)
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	fmt.Printf("deployctld listening on %s\n", socketPath)
-	if err := service.NewServer().Serve(listener); err != nil {
+	logger.Printf("deployctld listening on %s", socketPath)
+	if err := service.NewServerWithLogger(logger).Serve(listener); err != nil {
+		logger.Printf("serve failed: %v", err)
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
