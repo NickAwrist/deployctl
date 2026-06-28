@@ -31,6 +31,21 @@ func TestRootCommandPrintsName(t *testing.T) {
 	}
 }
 
+func TestVersionFlagPrintsGitCommitBuild(t *testing.T) {
+	output, err := executeRoot(t, []string{"--version"}, "")
+	if err != nil {
+		t.Fatalf("execute version command: %v", err)
+	}
+
+	got := strings.TrimSpace(output)
+	if !strings.HasPrefix(got, "deployctl build: git commit ") {
+		t.Fatalf("version output = %q", got)
+	}
+	if strings.TrimPrefix(got, "deployctl build: git commit ") == "" {
+		t.Fatalf("version output is missing git commit: %q", got)
+	}
+}
+
 func TestDaemonStatusShowsDaemonAndDockerSections(t *testing.T) {
 	setupTestHome(t)
 
