@@ -4,15 +4,19 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"deployctl/internal"
+	deployclient "deployctl/internal/client"
 	"deployctl/internal/envfile"
+	"deployctl/internal/service"
 	"deployctl/internal/store"
 )
 
@@ -73,11 +77,10 @@ func TestListCommandShowsDeployments(t *testing.T) {
 		EnvPath:     "/tmp/api/.env",
 	})
 
-	output := captureStdout(t, func() {
-		if _, err := executeRoot(t, []string{"list"}, ""); err != nil {
-			t.Fatalf("list command: %v", err)
-		}
-	})
+	output, err := executeRoot(t, []string{"list"}, "")
+	if err != nil {
+		t.Fatalf("list command: %v", err)
+	}
 
 	for _, want := range []string{"api:", "https://example.test/api.git", "/tmp/api/compose.yml", "/tmp/api/.env"} {
 		if !strings.Contains(output, want) {
@@ -111,11 +114,10 @@ func TestEnvCommandsSetListAndUnsetVariables(t *testing.T) {
 		t.Fatalf("variables after set = %#v", variables)
 	}
 
-	output := captureStdout(t, func() {
-		if _, err := executeRoot(t, []string{"env", "list", "api"}, ""); err != nil {
-			t.Fatalf("env list command: %v", err)
-		}
-	})
+	output, err := executeRoot(t, []string{"env", "list", "api"}, "")
+	if err != nil {
+		t.Fatalf("env list command: %v", err)
+	}
 	if !strings.Contains(output, "BAZ=*****") || !strings.Contains(output, "FOO=*****") {
 		t.Fatalf("env list output = %q", output)
 	}
@@ -237,11 +239,10 @@ func TestEnvListAndUnsetUseExplicitComposeEnvFile(t *testing.T) {
 		t.Fatalf("env set explicit file command: %v", err)
 	}
 
-	output := captureStdout(t, func() {
-		if _, err := executeRoot(t, []string{"env", "list", "api", "app.env"}, ""); err != nil {
-			t.Fatalf("env list explicit file command: %v", err)
-		}
-	})
+	output, err := executeRoot(t, []string{"env", "list", "api", "app.env"}, "")
+	if err != nil {
+		t.Fatalf("env list explicit file command: %v", err)
+	}
 	if !strings.Contains(output, "BAZ=*****") || !strings.Contains(output, "FOO=*****") {
 		t.Fatalf("env list output = %q", output)
 	}
@@ -345,7 +346,7 @@ func TestConfirmDelete(t *testing.T) {
 			var got bool
 			var err error
 			captureStdout(t, func() {
-				got, err = confirmDelete(strings.NewReader(tc.input), "api", false)
+				got, err = confirmDelete(strings.NewReader(tc.input), io.Discard, "api", false)
 			})
 			if err != nil {
 				t.Fatalf("confirm delete: %v", err)
@@ -390,7 +391,35 @@ func setupTestHome(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
+	socketPath := filepath.Join(os.TempDir(), fmt.Sprintf("dct-%d-%d.sock", os.Getpid(), time.Now().UnixNano()))
+	t.Setenv("DEPLOYCTL_SOCKET_PATH", socketPath)
+	t.Cleanup(func() {
+		_ = os.Remove(socketPath)
+	})
 	internal.InitializeDirectoryStructure()
+	startTestDaemon(t)
+}
+
+func startTestDaemon(t *testing.T) {
+	t.Helper()
+
+	listener, err := service.ListenUnix(internal.GetSocketPath())
+	if err != nil {
+		t.Fatalf("listen test daemon: %v", err)
+	}
+	grpcServer := service.NewGRPCServer(service.NewServer())
+	t.Cleanup(grpcServer.Stop)
+	go func() {
+		_ = grpcServer.Serve(listener)
+	}()
+
+	client, err := deployclient.DialDefault(context.Background())
+	if err != nil {
+		t.Fatalf("dial test daemon: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = client.Close()
+	})
 }
 
 func insertRepository(t *testing.T, repository store.Repository) {

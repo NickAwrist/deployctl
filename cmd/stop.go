@@ -3,9 +3,7 @@ package cmd
 import (
 	"errors"
 
-	"deployctl/internal"
-	"deployctl/internal/docker"
-	"deployctl/internal/store"
+	"deployctl/internal/rpc"
 
 	"github.com/spf13/cobra"
 )
@@ -25,46 +23,22 @@ var stopCmd = &cobra.Command{
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Get the repository name from the command line arguments or flags
-		repositoryName := ""
-		if len(args) > 0 {
-			repositoryName = args[0]
-			if repositoryName == "" {
-				return errors.New("repository name is required")
-			}
-		}
-
+		repositoryName := args[0]
 		if repositoryName == "" {
 			return errors.New("repository name is required")
 		}
 
-		// Get the repository from the database
-		repositories := store.NewRepositoryStore()
-		repository, err := repositories.Get(cmd.Context(), repositoryName)
-		if err != nil {
-			return err
-		}
-
-		status, err := docker.ComposeStatus(cmd.Context(), &repository)
-		if err != nil {
-			return err
-		}
-		if !status.AnyRunning() {
-			internal.Info("Deployment is not running")
-			return nil
-		}
-
-		// Stop the repository
-		err = docker.ComposeDown(cmd.Context(), &repository)
-		if err != nil {
-			return err
-		}
-
-		internal.Info("Deployment stopped successfully")
-		return nil
+		return runWithClient(cmd, func(client *daemonClient) error {
+			response, err := client.Deployment.StopDeployment(cmd.Context(), &rpc.StopDeploymentRequest{Name: repositoryName})
+			if err != nil {
+				return err
+			}
+			return handleJob(cmd, client, response, "Deployment stopped successfully")
+		})
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(stopCmd)
+	addJobFlags(stopCmd)
 }

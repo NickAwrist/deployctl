@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package deployctl.v1;
+
+option go_package = "deployctl/internal/rpc;rpc";
+
+service DeploymentService {
+  rpc CreateDeployment(CreateDeploymentRequest) returns (JobResponse);
+  rpc GetDeployment(GetDeploymentRequest) returns (Deployment);
+  rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
+  rpc DeleteDeployment(DeleteDeploymentRequest) returns (JobResponse);
+  rpc UpdateDeployment(UpdateDeploymentRequest) returns (JobResponse);
+  rpc DeployDeployment(DeployDeploymentRequest) returns (JobResponse);
+  rpc RestartDeployment(RestartDeploymentRequest) returns (JobResponse);
+  rpc StopDeployment(StopDeploymentRequest) returns (JobResponse);
+}
+
+service EnvService {
+  rpc ListEnvNames(ListEnvNamesRequest) returns (ListEnvNamesResponse);
+  rpc SetEnv(SetEnvRequest) returns (JobResponse);
+  rpc ImportEnvFile(ImportEnvFileRequest) returns (JobResponse);
+  rpc UnsetEnv(UnsetEnvRequest) returns (JobResponse);
+}
+
+service JobService {
+  rpc GetJob(GetJobRequest) returns (Job);
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  rpc WatchJob(WatchJobRequest) returns (stream JobEvent);
+  rpc CancelJob(CancelJobRequest) returns (Job);
+}
+
+service SystemService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc Version(VersionRequest) returns (VersionResponse);
+  rpc Capabilities(CapabilitiesRequest) returns (CapabilitiesResponse);
+}
+
+message Deployment {
+  string name = 1;
+  string url = 2;
+  string location = 3;
+  string compose_path = 4;
+  string env_path = 5;
+}
+
+message CreateDeploymentRequest {
+  string repo_url = 1;
+  string name = 2;
+  string compose_file = 3;
+  string env_file = 4;
+}
+
+message GetDeploymentRequest { string name = 1; }
+message ListDeploymentsRequest {}
+message ListDeploymentsResponse { repeated Deployment deployments = 1; }
+message DeleteDeploymentRequest { string name = 1; bool force = 2; }
+message UpdateDeploymentRequest { string name = 1; bool build = 2; }
+message DeployDeploymentRequest { string name = 1; bool build = 2; }
+message RestartDeploymentRequest { string name = 1; bool build = 2; }
+message StopDeploymentRequest { string name = 1; }
+
+message ListEnvNamesRequest { string deployment_name = 1; string env_file = 2; }
+message ListEnvNamesResponse { repeated string names = 1; }
+message SetEnvRequest {
+  string deployment_name = 1;
+  map<string, string> variables = 2;
+  string env_file = 3;
+}
+message ImportEnvFileRequest {
+  string deployment_name = 1;
+  string source_path = 2;
+  string env_file = 3;
+}
+message UnsetEnvRequest {
+  string deployment_name = 1;
+  repeated string names = 2;
+  string env_file = 3;
+}
+
+message JobResponse { string job_id = 1; }
+
+message Job {
+  string id = 1;
+  string type = 2;
+  string deployment_name = 3;
+  string status = 4;
+  string error = 5;
+  int64 created_at_unix = 6;
+  int64 started_at_unix = 7;
+  int64 finished_at_unix = 8;
+}
+
+message GetJobRequest { string id = 1; }
+message ListJobsRequest { string deployment_name = 1; }
+message ListJobsResponse { repeated Job jobs = 1; }
+message WatchJobRequest { string id = 1; int64 after_sequence = 2; }
+message CancelJobRequest { string id = 1; }
+
+message JobEvent {
+  string job_id = 1;
+  int64 sequence = 2;
+  string message = 3;
+  Job job = 4;
+}
+
+message HealthRequest {}
+message HealthResponse { string status = 1; }
+message VersionRequest {}
+message VersionResponse { string version = 1; }
+message CapabilitiesRequest {}
+message CapabilitiesResponse { repeated string capabilities = 1; }

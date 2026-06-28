@@ -6,7 +6,10 @@ require (
 	github.com/compose-spec/compose-go/v2 v2.10.1
 	github.com/docker/cli v29.2.1+incompatible
 	github.com/docker/compose/v5 v5.1.1
+	github.com/google/uuid v1.6.0
 	github.com/spf13/cobra v1.10.2
+	google.golang.org/grpc v1.78.0
+	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.50.1
 )
 
@@ -48,7 +51,6 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -128,8 +130,6 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251103181224-f26f9409b101 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
-	google.golang.org/grpc v1.78.0 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.72.3 // indirect

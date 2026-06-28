@@ -3,10 +3,7 @@ package cmd
 import (
 	"errors"
 
-	"deployctl/internal"
-	"deployctl/internal/docker"
-	internalgit "deployctl/internal/git"
-	"deployctl/internal/store"
+	"deployctl/internal/rpc"
 
 	"github.com/spf13/cobra"
 )
@@ -27,41 +24,31 @@ var updateCmd = &cobra.Command{
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName := ""
-		if len(args) > 0 {
-			repositoryName = args[0]
-			if repositoryName == "" {
-				return errors.New("repository name is required")
-			}
-		}
-
-		repositories := store.NewRepositoryStore()
-		repository, err := repositories.Get(cmd.Context(), repositoryName)
-		if err != nil {
-			return err
-		}
-
-		if err := internalgit.PullRepo(repository.Location); err != nil {
-			return err
+		repositoryName := args[0]
+		if repositoryName == "" {
+			return errors.New("repository name is required")
 		}
 
 		build, err := cmd.Flags().GetBool("build")
 		if err != nil {
 			return err
 		}
-		if build {
-			if err := docker.ComposeBuild(cmd.Context(), &repository); err != nil {
+
+		return runWithClient(cmd, func(client *daemonClient) error {
+			response, err := client.Deployment.UpdateDeployment(cmd.Context(), &rpc.UpdateDeploymentRequest{
+				Name:  repositoryName,
+				Build: build,
+			})
+			if err != nil {
 				return err
 			}
-		}
-
-		internal.Info("Deployment updated successfully")
-		return nil
+			return handleJob(cmd, client, response, "Deployment updated successfully")
+		})
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(updateCmd)
-
 	updateCmd.Flags().Bool("build", false, "Build deployment images after pulling")
+	addJobFlags(updateCmd)
 }

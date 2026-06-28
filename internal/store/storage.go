@@ -22,5 +22,13 @@ func newStorage() storage {
 }
 
 func (s storage) open() (*sql.DB, error) {
-	return sql.Open("sqlite", s.path)
+	db, err := sql.Open("sqlite", s.path)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := db.Exec("PRAGMA busy_timeout = 5000"); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	return db, nil
 }

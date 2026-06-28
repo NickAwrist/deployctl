@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"deployctl/internal"
-	"deployctl/internal/store"
+	"fmt"
+
+	"deployctl/internal/rpc"
 
 	"github.com/spf13/cobra"
 )
@@ -17,32 +18,28 @@ var listCmd = &cobra.Command{
 	Short:   "List all deployments",
 	Aliases: []string{"ls"},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Get all repositories from the database
-		repositories := store.NewRepositoryStore()
-		repos, err := repositories.GetAll(cmd.Context())
-		if err != nil {
-			return err
-		}
-
-		// If no repositories are found, warn the user and return
-		if len(repos) == 0 {
-			internal.Warning("No deployments found")
+		return runWithClient(cmd, func(client *daemonClient) error {
+			response, err := client.Deployment.ListDeployments(cmd.Context(), &rpc.ListDeploymentsRequest{})
+			if err != nil {
+				return err
+			}
+			if len(response.Deployments) == 0 {
+				fmt.Fprintln(cmd.OutOrStdout(), "No deployments found")
+				return nil
+			}
+			for _, deployment := range response.Deployments {
+				composePath := deployment.ComposePath
+				if composePath == "" {
+					composePath = "none"
+				}
+				envPath := deployment.EnvPath
+				if envPath == "" {
+					envPath = "none"
+				}
+				fmt.Fprintf(cmd.OutOrStdout(), "%s:\n- %s\n- %s\n- %s\n- %s\n", deployment.Name, deployment.Url, deployment.Location, composePath, envPath)
+			}
 			return nil
-		}
-
-		// List the repositories
-		for _, repo := range repos {
-			composePath := repo.ComposePath
-			if composePath == "" {
-				composePath = "none"
-			}
-			envPath := repo.EnvPath
-			if envPath == "" {
-				envPath = "none"
-			}
-			internal.Info("%s:\n- %s\n- %s\n- %s\n- %s", repo.Name, repo.URL, repo.Location, composePath, envPath)
-		}
-		return nil
+		})
 	},
 }
 

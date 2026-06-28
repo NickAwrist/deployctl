@@ -3,7 +3,7 @@ package cmd
 import (
 	"strings"
 
-	"deployctl/internal/store"
+	"deployctl/internal/rpc"
 
 	"github.com/spf13/cobra"
 )
@@ -13,14 +13,19 @@ func completeDeploymentNames(cmd *cobra.Command, args []string, toComplete strin
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 
-	repositories := store.NewRepositoryStore()
-	deployments, err := repositories.GetAll(cmd.Context())
+	client, err := dialClient(cmd.Context())
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+	defer client.Close()
+
+	response, err := client.Deployment.ListDeployments(cmd.Context(), &rpc.ListDeploymentsRequest{})
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 
-	matches := make([]string, 0, len(deployments))
-	for _, deployment := range deployments {
+	matches := make([]string, 0, len(response.Deployments))
+	for _, deployment := range response.Deployments {
 		if strings.HasPrefix(deployment.Name, toComplete) {
 			matches = append(matches, deployment.Name)
 		}

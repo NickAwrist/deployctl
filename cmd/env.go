@@ -3,15 +3,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
-	"sort"
 	"strings"
 
-	"deployctl/internal"
 	"deployctl/internal/envfile"
-	internalfile "deployctl/internal/file"
-	"deployctl/internal/store"
+	"deployctl/internal/rpc"
 
 	"github.com/spf13/cobra"
 )
@@ -33,57 +28,42 @@ var envSetCmd = &cobra.Command{
 			return errors.New("repository name is required")
 		}
 
-		repositories := store.NewRepositoryStore()
-		repository, err := repositories.Get(cmd.Context(), repositoryName)
+		targetEnvFile, values := resolveEnvSetArgs(args[1:])
+		if len(values) == 1 && !strings.Contains(values[0], "=") {
+			return runWithClient(cmd, func(client *daemonClient) error {
+				response, err := client.Env.ImportEnvFile(cmd.Context(), &rpc.ImportEnvFileRequest{
+					DeploymentName: repositoryName,
+					SourcePath:     values[0],
+					EnvFile:        targetEnvFile,
+				})
+				if err != nil {
+					return err
+				}
+				return handleJob(cmd, client, response, fmt.Sprintf("Updated env file for %s", repositoryName))
+			})
+		}
+
+		variables, err := parseAssignments(values)
 		if err != nil {
 			return err
 		}
-
-		targetEnvPath, values := resolveEnvSetTarget(repository, args[1:])
-
-		if len(values) == 1 && !strings.Contains(values[0], "=") {
-			source, ok := internalfile.ExistingFile(values[0])
-			if ok {
-				if err := copyEnvFile(targetEnvPath, source); err != nil {
-					return err
-				}
-				if isDefaultEnvPath(repository, targetEnvPath) {
-					repository.EnvPath = targetEnvPath
-					if err := repositories.Update(cmd.Context(), repository); err != nil {
-						return err
-					}
-				}
-
-				internal.Info("Updated %s for %s", displayEnvPath(repository, targetEnvPath), repository.Name)
-				return nil
+		for name := range variables {
+			if err := envfile.ValidateName(name); err != nil {
+				return err
 			}
 		}
 
-		variables, err := envfile.Read(targetEnvPath)
-		if err != nil {
-			return err
-		}
-
-		for _, assignment := range values {
-			name, value, err := envfile.ParseAssignment(assignment)
+		return runWithClient(cmd, func(client *daemonClient) error {
+			response, err := client.Env.SetEnv(cmd.Context(), &rpc.SetEnvRequest{
+				DeploymentName: repositoryName,
+				Variables:      variables,
+				EnvFile:        targetEnvFile,
+			})
 			if err != nil {
 				return err
 			}
-			variables[name] = value
-		}
-
-		if err := envfile.Write(targetEnvPath, variables); err != nil {
-			return err
-		}
-		if isDefaultEnvPath(repository, targetEnvPath) {
-			repository.EnvPath = targetEnvPath
-			if err := repositories.Update(cmd.Context(), repository); err != nil {
-				return err
-			}
-		}
-
-		internal.Info("Updated %d env variable(s) in %s for %s", len(values), displayEnvPath(repository, targetEnvPath), repository.Name)
-		return nil
+			return handleJob(cmd, client, response, fmt.Sprintf("Updated %d env variable(s) for %s", len(values), repositoryName))
+		})
 	},
 }
 
@@ -99,42 +79,24 @@ var envUnsetCmd = &cobra.Command{
 			return errors.New("repository name is required")
 		}
 
-		repositories := store.NewRepositoryStore()
-		repository, err := repositories.Get(cmd.Context(), repositoryName)
-		if err != nil {
-			return err
-		}
-
-		targetEnvPath, names := resolveEnvUnsetTarget(repository, args[1:])
-
-		variables, err := envfile.Read(targetEnvPath)
-		if err != nil {
-			return err
-		}
-
-		deleted := 0
+		targetEnvFile, names := resolveEnvUnsetArgs(args[1:])
 		for _, name := range names {
 			if err := envfile.ValidateName(name); err != nil {
 				return err
 			}
-			if _, ok := variables[name]; ok {
-				delete(variables, name)
-				deleted++
-			}
 		}
 
-		if err := envfile.Write(targetEnvPath, variables); err != nil {
-			return err
-		}
-		if isDefaultEnvPath(repository, targetEnvPath) {
-			repository.EnvPath = targetEnvPath
-			if err := repositories.Update(cmd.Context(), repository); err != nil {
+		return runWithClient(cmd, func(client *daemonClient) error {
+			response, err := client.Env.UnsetEnv(cmd.Context(), &rpc.UnsetEnvRequest{
+				DeploymentName: repositoryName,
+				Names:          names,
+				EnvFile:        targetEnvFile,
+			})
+			if err != nil {
 				return err
 			}
-		}
-
-		internal.Info("Deleted %d env variable(s) from %s for %s", deleted, displayEnvPath(repository, targetEnvPath), repository.Name)
-		return nil
+			return handleJob(cmd, client, response, fmt.Sprintf("Deleted env variable(s) from %s", repositoryName))
+		})
 	},
 }
 
@@ -149,107 +111,50 @@ var envListCmd = &cobra.Command{
 			return errors.New("repository name is required")
 		}
 
-		repositories := store.NewRepositoryStore()
-		repository, err := repositories.Get(cmd.Context(), repositoryName)
-		if err != nil {
-			return err
-		}
-
 		envFile := ""
 		if len(args) == 2 {
 			envFile = args[1]
 		}
-		targetEnvPath := resolveEnvTargetPath(repository, envFile)
 
-		variables, err := envfile.Read(targetEnvPath)
-		if err != nil {
-			return err
-		}
-		if len(variables) == 0 {
-			internal.Warning("No env variables found in %s for %s", displayEnvPath(repository, targetEnvPath), repository.Name)
+		return runWithClient(cmd, func(client *daemonClient) error {
+			response, err := client.Env.ListEnvNames(cmd.Context(), &rpc.ListEnvNamesRequest{
+				DeploymentName: repositoryName,
+				EnvFile:        envFile,
+			})
+			if err != nil {
+				return err
+			}
+			if len(response.Names) == 0 {
+				fmt.Fprintf(cmd.OutOrStdout(), "No env variables found for %s\n", repositoryName)
+				return nil
+			}
+			printMaskedEnv(cmd.OutOrStdout(), response.Names)
 			return nil
-		}
-
-		names := make([]string, 0, len(variables))
-		for name := range variables {
-			names = append(names, name)
-		}
-		sort.Strings(names)
-
-		for _, name := range names {
-			internal.Info("%s=*****", name)
-		}
-		return nil
+		})
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(envCmd)
 	envCmd.AddCommand(envSetCmd, envUnsetCmd, envListCmd)
+	addJobFlags(envSetCmd)
+	addJobFlags(envUnsetCmd)
 }
 
-func defaultEnvPath(repositoryLocation string) string {
-	return filepath.Join(repositoryLocation, ".env")
-}
-
-func copyEnvFile(destination string, source string) error {
-	contents, err := os.ReadFile(source)
-	if err != nil {
-		return fmt.Errorf("read env file: %w", err)
-	}
-	if err := os.MkdirAll(filepath.Dir(destination), 0755); err != nil {
-		return fmt.Errorf("create env file directory: %w", err)
-	}
-	if err := os.WriteFile(destination, contents, 0600); err != nil {
-		return fmt.Errorf("copy env file: %w", err)
-	}
-
-	return nil
-}
-
-func resolveEnvSetTarget(repository store.Repository, values []string) (string, []string) {
+func resolveEnvSetArgs(values []string) (string, []string) {
 	if len(values) >= 2 && !strings.Contains(values[0], "=") {
-		return resolveEnvTargetPath(repository, values[0]), values[1:]
+		return values[0], values[1:]
 	}
-	return resolveEnvTargetPath(repository, ""), values
+	return "", values
 }
 
-func resolveEnvUnsetTarget(repository store.Repository, names []string) (string, []string) {
+func resolveEnvUnsetArgs(names []string) (string, []string) {
 	if len(names) >= 2 && !looksLikeEnvName(names[0]) {
-		return resolveEnvTargetPath(repository, names[0]), names[1:]
+		return names[0], names[1:]
 	}
-	return resolveEnvTargetPath(repository, ""), names
+	return "", names
 }
 
 func looksLikeEnvName(value string) bool {
 	return envfile.ValidateName(value) == nil
-}
-
-func resolveEnvTargetPath(repository store.Repository, envFile string) string {
-	if envFile == "" {
-		return defaultEnvPath(repository.Location)
-	}
-	if filepath.IsAbs(envFile) {
-		return filepath.Clean(envFile)
-	}
-	return filepath.Join(envFileBaseDir(repository), envFile)
-}
-
-func envFileBaseDir(repository store.Repository) string {
-	if repository.ComposePath != "" {
-		return filepath.Dir(repository.ComposePath)
-	}
-	return repository.Location
-}
-
-func isDefaultEnvPath(repository store.Repository, path string) bool {
-	return filepath.Clean(path) == filepath.Clean(defaultEnvPath(repository.Location))
-}
-
-func displayEnvPath(repository store.Repository, path string) string {
-	base := envFileBaseDir(repository)
-	if relative, err := filepath.Rel(base, path); err == nil && !strings.HasPrefix(relative, "..") && relative != "." {
-		return relative
-	}
-	return path
 }

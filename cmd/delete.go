@@ -5,12 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
-	"deployctl/internal"
-	internalfile "deployctl/internal/file"
-	"deployctl/internal/store"
+	"deployctl/internal/rpc"
 
 	"github.com/spf13/cobra"
 )
@@ -46,33 +43,23 @@ var deleteCmd = &cobra.Command{
 			return err
 		}
 
-		// Get the repository from the database
-		repositories := store.NewRepositoryStore()
-		repository, err := repositories.Get(cmd.Context(), repositoryName)
-		if err != nil {
-			return err
-		}
-
 		// Prompt the user for confirmation
-		confirmed, err := confirmDelete(cmd.InOrStdin(), repository.Name, force)
+		confirmed, err := confirmDelete(cmd.InOrStdin(), cmd.OutOrStdout(), repositoryName, force)
 		if err != nil {
 			return err
 		}
 		if !confirmed && !force {
-			internal.Warning("Delete cancelled")
+			fmt.Fprintln(cmd.OutOrStdout(), "Delete cancelled")
 			return nil
 		}
 
-		// Delete the repository from the database and the file system
-		if err := internalfile.RemoveAllInside(internal.GetRepositoryDirectory(), repository.Location); err != nil {
-			return err
-		}
-		if err := repositories.Delete(cmd.Context(), repository.Name); err != nil {
-			return err
-		}
-
-		internal.Info("Deleted deployment %s", repository.Name)
-		return nil
+		return runWithClient(cmd, func(client *daemonClient) error {
+			response, err := client.Deployment.DeleteDeployment(cmd.Context(), &rpc.DeleteDeploymentRequest{Name: repositoryName, Force: force})
+			if err != nil {
+				return err
+			}
+			return handleJob(cmd, client, response, fmt.Sprintf("Deleted deployment %s", repositoryName))
+		})
 	},
 }
 
@@ -80,14 +67,15 @@ func init() {
 	rootCmd.AddCommand(deleteCmd)
 
 	deleteCmd.Flags().BoolP("force", "f", false, "Force deletion without confirmation")
+	addJobFlags(deleteCmd)
 }
 
-func confirmDelete(input io.Reader, repositoryName string, force bool) (bool, error) {
+func confirmDelete(input io.Reader, output io.Writer, repositoryName string, force bool) (bool, error) {
 	if force {
 		return true, nil
 	}
 
-	fmt.Fprintf(os.Stdout, "Are you sure you want to permanently delete %s? (Y/n) ", repositoryName)
+	fmt.Fprintf(output, "Are you sure you want to permanently delete %s? (Y/n) ", repositoryName)
 
 	reader := bufio.NewReader(input)
 	answer, err := reader.ReadString('\n')

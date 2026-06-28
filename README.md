@@ -22,6 +22,7 @@ go run .
 
 ```sh
 go build -o deployctl .
+go build -o deployctld ./cmd/deployctld
 ```
 
 On Windows PowerShell, build an `.exe`:
@@ -29,6 +30,29 @@ On Windows PowerShell, build an `.exe`:
 ```powershell
 go build -o deployctl.exe .
 ```
+
+## Daemon
+
+deployctl runs as a client/server tool. Start the local daemon before running
+deployment commands:
+
+```sh
+deployctl daemon start
+```
+
+The CLI talks to the daemon over a local Unix socket. Override the socket path
+with `DEPLOYCTL_SOCKET_PATH` when needed.
+
+Check daemon health:
+
+```sh
+deployctl daemon status
+```
+
+Deployment mutations run as daemon jobs. By default, the CLI follows the job
+until it finishes; pass `--detach` to return immediately after the job starts.
+
+## Shell completion
 
 ## Install
 
