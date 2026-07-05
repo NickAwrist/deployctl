@@ -134,6 +134,17 @@ func formatUnixTime(seconds int64) string {
 	return time.Unix(seconds, 0).Local().Format("2006-01-02 15:04:05 MST")
 }
 
+func formatOptionalUnixTime(seconds int64, fallback string) string {
+	if seconds == 0 {
+		return fallback
+	}
+	return formatUnixTime(seconds)
+}
+
+func formatJobDate(job *rpc.Job) string {
+	return formatOptionalUnixTime(jobTimestamp(job), "unknown")
+}
+
 func formatDuration(duration time.Duration) string {
 	if duration < 0 {
 		duration = 0

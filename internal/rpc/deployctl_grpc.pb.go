@@ -19,17 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DeploymentService_CreateDeployment_FullMethodName     = "/deployctl.v1.DeploymentService/CreateDeployment"
-	DeploymentService_GetDeployment_FullMethodName        = "/deployctl.v1.DeploymentService/GetDeployment"
-	DeploymentService_GetDeploymentStatus_FullMethodName  = "/deployctl.v1.DeploymentService/GetDeploymentStatus"
-	DeploymentService_StreamDeploymentLogs_FullMethodName = "/deployctl.v1.DeploymentService/StreamDeploymentLogs"
-	DeploymentService_ListDeployments_FullMethodName      = "/deployctl.v1.DeploymentService/ListDeployments"
-	DeploymentService_DeleteDeployment_FullMethodName     = "/deployctl.v1.DeploymentService/DeleteDeployment"
-	DeploymentService_BuildDeployment_FullMethodName      = "/deployctl.v1.DeploymentService/BuildDeployment"
-	DeploymentService_UpdateDeployment_FullMethodName     = "/deployctl.v1.DeploymentService/UpdateDeployment"
-	DeploymentService_DeployDeployment_FullMethodName     = "/deployctl.v1.DeploymentService/DeployDeployment"
-	DeploymentService_RestartDeployment_FullMethodName    = "/deployctl.v1.DeploymentService/RestartDeployment"
-	DeploymentService_StopDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/StopDeployment"
+	DeploymentService_CreateDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/CreateDeployment"
+	DeploymentService_GetDeployment_FullMethodName          = "/deployctl.v1.DeploymentService/GetDeployment"
+	DeploymentService_GetDeploymentStatus_FullMethodName    = "/deployctl.v1.DeploymentService/GetDeploymentStatus"
+	DeploymentService_StreamDeploymentLogs_FullMethodName   = "/deployctl.v1.DeploymentService/StreamDeploymentLogs"
+	DeploymentService_ListDeployments_FullMethodName        = "/deployctl.v1.DeploymentService/ListDeployments"
+	DeploymentService_ListDeploymentStatuses_FullMethodName = "/deployctl.v1.DeploymentService/ListDeploymentStatuses"
+	DeploymentService_DeleteDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/DeleteDeployment"
+	DeploymentService_BuildDeployment_FullMethodName        = "/deployctl.v1.DeploymentService/BuildDeployment"
+	DeploymentService_UpdateDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/UpdateDeployment"
+	DeploymentService_DeployDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/DeployDeployment"
+	DeploymentService_RestartDeployment_FullMethodName      = "/deployctl.v1.DeploymentService/RestartDeployment"
+	DeploymentService_StopDeployment_FullMethodName         = "/deployctl.v1.DeploymentService/StopDeployment"
 )
 
 // DeploymentServiceClient is the client API for DeploymentService service.
@@ -41,6 +42,7 @@ type DeploymentServiceClient interface {
 	GetDeploymentStatus(ctx context.Context, in *GetDeploymentStatusRequest, opts ...grpc.CallOption) (*DeploymentStatus, error)
 	StreamDeploymentLogs(ctx context.Context, in *StreamDeploymentLogsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DeploymentLogEntry], error)
 	ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error)
+	ListDeploymentStatuses(ctx context.Context, in *ListDeploymentStatusesRequest, opts ...grpc.CallOption) (*ListDeploymentStatusesResponse, error)
 	DeleteDeployment(ctx context.Context, in *DeleteDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	BuildDeployment(ctx context.Context, in *BuildDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	UpdateDeployment(ctx context.Context, in *UpdateDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
@@ -116,6 +118,16 @@ func (c *deploymentServiceClient) ListDeployments(ctx context.Context, in *ListD
 	return out, nil
 }
 
+func (c *deploymentServiceClient) ListDeploymentStatuses(ctx context.Context, in *ListDeploymentStatusesRequest, opts ...grpc.CallOption) (*ListDeploymentStatusesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListDeploymentStatusesResponse)
+	err := c.cc.Invoke(ctx, DeploymentService_ListDeploymentStatuses_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *deploymentServiceClient) DeleteDeployment(ctx context.Context, in *DeleteDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(JobResponse)
@@ -185,6 +197,7 @@ type DeploymentServiceServer interface {
 	GetDeploymentStatus(context.Context, *GetDeploymentStatusRequest) (*DeploymentStatus, error)
 	StreamDeploymentLogs(*StreamDeploymentLogsRequest, grpc.ServerStreamingServer[DeploymentLogEntry]) error
 	ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
+	ListDeploymentStatuses(context.Context, *ListDeploymentStatusesRequest) (*ListDeploymentStatusesResponse, error)
 	DeleteDeployment(context.Context, *DeleteDeploymentRequest) (*JobResponse, error)
 	BuildDeployment(context.Context, *BuildDeploymentRequest) (*JobResponse, error)
 	UpdateDeployment(context.Context, *UpdateDeploymentRequest) (*JobResponse, error)
@@ -215,6 +228,9 @@ func (UnimplementedDeploymentServiceServer) StreamDeploymentLogs(*StreamDeployme
 }
 func (UnimplementedDeploymentServiceServer) ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListDeployments not implemented")
+}
+func (UnimplementedDeploymentServiceServer) ListDeploymentStatuses(context.Context, *ListDeploymentStatusesRequest) (*ListDeploymentStatusesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListDeploymentStatuses not implemented")
 }
 func (UnimplementedDeploymentServiceServer) DeleteDeployment(context.Context, *DeleteDeploymentRequest) (*JobResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteDeployment not implemented")
@@ -334,6 +350,24 @@ func _DeploymentService_ListDeployments_Handler(srv interface{}, ctx context.Con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DeploymentServiceServer).ListDeployments(ctx, req.(*ListDeploymentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DeploymentService_ListDeploymentStatuses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListDeploymentStatusesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeploymentServiceServer).ListDeploymentStatuses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeploymentService_ListDeploymentStatuses_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeploymentServiceServer).ListDeploymentStatuses(ctx, req.(*ListDeploymentStatusesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -468,6 +502,10 @@ var DeploymentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListDeployments",
 			Handler:    _DeploymentService_ListDeployments_Handler,
+		},
+		{
+			MethodName: "ListDeploymentStatuses",
+			Handler:    _DeploymentService_ListDeploymentStatuses_Handler,
 		},
 		{
 			MethodName: "DeleteDeployment",
@@ -721,10 +759,11 @@ var EnvService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	JobService_GetJob_FullMethodName    = "/deployctl.v1.JobService/GetJob"
-	JobService_ListJobs_FullMethodName  = "/deployctl.v1.JobService/ListJobs"
-	JobService_WatchJob_FullMethodName  = "/deployctl.v1.JobService/WatchJob"
-	JobService_CancelJob_FullMethodName = "/deployctl.v1.JobService/CancelJob"
+	JobService_GetJob_FullMethodName      = "/deployctl.v1.JobService/GetJob"
+	JobService_ListJobs_FullMethodName    = "/deployctl.v1.JobService/ListJobs"
+	JobService_ListJobLogs_FullMethodName = "/deployctl.v1.JobService/ListJobLogs"
+	JobService_WatchJob_FullMethodName    = "/deployctl.v1.JobService/WatchJob"
+	JobService_CancelJob_FullMethodName   = "/deployctl.v1.JobService/CancelJob"
 )
 
 // JobServiceClient is the client API for JobService service.
@@ -733,6 +772,7 @@ const (
 type JobServiceClient interface {
 	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*Job, error)
 	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
+	ListJobLogs(ctx context.Context, in *ListJobLogsRequest, opts ...grpc.CallOption) (*ListJobLogsResponse, error)
 	WatchJob(ctx context.Context, in *WatchJobRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[JobEvent], error)
 	CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*Job, error)
 }
@@ -759,6 +799,16 @@ func (c *jobServiceClient) ListJobs(ctx context.Context, in *ListJobsRequest, op
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListJobsResponse)
 	err := c.cc.Invoke(ctx, JobService_ListJobs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *jobServiceClient) ListJobLogs(ctx context.Context, in *ListJobLogsRequest, opts ...grpc.CallOption) (*ListJobLogsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListJobLogsResponse)
+	err := c.cc.Invoke(ctx, JobService_ListJobLogs_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -800,6 +850,7 @@ func (c *jobServiceClient) CancelJob(ctx context.Context, in *CancelJobRequest, 
 type JobServiceServer interface {
 	GetJob(context.Context, *GetJobRequest) (*Job, error)
 	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
+	ListJobLogs(context.Context, *ListJobLogsRequest) (*ListJobLogsResponse, error)
 	WatchJob(*WatchJobRequest, grpc.ServerStreamingServer[JobEvent]) error
 	CancelJob(context.Context, *CancelJobRequest) (*Job, error)
 	mustEmbedUnimplementedJobServiceServer()
@@ -817,6 +868,9 @@ func (UnimplementedJobServiceServer) GetJob(context.Context, *GetJobRequest) (*J
 }
 func (UnimplementedJobServiceServer) ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListJobs not implemented")
+}
+func (UnimplementedJobServiceServer) ListJobLogs(context.Context, *ListJobLogsRequest) (*ListJobLogsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListJobLogs not implemented")
 }
 func (UnimplementedJobServiceServer) WatchJob(*WatchJobRequest, grpc.ServerStreamingServer[JobEvent]) error {
 	return status.Error(codes.Unimplemented, "method WatchJob not implemented")
@@ -881,6 +935,24 @@ func _JobService_ListJobs_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _JobService_ListJobLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListJobLogsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JobServiceServer).ListJobLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: JobService_ListJobLogs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JobServiceServer).ListJobLogs(ctx, req.(*ListJobLogsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _JobService_WatchJob_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(WatchJobRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -924,6 +996,10 @@ var JobService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListJobs",
 			Handler:    _JobService_ListJobs_Handler,
+		},
+		{
+			MethodName: "ListJobLogs",
+			Handler:    _JobService_ListJobLogs_Handler,
 		},
 		{
 			MethodName: "CancelJob",

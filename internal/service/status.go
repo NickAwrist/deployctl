@@ -22,8 +22,27 @@ func (s *Server) GetDeploymentStatus(ctx context.Context, req *rpc.GetDeployment
 	if err != nil {
 		return nil, err
 	}
+	return s.deploymentStatus(ctx, repository, req.EnvFile)
+}
 
-	envNames, err := listEnvNames(repository, req.EnvFile)
+func (s *Server) ListDeploymentStatuses(ctx context.Context, _ *rpc.ListDeploymentStatusesRequest) (*rpc.ListDeploymentStatusesResponse, error) {
+	repositories, err := s.repositories.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	response := &rpc.ListDeploymentStatusesResponse{Deployments: make([]*rpc.DeploymentListItem, 0, len(repositories))}
+	for _, repository := range repositories {
+		item, err := deploymentListItem(ctx, repository)
+		if err != nil {
+			return nil, err
+		}
+		response.Deployments = append(response.Deployments, item)
+	}
+	return response, nil
+}
+
+func (s *Server) deploymentStatus(ctx context.Context, repository store.Repository, envFile string) (*rpc.DeploymentStatus, error) {
+	envNames, err := listEnvNames(repository, envFile)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +92,22 @@ func (s *Server) GetDeploymentStatus(ctx context.Context, req *rpc.GetDeployment
 	}
 
 	return response, nil
+}
+
+func deploymentListItem(ctx context.Context, repository store.Repository) (*rpc.DeploymentListItem, error) {
+	item := &rpc.DeploymentListItem{
+		Deployment: deploymentFromRepository(repository),
+		State:      deploymentStateNotConfigured,
+	}
+	if repository.ComposePath == "" {
+		return item, nil
+	}
+	composeStatus, err := docker.ComposeStatus(ctx, &repository)
+	if err != nil {
+		return nil, err
+	}
+	item.State = deploymentState(composeStatus)
+	return item, nil
 }
 
 func deploymentState(status docker.DeploymentStatus) string {

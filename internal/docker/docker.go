@@ -17,6 +17,7 @@ import (
 	"deployctl/internal/store"
 
 	composecli "github.com/compose-spec/compose-go/v2/cli"
+	"github.com/compose-spec/compose-go/v2/loader"
 	"github.com/compose-spec/compose-go/v2/types"
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/docker/cli/cli/command"
@@ -401,6 +402,11 @@ func loadProject(ctx context.Context, repository *store.Repository) (api.Compose
 		ConfigPaths: []string{repository.ComposePath},
 		WorkingDir:  repository.Location,
 		ProjectName: repository.Name,
+		ProjectOptionsFns: []composecli.ProjectOptionsFn{
+			composecli.WithLoadOptions(func(options *loader.Options) {
+				options.SkipResolveEnvironment = true
+			}),
+		},
 	}
 	if repository.EnvPath != "" {
 		if err := mirrorDefaultEnvFile(repository); err != nil {
@@ -408,9 +414,9 @@ func loadProject(ctx context.Context, repository *store.Repository) (api.Compose
 		}
 
 		loadOptions.EnvFiles = []string{repository.EnvPath}
-		loadOptions.ProjectOptionsFns = []composecli.ProjectOptionsFn{
+		loadOptions.ProjectOptionsFns = append(loadOptions.ProjectOptionsFns,
 			composecli.WithEnv([]string{"DEPLOYCTL_ENV_FILE=" + repository.EnvPath}),
-		}
+		)
 	}
 
 	project, err := service.LoadProject(ctx, loadOptions)
@@ -420,8 +426,27 @@ func loadProject(ctx context.Context, repository *store.Repository) (api.Compose
 		}
 		return nil, nil, nil, fmt.Errorf("load compose project: %w", err)
 	}
+	project, err = resolveServiceEnvFiles(project)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("load compose project: %w", err)
+	}
 
 	return service, project, dockerCLI, nil
+}
+
+func resolveServiceEnvFiles(project *types.Project) (*types.Project, error) {
+	for i, service := range project.Services {
+		for j, envFile := range service.EnvFiles {
+			if _, err := os.Stat(envFile.Path); err == nil {
+				continue
+			} else if !os.IsNotExist(err) {
+				return nil, err
+			}
+			service.EnvFiles[j].Required = types.OptOut(false)
+		}
+		project.Services[i] = service
+	}
+	return project.WithServicesEnvironmentResolved(false)
 }
 
 func containerName(names []string) string {
@@ -445,8 +470,7 @@ func dockerUnavailableError(dockerCLI *command.DockerCli, err error) *Unavailabl
 }
 
 func isDockerConnectionError(err error) bool {
-	if errors.Is(err, os.ErrNotExist) ||
-		errors.Is(err, syscall.ECONNREFUSED) ||
+	if errors.Is(err, syscall.ECONNREFUSED) ||
 		errors.Is(err, syscall.ECONNRESET) ||
 		errors.Is(err, syscall.ENOTCONN) {
 		return true

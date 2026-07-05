@@ -132,11 +132,10 @@ func TestCreateCommandClonesRepoAndStoresDeployment(t *testing.T) {
 func TestListCommandShowsDeployments(t *testing.T) {
 	setupTestHome(t)
 	insertRepository(t, store.Repository{
-		Name:        "api",
-		URL:         "https://example.test/api.git",
-		Location:    "/tmp/api",
-		ComposePath: "/tmp/api/compose.yml",
-		EnvPath:     "/tmp/api/.env",
+		Name:     "api",
+		URL:      "https://example.test/api.git",
+		Location: "/tmp/api",
+		EnvPath:  "/tmp/api/.env",
 	})
 
 	output, err := executeRoot(t, []string{"list"}, "")
@@ -144,9 +143,83 @@ func TestListCommandShowsDeployments(t *testing.T) {
 		t.Fatalf("list command: %v", err)
 	}
 
-	for _, want := range []string{"api:", "https://example.test/api.git", "/tmp/api/compose.yml", "/tmp/api/.env"} {
+	for _, want := range []string{"NAME", "STATUS", "REPOSITORY", "api", "not_configured", "https://example.test/api.git", "/tmp/api", "none", "/tmp/api/.env"} {
 		if !strings.Contains(output, want) {
 			t.Fatalf("list output %q does not contain %q", output, want)
+		}
+	}
+	if strings.Contains(output, "ERROR") {
+		t.Fatalf("list output %q should not contain an error column", output)
+	}
+}
+
+func TestHistoryCommandShowsDeploymentJobs(t *testing.T) {
+	setupTestHome(t)
+	insertRepository(t, store.Repository{Name: "api", URL: "https://example.test/api.git", Location: "/tmp/api"})
+	finishedAt := time.Unix(1_800_000_000, 0)
+	insertJob(t, store.Job{
+		ID:             "job-1",
+		Type:           "update",
+		DeploymentName: "api",
+		Status:         store.JobStatusFailed,
+		CreatedAt:      finishedAt.Add(-time.Minute),
+		StartedAt:      finishedAt.Add(-30 * time.Second),
+		FinishedAt:     finishedAt,
+		Error:          "pull failed",
+	})
+
+	output, err := executeRoot(t, []string{"history", "api"}, "")
+	if err != nil {
+		t.Fatalf("history command: %v", err)
+	}
+
+	for _, want := range []string{"JOB ID", "TYPE", "STATUS", "DATE", "ERROR", "job-1", "update", "failed", formatUnixTime(finishedAt.Unix()), "pull failed"} {
+		if !strings.Contains(output, want) {
+			t.Fatalf("history output %q does not contain %q", output, want)
+		}
+	}
+}
+
+func TestHistoryCommandReportsMissingDeploymentCleanly(t *testing.T) {
+	setupTestHome(t)
+
+	output, err := executeRoot(t, []string{"history", "missing-api"}, "")
+	if err == nil {
+		t.Fatal("history command succeeded with missing deployment")
+	}
+	if !strings.Contains(output, `deployment "missing-api" not found`) {
+		t.Fatalf("history output %q does not contain clean not-found message", output)
+	}
+	for _, unwanted := range []string{"sql: no rows", "rpc error:", "code ="} {
+		if strings.Contains(output, unwanted) {
+			t.Fatalf("history output %q contains %q", output, unwanted)
+		}
+	}
+}
+
+func TestJobCommandShowsDetailsAndLogs(t *testing.T) {
+	setupTestHome(t)
+	finishedAt := time.Unix(1_800_000_000, 0)
+	insertJob(t, store.Job{
+		ID:             "job-1",
+		Type:           "deploy",
+		DeploymentName: "api",
+		Status:         store.JobStatusSucceeded,
+		CreatedAt:      finishedAt.Add(-time.Minute),
+		StartedAt:      finishedAt.Add(-30 * time.Second),
+		FinishedAt:     finishedAt,
+	})
+	insertJobLog(t, "job-1", "Building api")
+	insertJobLog(t, "job-1", "Deployment ready")
+
+	output, err := executeRoot(t, []string{"job", "job-1", "--logs"}, "")
+	if err != nil {
+		t.Fatalf("job command: %v", err)
+	}
+
+	for _, want := range []string{"Job: job-1", "Type: deploy", "Deployment: api", "Status: succeeded", "Finished: " + formatUnixTime(finishedAt.Unix()), "Logs:", "Building api", "Deployment ready"} {
+		if !strings.Contains(output, want) {
+			t.Fatalf("job output %q does not contain %q", output, want)
 		}
 	}
 }
@@ -696,6 +769,16 @@ func insertJob(t *testing.T, job store.Job) {
 	defer dataStore.Close()
 	if err := dataStore.Jobs.Insert(context.Background(), job); err != nil {
 		t.Fatalf("insert job: %v", err)
+	}
+}
+
+func insertJobLog(t *testing.T, jobID string, message string) {
+	t.Helper()
+
+	dataStore := openTestStore(t)
+	defer dataStore.Close()
+	if _, err := dataStore.Jobs.AddLog(context.Background(), jobID, message); err != nil {
+		t.Fatalf("insert job log: %v", err)
 	}
 }
 

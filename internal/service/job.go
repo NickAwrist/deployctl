@@ -17,6 +17,11 @@ func (s *Server) GetJob(ctx context.Context, req *rpc.GetJobRequest) (*rpc.Job, 
 }
 
 func (s *Server) ListJobs(ctx context.Context, req *rpc.ListJobsRequest) (*rpc.ListJobsResponse, error) {
+	if req.DeploymentName != "" {
+		if _, err := s.getRepository(ctx, req.DeploymentName); err != nil {
+			return nil, err
+		}
+	}
 	jobs, err := s.jobs.List(ctx, req.DeploymentName)
 	if err != nil {
 		return nil, err
@@ -24,6 +29,21 @@ func (s *Server) ListJobs(ctx context.Context, req *rpc.ListJobsRequest) (*rpc.L
 	response := &rpc.ListJobsResponse{Jobs: make([]*rpc.Job, 0, len(jobs))}
 	for _, job := range jobs {
 		response.Jobs = append(response.Jobs, jobToRPC(job))
+	}
+	return response, nil
+}
+
+func (s *Server) ListJobLogs(ctx context.Context, req *rpc.ListJobLogsRequest) (*rpc.ListJobLogsResponse, error) {
+	if _, err := s.getJob(ctx, req.Id); err != nil {
+		return nil, err
+	}
+	logs, err := s.jobs.LogsAfter(ctx, req.Id, 0)
+	if err != nil {
+		return nil, err
+	}
+	response := &rpc.ListJobLogsResponse{Logs: make([]*rpc.JobLog, 0, len(logs))}
+	for _, log := range logs {
+		response.Logs = append(response.Logs, jobLogToRPC(log))
 	}
 	return response, nil
 }
@@ -99,6 +119,15 @@ func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc
 		return nil, err
 	}
 	return jobToRPC(job), nil
+}
+
+func jobLogToRPC(log store.JobLog) *rpc.JobLog {
+	return &rpc.JobLog{
+		JobId:         log.JobID,
+		Sequence:      log.Sequence,
+		Message:       log.Message,
+		CreatedAtUnix: unix(log.CreatedAt),
+	}
 }
 
 func jobToRPC(job store.Job) *rpc.Job {

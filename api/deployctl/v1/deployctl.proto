@@ -10,6 +10,7 @@ service DeploymentService {
   rpc GetDeploymentStatus(GetDeploymentStatusRequest) returns (DeploymentStatus);
   rpc StreamDeploymentLogs(StreamDeploymentLogsRequest) returns (stream DeploymentLogEntry);
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
+  rpc ListDeploymentStatuses(ListDeploymentStatusesRequest) returns (ListDeploymentStatusesResponse);
   rpc DeleteDeployment(DeleteDeploymentRequest) returns (JobResponse);
   rpc BuildDeployment(BuildDeploymentRequest) returns (JobResponse);
   rpc UpdateDeployment(UpdateDeploymentRequest) returns (JobResponse);
@@ -28,6 +29,7 @@ service EnvService {
 service JobService {
   rpc GetJob(GetJobRequest) returns (Job);
   rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+  rpc ListJobLogs(ListJobLogsRequest) returns (ListJobLogsResponse);
   rpc WatchJob(WatchJobRequest) returns (stream JobEvent);
   rpc CancelJob(CancelJobRequest) returns (Job);
 }
@@ -88,6 +90,12 @@ message ContainerStatus {
 }
 message ListDeploymentsRequest {}
 message ListDeploymentsResponse { repeated Deployment deployments = 1; }
+message ListDeploymentStatusesRequest {}
+message ListDeploymentStatusesResponse { repeated DeploymentListItem deployments = 1; }
+message DeploymentListItem {
+  Deployment deployment = 1;
+  string state = 2;
+}
 message DeleteDeploymentRequest { string name = 1; }
 message BuildDeploymentRequest { string name = 1; }
 message UpdateDeploymentRequest { string name = 1; bool build = 2; }
@@ -129,8 +137,17 @@ message Job {
 message GetJobRequest { string id = 1; }
 message ListJobsRequest { string deployment_name = 1; }
 message ListJobsResponse { repeated Job jobs = 1; }
+message ListJobLogsRequest { string id = 1; }
+message ListJobLogsResponse { repeated JobLog logs = 1; }
 message WatchJobRequest { string id = 1; int64 after_sequence = 2; }
 message CancelJobRequest { string id = 1; }
+
+message JobLog {
+  string job_id = 1;
+  int64 sequence = 2;
+  string message = 3;
+  int64 created_at_unix = 4;
+}
 
 message JobEvent {
   string job_id = 1;
