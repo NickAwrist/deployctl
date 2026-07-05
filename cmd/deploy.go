@@ -7,16 +7,16 @@ import (
 )
 
 /*
-deployctl deploy <repository-name>
+deployctl deploy <deployment-name>
 
 Deploys a deployment. Use --build to rebuild images before starting.
 
 Arguments:
 
-	<repository-name> The name of the deployment to deploy
+	<deployment-name> The name of the deployment to deploy
 */
 var deployCmd = &cobra.Command{
-	Use:               "deploy [repository-name]",
+	Use:               "deploy [deployment-name]",
 	Short:             "Deploy a deployment",
 	Aliases:           []string{"start"},
 	Args:              cobra.ExactArgs(1),
@@ -27,9 +27,9 @@ var deployCmd = &cobra.Command{
 			return err
 		}
 
-		return runDeploymentJob(cmd, args, "Deployment deployed successfully", func(client *daemonClient, repositoryName string) (*rpc.JobResponse, error) {
+		return runDeploymentJob(cmd, args, "Deployment deployed successfully", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
 			return client.Deployment.DeployDeployment(cmd.Context(), &rpc.DeployDeploymentRequest{
-				DeploymentName: repositoryName,
+				DeploymentName: deploymentName,
 				Build:          build,
 			})
 		})

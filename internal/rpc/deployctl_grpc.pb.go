@@ -19,18 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DeploymentService_CreateDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/CreateDeployment"
-	DeploymentService_GetDeployment_FullMethodName          = "/deployctl.v1.DeploymentService/GetDeployment"
-	DeploymentService_GetDeploymentStatus_FullMethodName    = "/deployctl.v1.DeploymentService/GetDeploymentStatus"
-	DeploymentService_StreamDeploymentLogs_FullMethodName   = "/deployctl.v1.DeploymentService/StreamDeploymentLogs"
-	DeploymentService_ListDeployments_FullMethodName        = "/deployctl.v1.DeploymentService/ListDeployments"
-	DeploymentService_ListDeploymentStatuses_FullMethodName = "/deployctl.v1.DeploymentService/ListDeploymentStatuses"
-	DeploymentService_DeleteDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/DeleteDeployment"
-	DeploymentService_BuildDeployment_FullMethodName        = "/deployctl.v1.DeploymentService/BuildDeployment"
-	DeploymentService_UpdateDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/UpdateDeployment"
-	DeploymentService_DeployDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/DeployDeployment"
-	DeploymentService_RestartDeployment_FullMethodName      = "/deployctl.v1.DeploymentService/RestartDeployment"
-	DeploymentService_StopDeployment_FullMethodName         = "/deployctl.v1.DeploymentService/StopDeployment"
+	DeploymentService_CreateDeployment_FullMethodName        = "/deployctl.v1.DeploymentService/CreateDeployment"
+	DeploymentService_GetDeployment_FullMethodName           = "/deployctl.v1.DeploymentService/GetDeployment"
+	DeploymentService_GetDeploymentStatus_FullMethodName     = "/deployctl.v1.DeploymentService/GetDeploymentStatus"
+	DeploymentService_StreamDeploymentLogs_FullMethodName    = "/deployctl.v1.DeploymentService/StreamDeploymentLogs"
+	DeploymentService_ListDeployments_FullMethodName         = "/deployctl.v1.DeploymentService/ListDeployments"
+	DeploymentService_ListDeploymentSummaries_FullMethodName = "/deployctl.v1.DeploymentService/ListDeploymentSummaries"
+	DeploymentService_DeleteDeployment_FullMethodName        = "/deployctl.v1.DeploymentService/DeleteDeployment"
+	DeploymentService_BuildDeployment_FullMethodName         = "/deployctl.v1.DeploymentService/BuildDeployment"
+	DeploymentService_UpdateDeployment_FullMethodName        = "/deployctl.v1.DeploymentService/UpdateDeployment"
+	DeploymentService_DeployDeployment_FullMethodName        = "/deployctl.v1.DeploymentService/DeployDeployment"
+	DeploymentService_RestartDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/RestartDeployment"
+	DeploymentService_StopDeployment_FullMethodName          = "/deployctl.v1.DeploymentService/StopDeployment"
 )
 
 // DeploymentServiceClient is the client API for DeploymentService service.
@@ -42,7 +42,7 @@ type DeploymentServiceClient interface {
 	GetDeploymentStatus(ctx context.Context, in *GetDeploymentStatusRequest, opts ...grpc.CallOption) (*DeploymentStatus, error)
 	StreamDeploymentLogs(ctx context.Context, in *StreamDeploymentLogsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DeploymentLogEntry], error)
 	ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error)
-	ListDeploymentStatuses(ctx context.Context, in *ListDeploymentStatusesRequest, opts ...grpc.CallOption) (*ListDeploymentStatusesResponse, error)
+	ListDeploymentSummaries(ctx context.Context, in *ListDeploymentSummariesRequest, opts ...grpc.CallOption) (*ListDeploymentSummariesResponse, error)
 	DeleteDeployment(ctx context.Context, in *DeleteDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	BuildDeployment(ctx context.Context, in *BuildDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	UpdateDeployment(ctx context.Context, in *UpdateDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
@@ -118,10 +118,10 @@ func (c *deploymentServiceClient) ListDeployments(ctx context.Context, in *ListD
 	return out, nil
 }
 
-func (c *deploymentServiceClient) ListDeploymentStatuses(ctx context.Context, in *ListDeploymentStatusesRequest, opts ...grpc.CallOption) (*ListDeploymentStatusesResponse, error) {
+func (c *deploymentServiceClient) ListDeploymentSummaries(ctx context.Context, in *ListDeploymentSummariesRequest, opts ...grpc.CallOption) (*ListDeploymentSummariesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListDeploymentStatusesResponse)
-	err := c.cc.Invoke(ctx, DeploymentService_ListDeploymentStatuses_FullMethodName, in, out, cOpts...)
+	out := new(ListDeploymentSummariesResponse)
+	err := c.cc.Invoke(ctx, DeploymentService_ListDeploymentSummaries_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,7 @@ type DeploymentServiceServer interface {
 	GetDeploymentStatus(context.Context, *GetDeploymentStatusRequest) (*DeploymentStatus, error)
 	StreamDeploymentLogs(*StreamDeploymentLogsRequest, grpc.ServerStreamingServer[DeploymentLogEntry]) error
 	ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
-	ListDeploymentStatuses(context.Context, *ListDeploymentStatusesRequest) (*ListDeploymentStatusesResponse, error)
+	ListDeploymentSummaries(context.Context, *ListDeploymentSummariesRequest) (*ListDeploymentSummariesResponse, error)
 	DeleteDeployment(context.Context, *DeleteDeploymentRequest) (*JobResponse, error)
 	BuildDeployment(context.Context, *BuildDeploymentRequest) (*JobResponse, error)
 	UpdateDeployment(context.Context, *UpdateDeploymentRequest) (*JobResponse, error)
@@ -229,8 +229,8 @@ func (UnimplementedDeploymentServiceServer) StreamDeploymentLogs(*StreamDeployme
 func (UnimplementedDeploymentServiceServer) ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListDeployments not implemented")
 }
-func (UnimplementedDeploymentServiceServer) ListDeploymentStatuses(context.Context, *ListDeploymentStatusesRequest) (*ListDeploymentStatusesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListDeploymentStatuses not implemented")
+func (UnimplementedDeploymentServiceServer) ListDeploymentSummaries(context.Context, *ListDeploymentSummariesRequest) (*ListDeploymentSummariesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListDeploymentSummaries not implemented")
 }
 func (UnimplementedDeploymentServiceServer) DeleteDeployment(context.Context, *DeleteDeploymentRequest) (*JobResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteDeployment not implemented")
@@ -354,20 +354,20 @@ func _DeploymentService_ListDeployments_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DeploymentService_ListDeploymentStatuses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListDeploymentStatusesRequest)
+func _DeploymentService_ListDeploymentSummaries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListDeploymentSummariesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DeploymentServiceServer).ListDeploymentStatuses(ctx, in)
+		return srv.(DeploymentServiceServer).ListDeploymentSummaries(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DeploymentService_ListDeploymentStatuses_FullMethodName,
+		FullMethod: DeploymentService_ListDeploymentSummaries_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeploymentServiceServer).ListDeploymentStatuses(ctx, req.(*ListDeploymentStatusesRequest))
+		return srv.(DeploymentServiceServer).ListDeploymentSummaries(ctx, req.(*ListDeploymentSummariesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -504,8 +504,8 @@ var DeploymentService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DeploymentService_ListDeployments_Handler,
 		},
 		{
-			MethodName: "ListDeploymentStatuses",
-			Handler:    _DeploymentService_ListDeploymentStatuses_Handler,
+			MethodName: "ListDeploymentSummaries",
+			Handler:    _DeploymentService_ListDeploymentSummaries_Handler,
 		},
 		{
 			MethodName: "DeleteDeployment",

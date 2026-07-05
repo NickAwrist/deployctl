@@ -16,13 +16,13 @@ var envCmd = &cobra.Command{
 }
 
 var envSetCmd = &cobra.Command{
-	Use:               "set [repository-name] [env-file] KEY=VALUE...",
+	Use:               "set [deployment-name] [env-file] KEY=VALUE...",
 	Aliases:           []string{"add"},
 	Short:             "Set deployment env variables",
 	Args:              cobra.MinimumNArgs(2),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName, err := deploymentNameArg(args)
+		deploymentName, err := deploymentNameArg(args)
 		if err != nil {
 			return err
 		}
@@ -40,25 +40,25 @@ var envSetCmd = &cobra.Command{
 
 		return runWithClient(cmd, func(client *daemonClient) error {
 			response, err := client.Env.SetEnv(cmd.Context(), &rpc.SetEnvRequest{
-				DeploymentName: repositoryName,
+				DeploymentName: deploymentName,
 				Variables:      variables,
 				EnvFile:        targetEnvFile,
 			})
 			if err != nil {
 				return err
 			}
-			return handleJob(cmd, client, response, fmt.Sprintf("Updated %d env variable(s) for %s", len(values), repositoryName))
+			return handleJob(cmd, client, response, fmt.Sprintf("Updated %d env variable(s) for %s", len(values), deploymentName))
 		})
 	},
 }
 
 var envImportCmd = &cobra.Command{
-	Use:               "import [repository-name] [env-file] env-path",
+	Use:               "import [deployment-name] [env-file] env-path",
 	Short:             "Import a deployment env file",
 	Args:              cobra.RangeArgs(2, 3),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName, err := deploymentNameArg(args)
+		deploymentName, err := deploymentNameArg(args)
 		if err != nil {
 			return err
 		}
@@ -66,26 +66,26 @@ var envImportCmd = &cobra.Command{
 		targetEnvFile, sourcePath := resolveEnvImportArgs(args[1:])
 		return runWithClient(cmd, func(client *daemonClient) error {
 			response, err := client.Env.ImportEnvFile(cmd.Context(), &rpc.ImportEnvFileRequest{
-				DeploymentName: repositoryName,
+				DeploymentName: deploymentName,
 				SourcePath:     sourcePath,
 				EnvFile:        targetEnvFile,
 			})
 			if err != nil {
 				return err
 			}
-			return handleJob(cmd, client, response, fmt.Sprintf("Imported env file for %s", repositoryName))
+			return handleJob(cmd, client, response, fmt.Sprintf("Imported env file for %s", deploymentName))
 		})
 	},
 }
 
 var envUnsetCmd = &cobra.Command{
-	Use:               "unset [repository-name] [env-file] KEY...",
+	Use:               "unset [deployment-name] [env-file] KEY...",
 	Aliases:           []string{"delete", "remove", "rm"},
 	Short:             "Delete deployment env variables",
 	Args:              cobra.MinimumNArgs(2),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName, err := deploymentNameArg(args)
+		deploymentName, err := deploymentNameArg(args)
 		if err != nil {
 			return err
 		}
@@ -99,25 +99,25 @@ var envUnsetCmd = &cobra.Command{
 
 		return runWithClient(cmd, func(client *daemonClient) error {
 			response, err := client.Env.UnsetEnv(cmd.Context(), &rpc.UnsetEnvRequest{
-				DeploymentName: repositoryName,
+				DeploymentName: deploymentName,
 				Names:          names,
 				EnvFile:        targetEnvFile,
 			})
 			if err != nil {
 				return err
 			}
-			return handleJob(cmd, client, response, fmt.Sprintf("Deleted env variable(s) from %s", repositoryName))
+			return handleJob(cmd, client, response, fmt.Sprintf("Deleted env variable(s) from %s", deploymentName))
 		})
 	},
 }
 
 var envListCmd = &cobra.Command{
-	Use:               "list [repository-name] [env-file]",
+	Use:               "list [deployment-name] [env-file]",
 	Short:             "List deployment env variables",
 	Args:              cobra.RangeArgs(1, 2),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName, err := deploymentNameArg(args)
+		deploymentName, err := deploymentNameArg(args)
 		if err != nil {
 			return err
 		}
@@ -129,13 +129,13 @@ var envListCmd = &cobra.Command{
 
 		return runWithClient(cmd, func(client *daemonClient) error {
 			response, err := client.Env.ListEnvFiles(cmd.Context(), &rpc.ListEnvFilesRequest{
-				DeploymentName: repositoryName,
+				DeploymentName: deploymentName,
 				EnvFile:        envFile,
 			})
 			if err != nil {
 				return err
 			}
-			printEnvFiles(cmd.OutOrStdout(), repositoryName, envFile != "", response)
+			printEnvFiles(cmd.OutOrStdout(), deploymentName, envFile != "", response)
 			return nil
 		})
 	},

@@ -20,7 +20,7 @@ var listCmd = &cobra.Command{
 	Aliases: []string{"ls"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runWithClient(cmd, func(client *daemonClient) error {
-			response, err := client.Deployment.ListDeploymentStatuses(cmd.Context(), &rpc.ListDeploymentStatusesRequest{})
+			response, err := client.Deployment.ListDeploymentSummaries(cmd.Context(), &rpc.ListDeploymentSummariesRequest{})
 			if err != nil {
 				return err
 			}
@@ -34,7 +34,7 @@ var listCmd = &cobra.Command{
 	},
 }
 
-func printDeploymentList(output io.Writer, deployments []*rpc.DeploymentListItem) {
+func printDeploymentList(output io.Writer, deployments []*rpc.DeploymentSummary) {
 	table := newTableWriter(output)
 	fmt.Fprintln(table, "NAME\tSTATUS\tREPOSITORY\tLOCATION\tCOMPOSE\tENV")
 	for _, item := range deployments {
@@ -43,8 +43,8 @@ func printDeploymentList(output io.Writer, deployments []*rpc.DeploymentListItem
 			table,
 			"%s\t%s\t%s\t%s\t%s\t%s\n",
 			deployment.GetName(),
-			emptyAs(item.GetState(), "unknown"),
-			emptyAs(deployment.GetUrl(), "unknown"),
+			formatDeploymentState(item.GetState()),
+			emptyAs(deployment.GetRepoUrl(), "unknown"),
 			emptyAs(deployment.GetLocation(), "unknown"),
 			emptyAs(deployment.GetComposePath(), "none"),
 			emptyAs(deployment.GetEnvPath(), "none"),

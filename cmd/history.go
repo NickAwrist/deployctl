@@ -10,23 +10,23 @@ import (
 )
 
 var historyCmd = &cobra.Command{
-	Use:               "history [repository-name]",
+	Use:               "history [deployment-name]",
 	Short:             "Show deployment job history",
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName, err := deploymentNameArg(args)
+		deploymentName, err := deploymentNameArg(args)
 		if err != nil {
 			return err
 		}
 
 		return runWithClient(cmd, func(client *daemonClient) error {
-			response, err := client.Job.ListJobs(cmd.Context(), &rpc.ListJobsRequest{DeploymentName: repositoryName})
+			response, err := client.Job.ListJobs(cmd.Context(), &rpc.ListJobsRequest{DeploymentName: deploymentName})
 			if err != nil {
 				return err
 			}
 			if len(response.GetJobs()) == 0 {
-				fmt.Fprintf(cmd.OutOrStdout(), "No jobs found for deployment %q\n", repositoryName)
+				fmt.Fprintf(cmd.OutOrStdout(), "No jobs found for deployment %q\n", deploymentName)
 				return nil
 			}
 			printJobHistory(cmd.OutOrStdout(), response.GetJobs())
@@ -43,8 +43,8 @@ func printJobHistory(output io.Writer, jobs []*rpc.Job) {
 			table,
 			"%s\t%s\t%s\t%s\t%s\n",
 			job.GetId(),
-			emptyAs(job.GetType(), "job"),
-			emptyAs(job.GetStatus(), "unknown"),
+			formatJobType(job.GetType()),
+			formatJobStatus(job.GetStatus()),
 			formatJobDate(job),
 			job.GetError(),
 		)

@@ -10,7 +10,7 @@ service DeploymentService {
   rpc GetDeploymentStatus(GetDeploymentStatusRequest) returns (DeploymentStatus);
   rpc StreamDeploymentLogs(StreamDeploymentLogsRequest) returns (stream DeploymentLogEntry);
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
-  rpc ListDeploymentStatuses(ListDeploymentStatusesRequest) returns (ListDeploymentStatusesResponse);
+  rpc ListDeploymentSummaries(ListDeploymentSummariesRequest) returns (ListDeploymentSummariesResponse);
   rpc DeleteDeployment(DeleteDeploymentRequest) returns (JobResponse);
   rpc BuildDeployment(BuildDeploymentRequest) returns (JobResponse);
   rpc UpdateDeployment(UpdateDeploymentRequest) returns (JobResponse);
@@ -43,10 +43,60 @@ service SystemService {
 
 message Deployment {
   string name = 1;
-  string url = 2;
+  string repo_url = 2;
   string location = 3;
   string compose_path = 4;
   string env_path = 5;
+}
+
+enum DeploymentState {
+  DEPLOYMENT_STATE_UNSPECIFIED = 0;
+  DEPLOYMENT_STATE_NOT_CONFIGURED = 1;
+  DEPLOYMENT_STATE_NOT_CREATED = 2;
+  DEPLOYMENT_STATE_RUNNING = 3;
+  DEPLOYMENT_STATE_PARTIAL = 4;
+  DEPLOYMENT_STATE_STOPPED = 5;
+}
+
+enum ContainerState {
+  CONTAINER_STATE_UNSPECIFIED = 0;
+  CONTAINER_STATE_CREATED = 1;
+  CONTAINER_STATE_RESTARTING = 2;
+  CONTAINER_STATE_RUNNING = 3;
+  CONTAINER_STATE_REMOVING = 4;
+  CONTAINER_STATE_PAUSED = 5;
+  CONTAINER_STATE_EXITED = 6;
+  CONTAINER_STATE_DEAD = 7;
+}
+
+enum JobType {
+  JOB_TYPE_UNSPECIFIED = 0;
+  JOB_TYPE_CREATE = 1;
+  JOB_TYPE_DELETE = 2;
+  JOB_TYPE_BUILD = 3;
+  JOB_TYPE_UPDATE = 4;
+  JOB_TYPE_DEPLOY = 5;
+  JOB_TYPE_RESTART = 6;
+  JOB_TYPE_STOP = 7;
+  JOB_TYPE_ENV_SET = 8;
+  JOB_TYPE_ENV_IMPORT = 9;
+  JOB_TYPE_ENV_UNSET = 10;
+}
+
+enum JobStatus {
+  JOB_STATUS_UNSPECIFIED = 0;
+  JOB_STATUS_QUEUED = 1;
+  JOB_STATUS_RUNNING = 2;
+  JOB_STATUS_SUCCEEDED = 3;
+  JOB_STATUS_FAILED = 4;
+  JOB_STATUS_CANCELLED = 5;
+}
+
+enum DockerConnectionState {
+  DOCKER_CONNECTION_STATE_UNSPECIFIED = 0;
+  DOCKER_CONNECTION_STATE_CONNECTED = 1;
+  DOCKER_CONNECTION_STATE_PARTIALLY_CONNECTED = 2;
+  DOCKER_CONNECTION_STATE_UNAVAILABLE = 3;
 }
 
 message CreateDeploymentRequest {
@@ -69,7 +119,7 @@ message DeploymentLogEntry {
 }
 message DeploymentStatus {
   Deployment deployment = 1;
-  string state = 2;
+  DeploymentState state = 2;
   repeated ContainerStatus containers = 3;
   repeated string missing_services = 4;
   repeated string env_names = 5;
@@ -82,7 +132,7 @@ message ContainerStatus {
   string service = 1;
   string name = 2;
   string status = 3;
-  string state = 4;
+  ContainerState state = 4;
   string image = 5;
   string image_id = 6;
   int64 created_at_unix = 7;
@@ -91,11 +141,11 @@ message ContainerStatus {
 }
 message ListDeploymentsRequest {}
 message ListDeploymentsResponse { repeated Deployment deployments = 1; }
-message ListDeploymentStatusesRequest {}
-message ListDeploymentStatusesResponse { repeated DeploymentListItem deployments = 1; }
-message DeploymentListItem {
+message ListDeploymentSummariesRequest {}
+message ListDeploymentSummariesResponse { repeated DeploymentSummary deployments = 1; }
+message DeploymentSummary {
   Deployment deployment = 1;
-  string state = 2;
+  DeploymentState state = 2;
 }
 message DeleteDeploymentRequest { string deployment_name = 1; }
 message BuildDeploymentRequest { string deployment_name = 1; }
@@ -135,9 +185,9 @@ message JobResponse { string job_id = 1; }
 
 message Job {
   string id = 1;
-  string type = 2;
+  JobType type = 2;
   string deployment_name = 3;
-  string status = 4;
+  JobStatus status = 4;
   string error = 5;
   int64 created_at_unix = 6;
   int64 started_at_unix = 7;
@@ -167,7 +217,18 @@ message JobEvent {
 }
 
 message HealthRequest {}
-message HealthResponse { string status = 1; }
+message DockerHealth {
+  DockerConnectionState state = 1;
+  string host = 2;
+  string server_version = 3;
+  string api_version = 4;
+  string os_type = 5;
+  string error = 6;
+}
+message HealthResponse {
+  bool daemon_reachable = 1;
+  DockerHealth docker = 2;
+}
 message VersionRequest {}
 message VersionResponse { string version = 1; }
 message CapabilitiesRequest {}

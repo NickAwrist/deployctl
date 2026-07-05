@@ -12,22 +12,22 @@ import (
 )
 
 /*
-deployctl delete <repository-name>
+deployctl delete <deployment-name>
 
 Deletes a deployment.
 
 Arguments:
 
-	<repository-name> The name of the deployment to delete
+	<deployment-name> The name of the deployment to delete
 */
 var deleteCmd = &cobra.Command{
-	Use:               "delete [repository-name]",
+	Use:               "delete [deployment-name]",
 	Short:             "Delete a deployment",
 	Aliases:           []string{"remove", "rm"},
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName, err := deploymentNameArg(args)
+		deploymentName, err := deploymentNameArg(args)
 		if err != nil {
 			return err
 		}
@@ -39,7 +39,7 @@ var deleteCmd = &cobra.Command{
 		}
 
 		// Prompt the user for confirmation
-		confirmed, err := confirmDelete(cmd.InOrStdin(), cmd.OutOrStdout(), repositoryName, force)
+		confirmed, err := confirmDelete(cmd.InOrStdin(), cmd.OutOrStdout(), deploymentName, force)
 		if err != nil {
 			return err
 		}
@@ -48,8 +48,8 @@ var deleteCmd = &cobra.Command{
 			return nil
 		}
 
-		return runDeploymentJob(cmd, args, fmt.Sprintf("Deleted deployment %s", repositoryName), func(client *daemonClient, repositoryName string) (*rpc.JobResponse, error) {
-			return client.Deployment.DeleteDeployment(cmd.Context(), &rpc.DeleteDeploymentRequest{DeploymentName: repositoryName})
+		return runDeploymentJob(cmd, args, fmt.Sprintf("Deleted deployment %s", deploymentName), func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
+			return client.Deployment.DeleteDeployment(cmd.Context(), &rpc.DeleteDeploymentRequest{DeploymentName: deploymentName})
 		})
 	},
 }
@@ -61,12 +61,12 @@ func init() {
 	addJobFlags(deleteCmd)
 }
 
-func confirmDelete(input io.Reader, output io.Writer, repositoryName string, force bool) (bool, error) {
+func confirmDelete(input io.Reader, output io.Writer, deploymentName string, force bool) (bool, error) {
 	if force {
 		return true, nil
 	}
 
-	fmt.Fprintf(output, "Are you sure you want to permanently delete %s? (Y/n) ", repositoryName)
+	fmt.Fprintf(output, "Are you sure you want to permanently delete %s? (Y/n) ", deploymentName)
 
 	reader := bufio.NewReader(input)
 	answer, err := reader.ReadString('\n')

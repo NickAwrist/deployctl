@@ -7,16 +7,16 @@ import (
 )
 
 /*
-deployctl update <repository-name>
+deployctl update <deployment-name>
 
 Pulls the latest repository changes. Use --build to rebuild images after pulling.
 
 Arguments:
 
-	<repository-name> The name of the deployment to update
+	<deployment-name> The name of the deployment to update
 */
 var updateCmd = &cobra.Command{
-	Use:               "update [repository-name]",
+	Use:               "update [deployment-name]",
 	Short:             "Pull latest deployment changes",
 	Aliases:           []string{"upgrade", "pull"},
 	Args:              cobra.ExactArgs(1),
@@ -27,9 +27,9 @@ var updateCmd = &cobra.Command{
 			return err
 		}
 
-		return runDeploymentJob(cmd, args, "Deployment updated successfully", func(client *daemonClient, repositoryName string) (*rpc.JobResponse, error) {
+		return runDeploymentJob(cmd, args, "Deployment updated successfully", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
 			return client.Deployment.UpdateDeployment(cmd.Context(), &rpc.UpdateDeploymentRequest{
-				DeploymentName: repositoryName,
+				DeploymentName: deploymentName,
 				Build:          build,
 			})
 		})

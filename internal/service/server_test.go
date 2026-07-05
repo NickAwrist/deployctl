@@ -102,8 +102,8 @@ func TestCancelJobCancelsRunningJob(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cancel job: %v", err)
 	}
-	if job.Status != store.JobStatusCancelled {
-		t.Fatalf("job status = %s, want %s", job.Status, store.JobStatusCancelled)
+	if job.Status != rpc.JobStatus_JOB_STATUS_CANCELLED {
+		t.Fatalf("job status = %s, want %s", job.Status, rpc.JobStatus_JOB_STATUS_CANCELLED)
 	}
 }
 

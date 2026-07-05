@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"deployctl/internal/docker"
 	"deployctl/internal/rpc"
@@ -11,7 +9,10 @@ import (
 
 func (s *Server) Health(ctx context.Context, req *rpc.HealthRequest) (*rpc.HealthResponse, error) {
 	_ = req
-	return &rpc.HealthResponse{Status: dockerStatusReport(docker.CheckConnection(ctx))}, nil
+	return &rpc.HealthResponse{
+		DaemonReachable: true,
+		Docker:          dockerHealthToRPC(docker.CheckConnection(ctx)),
+	}, nil
 }
 
 func (s *Server) Version(context.Context, *rpc.VersionRequest) (*rpc.VersionResponse, error) {
@@ -29,34 +30,23 @@ func (s *Server) Capabilities(context.Context, *rpc.CapabilitiesRequest) (*rpc.C
 	}}, nil
 }
 
-func dockerStatusReport(status docker.ConnectionStatus) string {
-	var builder strings.Builder
+func dockerHealthToRPC(status docker.ConnectionStatus) *rpc.DockerHealth {
+	return &rpc.DockerHealth{
+		State:         dockerConnectionStateToRPC(status),
+		Host:          status.Host,
+		ServerVersion: status.ServerVersion,
+		ApiVersion:    status.APIVersion,
+		OsType:        status.OSType,
+		Error:         status.Error,
+	}
+}
+
+func dockerConnectionStateToRPC(status docker.ConnectionStatus) rpc.DockerConnectionState {
 	if status.Connected && status.Error == "" {
-		builder.WriteString("Docker\n")
-		builder.WriteString("  Status: connected\n")
-	} else if status.Connected {
-		builder.WriteString("Docker\n")
-		builder.WriteString("  Status: partially connected\n")
-	} else {
-		builder.WriteString("Docker\n")
-		builder.WriteString("  Status: unavailable\n")
+		return rpc.DockerConnectionState_DOCKER_CONNECTION_STATE_CONNECTED
 	}
-
-	if status.Host != "" {
-		fmt.Fprintf(&builder, "  Host: %s\n", status.Host)
+	if status.Connected {
+		return rpc.DockerConnectionState_DOCKER_CONNECTION_STATE_PARTIALLY_CONNECTED
 	}
-	if status.ServerVersion != "" {
-		fmt.Fprintf(&builder, "  Server version: %s\n", status.ServerVersion)
-	}
-	if status.APIVersion != "" {
-		fmt.Fprintf(&builder, "  API version: %s\n", status.APIVersion)
-	}
-	if status.OSType != "" {
-		fmt.Fprintf(&builder, "  OS type: %s\n", status.OSType)
-	}
-	if status.Error != "" {
-		fmt.Fprintf(&builder, "  Error: %s\n", status.Error)
-	}
-
-	return builder.String()
+	return rpc.DockerConnectionState_DOCKER_CONNECTION_STATE_UNAVAILABLE
 }

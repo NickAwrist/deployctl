@@ -45,9 +45,9 @@ var jobCmd = &cobra.Command{
 
 func printJobDetails(output io.Writer, job *rpc.Job) {
 	fmt.Fprintf(output, "Job: %s\n", job.GetId())
-	fmt.Fprintf(output, "Type: %s\n", emptyAs(job.GetType(), "job"))
+	fmt.Fprintf(output, "Type: %s\n", formatJobType(job.GetType()))
 	fmt.Fprintf(output, "Deployment: %s\n", emptyAs(job.GetDeploymentName(), "none"))
-	fmt.Fprintf(output, "Status: %s\n", emptyAs(job.GetStatus(), "unknown"))
+	fmt.Fprintf(output, "Status: %s\n", formatJobStatus(job.GetStatus()))
 	fmt.Fprintf(output, "Created: %s\n", formatOptionalUnixTime(job.GetCreatedAtUnix(), "unknown"))
 	fmt.Fprintf(output, "Started: %s\n", formatOptionalUnixTime(job.GetStartedAtUnix(), "not started"))
 	fmt.Fprintf(output, "Finished: %s\n", formatOptionalUnixTime(job.GetFinishedAtUnix(), "not finished"))

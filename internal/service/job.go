@@ -133,13 +133,57 @@ func jobLogToRPC(log store.JobLog) *rpc.JobLog {
 func jobToRPC(job store.Job) *rpc.Job {
 	return &rpc.Job{
 		Id:             job.ID,
-		Type:           job.Type,
+		Type:           jobTypeToRPC(job.Type),
 		DeploymentName: job.DeploymentName,
-		Status:         job.Status,
+		Status:         jobStatusToRPC(job.Status),
 		Error:          job.Error,
 		CreatedAtUnix:  unix(job.CreatedAt),
 		StartedAtUnix:  unix(job.StartedAt),
 		FinishedAtUnix: unix(job.FinishedAt),
+	}
+}
+
+func jobTypeToRPC(jobType string) rpc.JobType {
+	switch jobType {
+	case "create":
+		return rpc.JobType_JOB_TYPE_CREATE
+	case "delete":
+		return rpc.JobType_JOB_TYPE_DELETE
+	case "build":
+		return rpc.JobType_JOB_TYPE_BUILD
+	case "update":
+		return rpc.JobType_JOB_TYPE_UPDATE
+	case "deploy":
+		return rpc.JobType_JOB_TYPE_DEPLOY
+	case "restart":
+		return rpc.JobType_JOB_TYPE_RESTART
+	case "stop":
+		return rpc.JobType_JOB_TYPE_STOP
+	case "env.set":
+		return rpc.JobType_JOB_TYPE_ENV_SET
+	case "env.import":
+		return rpc.JobType_JOB_TYPE_ENV_IMPORT
+	case "env.unset":
+		return rpc.JobType_JOB_TYPE_ENV_UNSET
+	default:
+		return rpc.JobType_JOB_TYPE_UNSPECIFIED
+	}
+}
+
+func jobStatusToRPC(status string) rpc.JobStatus {
+	switch status {
+	case store.JobStatusQueued:
+		return rpc.JobStatus_JOB_STATUS_QUEUED
+	case store.JobStatusRunning:
+		return rpc.JobStatus_JOB_STATUS_RUNNING
+	case store.JobStatusSucceeded:
+		return rpc.JobStatus_JOB_STATUS_SUCCEEDED
+	case store.JobStatusFailed:
+		return rpc.JobStatus_JOB_STATUS_FAILED
+	case store.JobStatusCancelled:
+		return rpc.JobStatus_JOB_STATUS_CANCELLED
+	default:
+		return rpc.JobStatus_JOB_STATUS_UNSPECIFIED
 	}
 }
 

@@ -406,7 +406,7 @@ func TestRuntimeErrorsDoNotHideUsageErrors(t *testing.T) {
 	if !strings.Contains(output, "Usage:") {
 		t.Fatalf("usage error output %q does not contain Usage", output)
 	}
-	if !strings.Contains(output, "deployctl status [repository-name]") {
+	if !strings.Contains(output, "deployctl status [deployment-name]") {
 		t.Fatalf("usage error output %q does not contain status usage", output)
 	}
 }

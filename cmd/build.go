@@ -7,22 +7,22 @@ import (
 )
 
 /*
-deployctl build <repository-name>
+deployctl build <deployment-name>
 
 Builds deployment images without starting the deployment.
 
 Arguments:
 
-	<repository-name> The name of the deployment to build
+	<deployment-name> The name of the deployment to build
 */
 var buildCmd = &cobra.Command{
-	Use:               "build [repository-name]",
+	Use:               "build [deployment-name]",
 	Short:             "Build deployment images",
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runDeploymentJob(cmd, args, "Deployment built successfully", func(client *daemonClient, repositoryName string) (*rpc.JobResponse, error) {
-			return client.Deployment.BuildDeployment(cmd.Context(), &rpc.BuildDeploymentRequest{DeploymentName: repositoryName})
+		return runDeploymentJob(cmd, args, "Deployment built successfully", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
+			return client.Deployment.BuildDeployment(cmd.Context(), &rpc.BuildDeploymentRequest{DeploymentName: deploymentName})
 		})
 	},
 }

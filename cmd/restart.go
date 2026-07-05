@@ -7,16 +7,16 @@ import (
 )
 
 /*
-deployctl restart <repository-name>
+deployctl restart <deployment-name>
 
 Restarts a deployment. Use --build to rebuild images before restarting.
 
 Arguments:
 
-	<repository-name> The name of the deployment to restart
+	<deployment-name> The name of the deployment to restart
 */
 var restartCmd = &cobra.Command{
-	Use:               "restart [repository-name]",
+	Use:               "restart [deployment-name]",
 	Short:             "Restart a deployment",
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
@@ -26,9 +26,9 @@ var restartCmd = &cobra.Command{
 			return err
 		}
 
-		return runDeploymentJob(cmd, args, "Deployment restarted successfully", func(client *daemonClient, repositoryName string) (*rpc.JobResponse, error) {
+		return runDeploymentJob(cmd, args, "Deployment restarted successfully", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
 			return client.Deployment.RestartDeployment(cmd.Context(), &rpc.RestartDeploymentRequest{
-				DeploymentName: repositoryName,
+				DeploymentName: deploymentName,
 				Build:          build,
 			})
 		})

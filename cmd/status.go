@@ -12,12 +12,12 @@ import (
 )
 
 var statusCmd = &cobra.Command{
-	Use:               "status [repository-name]",
+	Use:               "status [deployment-name]",
 	Short:             "Show deployment status",
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName, err := deploymentNameArg(args)
+		deploymentName, err := deploymentNameArg(args)
 		if err != nil {
 			return err
 		}
@@ -29,7 +29,7 @@ var statusCmd = &cobra.Command{
 
 		return runWithClient(cmd, func(client *daemonClient) error {
 			response, err := client.Deployment.GetDeploymentStatus(cmd.Context(), &rpc.GetDeploymentStatusRequest{
-				DeploymentName: repositoryName,
+				DeploymentName: deploymentName,
 				EnvFile:        envFile,
 			})
 			if err != nil {
@@ -49,8 +49,8 @@ func init() {
 func printDeploymentStatus(output io.Writer, status *rpc.DeploymentStatus) {
 	deployment := status.GetDeployment()
 	fmt.Fprintf(output, "Deployment: %s\n", deployment.GetName())
-	fmt.Fprintf(output, "State: %s\n", status.GetState())
-	fmt.Fprintf(output, "Repository: %s\n", emptyAs(deployment.GetUrl(), "unknown"))
+	fmt.Fprintf(output, "State: %s\n", formatDeploymentState(status.GetState()))
+	fmt.Fprintf(output, "Repository: %s\n", emptyAs(deployment.GetRepoUrl(), "unknown"))
 	fmt.Fprintf(output, "Location: %s\n", emptyAs(deployment.GetLocation(), "unknown"))
 	fmt.Fprintf(output, "Compose file: %s\n", emptyAs(deployment.GetComposePath(), "none"))
 	fmt.Fprintf(output, "Env file: %s\n", emptyAs(deployment.GetEnvPath(), "none"))
@@ -75,7 +75,7 @@ func printDeploymentStatus(output io.Writer, status *rpc.DeploymentStatus) {
 	} else {
 		for _, container := range status.GetContainers() {
 			fmt.Fprintf(output, "  %s: %s\n", container.GetService(), emptyAs(container.GetName(), "unnamed"))
-			fmt.Fprintf(output, "    State: %s\n", emptyAs(container.GetState(), "unknown"))
+			fmt.Fprintf(output, "    State: %s\n", formatContainerState(container.GetState()))
 			fmt.Fprintf(output, "    Status: %s\n", emptyAs(container.GetStatus(), "unknown"))
 			fmt.Fprintf(output, "    Image: %s\n", emptyAs(container.GetImage(), "unknown"))
 			fmt.Fprintf(output, "    Image ID: %s\n", emptyAs(container.GetImageId(), "unknown"))
@@ -109,7 +109,7 @@ func printDeploymentStatus(output io.Writer, status *rpc.DeploymentStatus) {
 }
 
 func formatJob(job *rpc.Job) string {
-	parts := []string{emptyAs(job.GetType(), "job"), emptyAs(job.GetStatus(), "unknown")}
+	parts := []string{formatJobType(job.GetType()), formatJobStatus(job.GetStatus())}
 	if at := jobTimestamp(job); at > 0 {
 		parts = append(parts, "at "+formatUnixTime(at))
 	}

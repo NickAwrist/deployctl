@@ -21,10 +21,315 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type DeploymentState int32
+
+const (
+	DeploymentState_DEPLOYMENT_STATE_UNSPECIFIED    DeploymentState = 0
+	DeploymentState_DEPLOYMENT_STATE_NOT_CONFIGURED DeploymentState = 1
+	DeploymentState_DEPLOYMENT_STATE_NOT_CREATED    DeploymentState = 2
+	DeploymentState_DEPLOYMENT_STATE_RUNNING        DeploymentState = 3
+	DeploymentState_DEPLOYMENT_STATE_PARTIAL        DeploymentState = 4
+	DeploymentState_DEPLOYMENT_STATE_STOPPED        DeploymentState = 5
+)
+
+// Enum value maps for DeploymentState.
+var (
+	DeploymentState_name = map[int32]string{
+		0: "DEPLOYMENT_STATE_UNSPECIFIED",
+		1: "DEPLOYMENT_STATE_NOT_CONFIGURED",
+		2: "DEPLOYMENT_STATE_NOT_CREATED",
+		3: "DEPLOYMENT_STATE_RUNNING",
+		4: "DEPLOYMENT_STATE_PARTIAL",
+		5: "DEPLOYMENT_STATE_STOPPED",
+	}
+	DeploymentState_value = map[string]int32{
+		"DEPLOYMENT_STATE_UNSPECIFIED":    0,
+		"DEPLOYMENT_STATE_NOT_CONFIGURED": 1,
+		"DEPLOYMENT_STATE_NOT_CREATED":    2,
+		"DEPLOYMENT_STATE_RUNNING":        3,
+		"DEPLOYMENT_STATE_PARTIAL":        4,
+		"DEPLOYMENT_STATE_STOPPED":        5,
+	}
+)
+
+func (x DeploymentState) Enum() *DeploymentState {
+	p := new(DeploymentState)
+	*p = x
+	return p
+}
+
+func (x DeploymentState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DeploymentState) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_deployctl_v1_deployctl_proto_enumTypes[0].Descriptor()
+}
+
+func (DeploymentState) Type() protoreflect.EnumType {
+	return &file_api_deployctl_v1_deployctl_proto_enumTypes[0]
+}
+
+func (x DeploymentState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DeploymentState.Descriptor instead.
+func (DeploymentState) EnumDescriptor() ([]byte, []int) {
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{0}
+}
+
+type ContainerState int32
+
+const (
+	ContainerState_CONTAINER_STATE_UNSPECIFIED ContainerState = 0
+	ContainerState_CONTAINER_STATE_CREATED     ContainerState = 1
+	ContainerState_CONTAINER_STATE_RESTARTING  ContainerState = 2
+	ContainerState_CONTAINER_STATE_RUNNING     ContainerState = 3
+	ContainerState_CONTAINER_STATE_REMOVING    ContainerState = 4
+	ContainerState_CONTAINER_STATE_PAUSED      ContainerState = 5
+	ContainerState_CONTAINER_STATE_EXITED      ContainerState = 6
+	ContainerState_CONTAINER_STATE_DEAD        ContainerState = 7
+)
+
+// Enum value maps for ContainerState.
+var (
+	ContainerState_name = map[int32]string{
+		0: "CONTAINER_STATE_UNSPECIFIED",
+		1: "CONTAINER_STATE_CREATED",
+		2: "CONTAINER_STATE_RESTARTING",
+		3: "CONTAINER_STATE_RUNNING",
+		4: "CONTAINER_STATE_REMOVING",
+		5: "CONTAINER_STATE_PAUSED",
+		6: "CONTAINER_STATE_EXITED",
+		7: "CONTAINER_STATE_DEAD",
+	}
+	ContainerState_value = map[string]int32{
+		"CONTAINER_STATE_UNSPECIFIED": 0,
+		"CONTAINER_STATE_CREATED":     1,
+		"CONTAINER_STATE_RESTARTING":  2,
+		"CONTAINER_STATE_RUNNING":     3,
+		"CONTAINER_STATE_REMOVING":    4,
+		"CONTAINER_STATE_PAUSED":      5,
+		"CONTAINER_STATE_EXITED":      6,
+		"CONTAINER_STATE_DEAD":        7,
+	}
+)
+
+func (x ContainerState) Enum() *ContainerState {
+	p := new(ContainerState)
+	*p = x
+	return p
+}
+
+func (x ContainerState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ContainerState) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_deployctl_v1_deployctl_proto_enumTypes[1].Descriptor()
+}
+
+func (ContainerState) Type() protoreflect.EnumType {
+	return &file_api_deployctl_v1_deployctl_proto_enumTypes[1]
+}
+
+func (x ContainerState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ContainerState.Descriptor instead.
+func (ContainerState) EnumDescriptor() ([]byte, []int) {
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{1}
+}
+
+type JobType int32
+
+const (
+	JobType_JOB_TYPE_UNSPECIFIED JobType = 0
+	JobType_JOB_TYPE_CREATE      JobType = 1
+	JobType_JOB_TYPE_DELETE      JobType = 2
+	JobType_JOB_TYPE_BUILD       JobType = 3
+	JobType_JOB_TYPE_UPDATE      JobType = 4
+	JobType_JOB_TYPE_DEPLOY      JobType = 5
+	JobType_JOB_TYPE_RESTART     JobType = 6
+	JobType_JOB_TYPE_STOP        JobType = 7
+	JobType_JOB_TYPE_ENV_SET     JobType = 8
+	JobType_JOB_TYPE_ENV_IMPORT  JobType = 9
+	JobType_JOB_TYPE_ENV_UNSET   JobType = 10
+)
+
+// Enum value maps for JobType.
+var (
+	JobType_name = map[int32]string{
+		0:  "JOB_TYPE_UNSPECIFIED",
+		1:  "JOB_TYPE_CREATE",
+		2:  "JOB_TYPE_DELETE",
+		3:  "JOB_TYPE_BUILD",
+		4:  "JOB_TYPE_UPDATE",
+		5:  "JOB_TYPE_DEPLOY",
+		6:  "JOB_TYPE_RESTART",
+		7:  "JOB_TYPE_STOP",
+		8:  "JOB_TYPE_ENV_SET",
+		9:  "JOB_TYPE_ENV_IMPORT",
+		10: "JOB_TYPE_ENV_UNSET",
+	}
+	JobType_value = map[string]int32{
+		"JOB_TYPE_UNSPECIFIED": 0,
+		"JOB_TYPE_CREATE":      1,
+		"JOB_TYPE_DELETE":      2,
+		"JOB_TYPE_BUILD":       3,
+		"JOB_TYPE_UPDATE":      4,
+		"JOB_TYPE_DEPLOY":      5,
+		"JOB_TYPE_RESTART":     6,
+		"JOB_TYPE_STOP":        7,
+		"JOB_TYPE_ENV_SET":     8,
+		"JOB_TYPE_ENV_IMPORT":  9,
+		"JOB_TYPE_ENV_UNSET":   10,
+	}
+)
+
+func (x JobType) Enum() *JobType {
+	p := new(JobType)
+	*p = x
+	return p
+}
+
+func (x JobType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (JobType) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_deployctl_v1_deployctl_proto_enumTypes[2].Descriptor()
+}
+
+func (JobType) Type() protoreflect.EnumType {
+	return &file_api_deployctl_v1_deployctl_proto_enumTypes[2]
+}
+
+func (x JobType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use JobType.Descriptor instead.
+func (JobType) EnumDescriptor() ([]byte, []int) {
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{2}
+}
+
+type JobStatus int32
+
+const (
+	JobStatus_JOB_STATUS_UNSPECIFIED JobStatus = 0
+	JobStatus_JOB_STATUS_QUEUED      JobStatus = 1
+	JobStatus_JOB_STATUS_RUNNING     JobStatus = 2
+	JobStatus_JOB_STATUS_SUCCEEDED   JobStatus = 3
+	JobStatus_JOB_STATUS_FAILED      JobStatus = 4
+	JobStatus_JOB_STATUS_CANCELLED   JobStatus = 5
+)
+
+// Enum value maps for JobStatus.
+var (
+	JobStatus_name = map[int32]string{
+		0: "JOB_STATUS_UNSPECIFIED",
+		1: "JOB_STATUS_QUEUED",
+		2: "JOB_STATUS_RUNNING",
+		3: "JOB_STATUS_SUCCEEDED",
+		4: "JOB_STATUS_FAILED",
+		5: "JOB_STATUS_CANCELLED",
+	}
+	JobStatus_value = map[string]int32{
+		"JOB_STATUS_UNSPECIFIED": 0,
+		"JOB_STATUS_QUEUED":      1,
+		"JOB_STATUS_RUNNING":     2,
+		"JOB_STATUS_SUCCEEDED":   3,
+		"JOB_STATUS_FAILED":      4,
+		"JOB_STATUS_CANCELLED":   5,
+	}
+)
+
+func (x JobStatus) Enum() *JobStatus {
+	p := new(JobStatus)
+	*p = x
+	return p
+}
+
+func (x JobStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (JobStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_deployctl_v1_deployctl_proto_enumTypes[3].Descriptor()
+}
+
+func (JobStatus) Type() protoreflect.EnumType {
+	return &file_api_deployctl_v1_deployctl_proto_enumTypes[3]
+}
+
+func (x JobStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use JobStatus.Descriptor instead.
+func (JobStatus) EnumDescriptor() ([]byte, []int) {
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{3}
+}
+
+type DockerConnectionState int32
+
+const (
+	DockerConnectionState_DOCKER_CONNECTION_STATE_UNSPECIFIED         DockerConnectionState = 0
+	DockerConnectionState_DOCKER_CONNECTION_STATE_CONNECTED           DockerConnectionState = 1
+	DockerConnectionState_DOCKER_CONNECTION_STATE_PARTIALLY_CONNECTED DockerConnectionState = 2
+	DockerConnectionState_DOCKER_CONNECTION_STATE_UNAVAILABLE         DockerConnectionState = 3
+)
+
+// Enum value maps for DockerConnectionState.
+var (
+	DockerConnectionState_name = map[int32]string{
+		0: "DOCKER_CONNECTION_STATE_UNSPECIFIED",
+		1: "DOCKER_CONNECTION_STATE_CONNECTED",
+		2: "DOCKER_CONNECTION_STATE_PARTIALLY_CONNECTED",
+		3: "DOCKER_CONNECTION_STATE_UNAVAILABLE",
+	}
+	DockerConnectionState_value = map[string]int32{
+		"DOCKER_CONNECTION_STATE_UNSPECIFIED":         0,
+		"DOCKER_CONNECTION_STATE_CONNECTED":           1,
+		"DOCKER_CONNECTION_STATE_PARTIALLY_CONNECTED": 2,
+		"DOCKER_CONNECTION_STATE_UNAVAILABLE":         3,
+	}
+)
+
+func (x DockerConnectionState) Enum() *DockerConnectionState {
+	p := new(DockerConnectionState)
+	*p = x
+	return p
+}
+
+func (x DockerConnectionState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DockerConnectionState) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_deployctl_v1_deployctl_proto_enumTypes[4].Descriptor()
+}
+
+func (DockerConnectionState) Type() protoreflect.EnumType {
+	return &file_api_deployctl_v1_deployctl_proto_enumTypes[4]
+}
+
+func (x DockerConnectionState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DockerConnectionState.Descriptor instead.
+func (DockerConnectionState) EnumDescriptor() ([]byte, []int) {
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{4}
+}
+
 type Deployment struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Url           string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	RepoUrl       string                 `protobuf:"bytes,2,opt,name=repo_url,json=repoUrl,proto3" json:"repo_url,omitempty"`
 	Location      string                 `protobuf:"bytes,3,opt,name=location,proto3" json:"location,omitempty"`
 	ComposePath   string                 `protobuf:"bytes,4,opt,name=compose_path,json=composePath,proto3" json:"compose_path,omitempty"`
 	EnvPath       string                 `protobuf:"bytes,5,opt,name=env_path,json=envPath,proto3" json:"env_path,omitempty"`
@@ -69,9 +374,9 @@ func (x *Deployment) GetName() string {
 	return ""
 }
 
-func (x *Deployment) GetUrl() string {
+func (x *Deployment) GetRepoUrl() string {
 	if x != nil {
-		return x.Url
+		return x.RepoUrl
 	}
 	return ""
 }
@@ -376,7 +681,7 @@ func (x *DeploymentLogEntry) GetMessage() string {
 type DeploymentStatus struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Deployment       *Deployment            `protobuf:"bytes,1,opt,name=deployment,proto3" json:"deployment,omitempty"`
-	State            string                 `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"`
+	State            DeploymentState        `protobuf:"varint,2,opt,name=state,proto3,enum=deployctl.v1.DeploymentState" json:"state,omitempty"`
 	Containers       []*ContainerStatus     `protobuf:"bytes,3,rep,name=containers,proto3" json:"containers,omitempty"`
 	MissingServices  []string               `protobuf:"bytes,4,rep,name=missing_services,json=missingServices,proto3" json:"missing_services,omitempty"`
 	EnvNames         []string               `protobuf:"bytes,5,rep,name=env_names,json=envNames,proto3" json:"env_names,omitempty"`
@@ -425,11 +730,11 @@ func (x *DeploymentStatus) GetDeployment() *Deployment {
 	return nil
 }
 
-func (x *DeploymentStatus) GetState() string {
+func (x *DeploymentStatus) GetState() DeploymentState {
 	if x != nil {
 		return x.State
 	}
-	return ""
+	return DeploymentState_DEPLOYMENT_STATE_UNSPECIFIED
 }
 
 func (x *DeploymentStatus) GetContainers() []*ContainerStatus {
@@ -486,7 +791,7 @@ type ContainerStatus struct {
 	Service        string                 `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty"`
 	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Status         string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	State          string                 `protobuf:"bytes,4,opt,name=state,proto3" json:"state,omitempty"`
+	State          ContainerState         `protobuf:"varint,4,opt,name=state,proto3,enum=deployctl.v1.ContainerState" json:"state,omitempty"`
 	Image          string                 `protobuf:"bytes,5,opt,name=image,proto3" json:"image,omitempty"`
 	ImageId        string                 `protobuf:"bytes,6,opt,name=image_id,json=imageId,proto3" json:"image_id,omitempty"`
 	CreatedAtUnix  int64                  `protobuf:"varint,7,opt,name=created_at_unix,json=createdAtUnix,proto3" json:"created_at_unix,omitempty"`
@@ -547,11 +852,11 @@ func (x *ContainerStatus) GetStatus() string {
 	return ""
 }
 
-func (x *ContainerStatus) GetState() string {
+func (x *ContainerStatus) GetState() ContainerState {
 	if x != nil {
 		return x.State
 	}
-	return ""
+	return ContainerState_CONTAINER_STATE_UNSPECIFIED
 }
 
 func (x *ContainerStatus) GetImage() string {
@@ -669,26 +974,26 @@ func (x *ListDeploymentsResponse) GetDeployments() []*Deployment {
 	return nil
 }
 
-type ListDeploymentStatusesRequest struct {
+type ListDeploymentSummariesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListDeploymentStatusesRequest) Reset() {
-	*x = ListDeploymentStatusesRequest{}
+func (x *ListDeploymentSummariesRequest) Reset() {
+	*x = ListDeploymentSummariesRequest{}
 	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListDeploymentStatusesRequest) String() string {
+func (x *ListDeploymentSummariesRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListDeploymentStatusesRequest) ProtoMessage() {}
+func (*ListDeploymentSummariesRequest) ProtoMessage() {}
 
-func (x *ListDeploymentStatusesRequest) ProtoReflect() protoreflect.Message {
+func (x *ListDeploymentSummariesRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -700,32 +1005,32 @@ func (x *ListDeploymentStatusesRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListDeploymentStatusesRequest.ProtoReflect.Descriptor instead.
-func (*ListDeploymentStatusesRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListDeploymentSummariesRequest.ProtoReflect.Descriptor instead.
+func (*ListDeploymentSummariesRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{10}
 }
 
-type ListDeploymentStatusesResponse struct {
+type ListDeploymentSummariesResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Deployments   []*DeploymentListItem  `protobuf:"bytes,1,rep,name=deployments,proto3" json:"deployments,omitempty"`
+	Deployments   []*DeploymentSummary   `protobuf:"bytes,1,rep,name=deployments,proto3" json:"deployments,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListDeploymentStatusesResponse) Reset() {
-	*x = ListDeploymentStatusesResponse{}
+func (x *ListDeploymentSummariesResponse) Reset() {
+	*x = ListDeploymentSummariesResponse{}
 	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListDeploymentStatusesResponse) String() string {
+func (x *ListDeploymentSummariesResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListDeploymentStatusesResponse) ProtoMessage() {}
+func (*ListDeploymentSummariesResponse) ProtoMessage() {}
 
-func (x *ListDeploymentStatusesResponse) ProtoReflect() protoreflect.Message {
+func (x *ListDeploymentSummariesResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -737,40 +1042,40 @@ func (x *ListDeploymentStatusesResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListDeploymentStatusesResponse.ProtoReflect.Descriptor instead.
-func (*ListDeploymentStatusesResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListDeploymentSummariesResponse.ProtoReflect.Descriptor instead.
+func (*ListDeploymentSummariesResponse) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *ListDeploymentStatusesResponse) GetDeployments() []*DeploymentListItem {
+func (x *ListDeploymentSummariesResponse) GetDeployments() []*DeploymentSummary {
 	if x != nil {
 		return x.Deployments
 	}
 	return nil
 }
 
-type DeploymentListItem struct {
+type DeploymentSummary struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Deployment    *Deployment            `protobuf:"bytes,1,opt,name=deployment,proto3" json:"deployment,omitempty"`
-	State         string                 `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"`
+	State         DeploymentState        `protobuf:"varint,2,opt,name=state,proto3,enum=deployctl.v1.DeploymentState" json:"state,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DeploymentListItem) Reset() {
-	*x = DeploymentListItem{}
+func (x *DeploymentSummary) Reset() {
+	*x = DeploymentSummary{}
 	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeploymentListItem) String() string {
+func (x *DeploymentSummary) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeploymentListItem) ProtoMessage() {}
+func (*DeploymentSummary) ProtoMessage() {}
 
-func (x *DeploymentListItem) ProtoReflect() protoreflect.Message {
+func (x *DeploymentSummary) ProtoReflect() protoreflect.Message {
 	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -782,23 +1087,23 @@ func (x *DeploymentListItem) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeploymentListItem.ProtoReflect.Descriptor instead.
-func (*DeploymentListItem) Descriptor() ([]byte, []int) {
+// Deprecated: Use DeploymentSummary.ProtoReflect.Descriptor instead.
+func (*DeploymentSummary) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *DeploymentListItem) GetDeployment() *Deployment {
+func (x *DeploymentSummary) GetDeployment() *Deployment {
 	if x != nil {
 		return x.Deployment
 	}
 	return nil
 }
 
-func (x *DeploymentListItem) GetState() string {
+func (x *DeploymentSummary) GetState() DeploymentState {
 	if x != nil {
 		return x.State
 	}
-	return ""
+	return DeploymentState_DEPLOYMENT_STATE_UNSPECIFIED
 }
 
 type DeleteDeploymentRequest struct {
@@ -1568,9 +1873,9 @@ func (x *JobResponse) GetJobId() string {
 type Job struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Type           string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Type           JobType                `protobuf:"varint,2,opt,name=type,proto3,enum=deployctl.v1.JobType" json:"type,omitempty"`
 	DeploymentName string                 `protobuf:"bytes,3,opt,name=deployment_name,json=deploymentName,proto3" json:"deployment_name,omitempty"`
-	Status         string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	Status         JobStatus              `protobuf:"varint,4,opt,name=status,proto3,enum=deployctl.v1.JobStatus" json:"status,omitempty"`
 	Error          string                 `protobuf:"bytes,5,opt,name=error,proto3" json:"error,omitempty"`
 	CreatedAtUnix  int64                  `protobuf:"varint,6,opt,name=created_at_unix,json=createdAtUnix,proto3" json:"created_at_unix,omitempty"`
 	StartedAtUnix  int64                  `protobuf:"varint,7,opt,name=started_at_unix,json=startedAtUnix,proto3" json:"started_at_unix,omitempty"`
@@ -1616,11 +1921,11 @@ func (x *Job) GetId() string {
 	return ""
 }
 
-func (x *Job) GetType() string {
+func (x *Job) GetType() JobType {
 	if x != nil {
 		return x.Type
 	}
-	return ""
+	return JobType_JOB_TYPE_UNSPECIFIED
 }
 
 func (x *Job) GetDeploymentName() string {
@@ -1630,11 +1935,11 @@ func (x *Job) GetDeploymentName() string {
 	return ""
 }
 
-func (x *Job) GetStatus() string {
+func (x *Job) GetStatus() JobStatus {
 	if x != nil {
 		return x.Status
 	}
-	return ""
+	return JobStatus_JOB_STATUS_UNSPECIFIED
 }
 
 func (x *Job) GetError() string {
@@ -2153,16 +2458,101 @@ func (*HealthRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{38}
 }
 
-type HealthResponse struct {
+type DockerHealth struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	State         DockerConnectionState  `protobuf:"varint,1,opt,name=state,proto3,enum=deployctl.v1.DockerConnectionState" json:"state,omitempty"`
+	Host          string                 `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
+	ServerVersion string                 `protobuf:"bytes,3,opt,name=server_version,json=serverVersion,proto3" json:"server_version,omitempty"`
+	ApiVersion    string                 `protobuf:"bytes,4,opt,name=api_version,json=apiVersion,proto3" json:"api_version,omitempty"`
+	OsType        string                 `protobuf:"bytes,5,opt,name=os_type,json=osType,proto3" json:"os_type,omitempty"`
+	Error         string                 `protobuf:"bytes,6,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
+func (x *DockerHealth) Reset() {
+	*x = DockerHealth{}
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DockerHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DockerHealth) ProtoMessage() {}
+
+func (x *DockerHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DockerHealth.ProtoReflect.Descriptor instead.
+func (*DockerHealth) Descriptor() ([]byte, []int) {
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *DockerHealth) GetState() DockerConnectionState {
+	if x != nil {
+		return x.State
+	}
+	return DockerConnectionState_DOCKER_CONNECTION_STATE_UNSPECIFIED
+}
+
+func (x *DockerHealth) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *DockerHealth) GetServerVersion() string {
+	if x != nil {
+		return x.ServerVersion
+	}
+	return ""
+}
+
+func (x *DockerHealth) GetApiVersion() string {
+	if x != nil {
+		return x.ApiVersion
+	}
+	return ""
+}
+
+func (x *DockerHealth) GetOsType() string {
+	if x != nil {
+		return x.OsType
+	}
+	return ""
+}
+
+func (x *DockerHealth) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+type HealthResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	DaemonReachable bool                   `protobuf:"varint,1,opt,name=daemon_reachable,json=daemonReachable,proto3" json:"daemon_reachable,omitempty"`
+	Docker          *DockerHealth          `protobuf:"bytes,2,opt,name=docker,proto3" json:"docker,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
 func (x *HealthResponse) Reset() {
 	*x = HealthResponse{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[39]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2174,7 +2564,7 @@ func (x *HealthResponse) String() string {
 func (*HealthResponse) ProtoMessage() {}
 
 func (x *HealthResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[39]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2187,14 +2577,21 @@ func (x *HealthResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthResponse.ProtoReflect.Descriptor instead.
 func (*HealthResponse) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{39}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{40}
 }
 
-func (x *HealthResponse) GetStatus() string {
+func (x *HealthResponse) GetDaemonReachable() bool {
 	if x != nil {
-		return x.Status
+		return x.DaemonReachable
 	}
-	return ""
+	return false
+}
+
+func (x *HealthResponse) GetDocker() *DockerHealth {
+	if x != nil {
+		return x.Docker
+	}
+	return nil
 }
 
 type VersionRequest struct {
@@ -2205,7 +2602,7 @@ type VersionRequest struct {
 
 func (x *VersionRequest) Reset() {
 	*x = VersionRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[40]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2217,7 +2614,7 @@ func (x *VersionRequest) String() string {
 func (*VersionRequest) ProtoMessage() {}
 
 func (x *VersionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[40]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2230,7 +2627,7 @@ func (x *VersionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VersionRequest.ProtoReflect.Descriptor instead.
 func (*VersionRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{40}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{41}
 }
 
 type VersionResponse struct {
@@ -2242,7 +2639,7 @@ type VersionResponse struct {
 
 func (x *VersionResponse) Reset() {
 	*x = VersionResponse{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[41]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2254,7 +2651,7 @@ func (x *VersionResponse) String() string {
 func (*VersionResponse) ProtoMessage() {}
 
 func (x *VersionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[41]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2267,7 +2664,7 @@ func (x *VersionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VersionResponse.ProtoReflect.Descriptor instead.
 func (*VersionResponse) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{41}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *VersionResponse) GetVersion() string {
@@ -2285,7 +2682,7 @@ type CapabilitiesRequest struct {
 
 func (x *CapabilitiesRequest) Reset() {
 	*x = CapabilitiesRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[42]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2297,7 +2694,7 @@ func (x *CapabilitiesRequest) String() string {
 func (*CapabilitiesRequest) ProtoMessage() {}
 
 func (x *CapabilitiesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[42]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2310,7 +2707,7 @@ func (x *CapabilitiesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CapabilitiesRequest.ProtoReflect.Descriptor instead.
 func (*CapabilitiesRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{42}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{43}
 }
 
 type CapabilitiesResponse struct {
@@ -2322,7 +2719,7 @@ type CapabilitiesResponse struct {
 
 func (x *CapabilitiesResponse) Reset() {
 	*x = CapabilitiesResponse{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[43]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2334,7 +2731,7 @@ func (x *CapabilitiesResponse) String() string {
 func (*CapabilitiesResponse) ProtoMessage() {}
 
 func (x *CapabilitiesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[43]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2347,7 +2744,7 @@ func (x *CapabilitiesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CapabilitiesResponse.ProtoReflect.Descriptor instead.
 func (*CapabilitiesResponse) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{43}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *CapabilitiesResponse) GetCapabilities() []string {
@@ -2361,11 +2758,11 @@ var File_api_deployctl_v1_deployctl_proto protoreflect.FileDescriptor
 
 const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"\n" +
-	" api/deployctl/v1/deployctl.proto\x12\fdeployctl.v1\"\x8c\x01\n" +
+	" api/deployctl/v1/deployctl.proto\x12\fdeployctl.v1\"\x95\x01\n" +
 	"\n" +
 	"Deployment\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
-	"\x03url\x18\x02 \x01(\tR\x03url\x12\x1a\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n" +
+	"\brepo_url\x18\x02 \x01(\tR\arepoUrl\x12\x1a\n" +
 	"\blocation\x18\x03 \x01(\tR\blocation\x12!\n" +
 	"\fcompose_path\x18\x04 \x01(\tR\vcomposePath\x12\x19\n" +
 	"\benv_path\x18\x05 \x01(\tR\aenvPath\"\x9b\x01\n" +
@@ -2385,12 +2782,12 @@ const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"\x05lines\x18\x03 \x01(\x05R\x05lines\"L\n" +
 	"\x12DeploymentLogEntry\x12\x1c\n" +
 	"\tcontainer\x18\x01 \x01(\tR\tcontainer\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\xb0\x03\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\xcf\x03\n" +
 	"\x10DeploymentStatus\x128\n" +
 	"\n" +
 	"deployment\x18\x01 \x01(\v2\x18.deployctl.v1.DeploymentR\n" +
-	"deployment\x12\x14\n" +
-	"\x05state\x18\x02 \x01(\tR\x05state\x12=\n" +
+	"deployment\x123\n" +
+	"\x05state\x18\x02 \x01(\x0e2\x1d.deployctl.v1.DeploymentStateR\x05state\x12=\n" +
 	"\n" +
 	"containers\x18\x03 \x03(\v2\x1d.deployctl.v1.ContainerStatusR\n" +
 	"containers\x12)\n" +
@@ -2400,12 +2797,12 @@ const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"latest_job\x18\x06 \x01(\v2\x11.deployctl.v1.JobR\tlatestJob\x12=\n" +
 	"\x11latest_update_job\x18\a \x01(\v2\x11.deployctl.v1.JobR\x0flatestUpdateJob\x12,\n" +
 	"\x12running_since_unix\x18\b \x01(\x03R\x10runningSinceUnix\x12&\n" +
-	"\x0fstopped_at_unix\x18\t \x01(\x03R\rstoppedAtUnix\"\x98\x02\n" +
+	"\x0fstopped_at_unix\x18\t \x01(\x03R\rstoppedAtUnix\"\xb6\x02\n" +
 	"\x0fContainerStatus\x12\x18\n" +
 	"\aservice\x18\x01 \x01(\tR\aservice\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
-	"\x06status\x18\x03 \x01(\tR\x06status\x12\x14\n" +
-	"\x05state\x18\x04 \x01(\tR\x05state\x12\x14\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\x122\n" +
+	"\x05state\x18\x04 \x01(\x0e2\x1c.deployctl.v1.ContainerStateR\x05state\x12\x14\n" +
 	"\x05image\x18\x05 \x01(\tR\x05image\x12\x19\n" +
 	"\bimage_id\x18\x06 \x01(\tR\aimageId\x12&\n" +
 	"\x0fcreated_at_unix\x18\a \x01(\x03R\rcreatedAtUnix\x12&\n" +
@@ -2413,15 +2810,15 @@ const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"\x10finished_at_unix\x18\t \x01(\x03R\x0efinishedAtUnix\"\x18\n" +
 	"\x16ListDeploymentsRequest\"U\n" +
 	"\x17ListDeploymentsResponse\x12:\n" +
-	"\vdeployments\x18\x01 \x03(\v2\x18.deployctl.v1.DeploymentR\vdeployments\"\x1f\n" +
-	"\x1dListDeploymentStatusesRequest\"d\n" +
-	"\x1eListDeploymentStatusesResponse\x12B\n" +
-	"\vdeployments\x18\x01 \x03(\v2 .deployctl.v1.DeploymentListItemR\vdeployments\"d\n" +
-	"\x12DeploymentListItem\x128\n" +
+	"\vdeployments\x18\x01 \x03(\v2\x18.deployctl.v1.DeploymentR\vdeployments\" \n" +
+	"\x1eListDeploymentSummariesRequest\"d\n" +
+	"\x1fListDeploymentSummariesResponse\x12A\n" +
+	"\vdeployments\x18\x01 \x03(\v2\x1f.deployctl.v1.DeploymentSummaryR\vdeployments\"\x82\x01\n" +
+	"\x11DeploymentSummary\x128\n" +
 	"\n" +
 	"deployment\x18\x01 \x01(\v2\x18.deployctl.v1.DeploymentR\n" +
-	"deployment\x12\x14\n" +
-	"\x05state\x18\x02 \x01(\tR\x05state\"B\n" +
+	"deployment\x123\n" +
+	"\x05state\x18\x02 \x01(\x0e2\x1d.deployctl.v1.DeploymentStateR\x05state\"B\n" +
 	"\x17DeleteDeploymentRequest\x12'\n" +
 	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\"A\n" +
 	"\x16BuildDeploymentRequest\x12'\n" +
@@ -2468,12 +2865,12 @@ const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"\x05names\x18\x02 \x03(\tR\x05names\x12\x19\n" +
 	"\benv_file\x18\x03 \x01(\tR\aenvFile\"$\n" +
 	"\vJobResponse\x12\x15\n" +
-	"\x06job_id\x18\x01 \x01(\tR\x05jobId\"\xfa\x01\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\"\xaa\x02\n" +
 	"\x03Job\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04type\x18\x02 \x01(\tR\x04type\x12'\n" +
-	"\x0fdeployment_name\x18\x03 \x01(\tR\x0edeploymentName\x12\x16\n" +
-	"\x06status\x18\x04 \x01(\tR\x06status\x12\x14\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12)\n" +
+	"\x04type\x18\x02 \x01(\x0e2\x15.deployctl.v1.JobTypeR\x04type\x12'\n" +
+	"\x0fdeployment_name\x18\x03 \x01(\tR\x0edeploymentName\x12/\n" +
+	"\x06status\x18\x04 \x01(\x0e2\x17.deployctl.v1.JobStatusR\x06status\x12\x14\n" +
 	"\x05error\x18\x05 \x01(\tR\x05error\x12&\n" +
 	"\x0fcreated_at_unix\x18\x06 \x01(\x03R\rcreatedAtUnix\x12&\n" +
 	"\x0fstarted_at_unix\x18\a \x01(\x03R\rstartedAtUnix\x12(\n" +
@@ -2503,22 +2900,72 @@ const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"\bsequence\x18\x02 \x01(\x03R\bsequence\x12\x18\n" +
 	"\amessage\x18\x03 \x01(\tR\amessage\x12#\n" +
 	"\x03job\x18\x04 \x01(\v2\x11.deployctl.v1.JobR\x03job\"\x0f\n" +
-	"\rHealthRequest\"(\n" +
-	"\x0eHealthResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status\"\x10\n" +
+	"\rHealthRequest\"\xd4\x01\n" +
+	"\fDockerHealth\x129\n" +
+	"\x05state\x18\x01 \x01(\x0e2#.deployctl.v1.DockerConnectionStateR\x05state\x12\x12\n" +
+	"\x04host\x18\x02 \x01(\tR\x04host\x12%\n" +
+	"\x0eserver_version\x18\x03 \x01(\tR\rserverVersion\x12\x1f\n" +
+	"\vapi_version\x18\x04 \x01(\tR\n" +
+	"apiVersion\x12\x17\n" +
+	"\aos_type\x18\x05 \x01(\tR\x06osType\x12\x14\n" +
+	"\x05error\x18\x06 \x01(\tR\x05error\"o\n" +
+	"\x0eHealthResponse\x12)\n" +
+	"\x10daemon_reachable\x18\x01 \x01(\bR\x0fdaemonReachable\x122\n" +
+	"\x06docker\x18\x02 \x01(\v2\x1a.deployctl.v1.DockerHealthR\x06docker\"\x10\n" +
 	"\x0eVersionRequest\"+\n" +
 	"\x0fVersionResponse\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\tR\aversion\"\x15\n" +
 	"\x13CapabilitiesRequest\":\n" +
 	"\x14CapabilitiesResponse\x12\"\n" +
-	"\fcapabilities\x18\x01 \x03(\tR\fcapabilities2\xd5\b\n" +
+	"\fcapabilities\x18\x01 \x03(\tR\fcapabilities*\xd4\x01\n" +
+	"\x0fDeploymentState\x12 \n" +
+	"\x1cDEPLOYMENT_STATE_UNSPECIFIED\x10\x00\x12#\n" +
+	"\x1fDEPLOYMENT_STATE_NOT_CONFIGURED\x10\x01\x12 \n" +
+	"\x1cDEPLOYMENT_STATE_NOT_CREATED\x10\x02\x12\x1c\n" +
+	"\x18DEPLOYMENT_STATE_RUNNING\x10\x03\x12\x1c\n" +
+	"\x18DEPLOYMENT_STATE_PARTIAL\x10\x04\x12\x1c\n" +
+	"\x18DEPLOYMENT_STATE_STOPPED\x10\x05*\xfb\x01\n" +
+	"\x0eContainerState\x12\x1f\n" +
+	"\x1bCONTAINER_STATE_UNSPECIFIED\x10\x00\x12\x1b\n" +
+	"\x17CONTAINER_STATE_CREATED\x10\x01\x12\x1e\n" +
+	"\x1aCONTAINER_STATE_RESTARTING\x10\x02\x12\x1b\n" +
+	"\x17CONTAINER_STATE_RUNNING\x10\x03\x12\x1c\n" +
+	"\x18CONTAINER_STATE_REMOVING\x10\x04\x12\x1a\n" +
+	"\x16CONTAINER_STATE_PAUSED\x10\x05\x12\x1a\n" +
+	"\x16CONTAINER_STATE_EXITED\x10\x06\x12\x18\n" +
+	"\x14CONTAINER_STATE_DEAD\x10\a*\xfb\x01\n" +
+	"\aJobType\x12\x18\n" +
+	"\x14JOB_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
+	"\x0fJOB_TYPE_CREATE\x10\x01\x12\x13\n" +
+	"\x0fJOB_TYPE_DELETE\x10\x02\x12\x12\n" +
+	"\x0eJOB_TYPE_BUILD\x10\x03\x12\x13\n" +
+	"\x0fJOB_TYPE_UPDATE\x10\x04\x12\x13\n" +
+	"\x0fJOB_TYPE_DEPLOY\x10\x05\x12\x14\n" +
+	"\x10JOB_TYPE_RESTART\x10\x06\x12\x11\n" +
+	"\rJOB_TYPE_STOP\x10\a\x12\x14\n" +
+	"\x10JOB_TYPE_ENV_SET\x10\b\x12\x17\n" +
+	"\x13JOB_TYPE_ENV_IMPORT\x10\t\x12\x16\n" +
+	"\x12JOB_TYPE_ENV_UNSET\x10\n" +
+	"*\xa1\x01\n" +
+	"\tJobStatus\x12\x1a\n" +
+	"\x16JOB_STATUS_UNSPECIFIED\x10\x00\x12\x15\n" +
+	"\x11JOB_STATUS_QUEUED\x10\x01\x12\x16\n" +
+	"\x12JOB_STATUS_RUNNING\x10\x02\x12\x18\n" +
+	"\x14JOB_STATUS_SUCCEEDED\x10\x03\x12\x15\n" +
+	"\x11JOB_STATUS_FAILED\x10\x04\x12\x18\n" +
+	"\x14JOB_STATUS_CANCELLED\x10\x05*\xc1\x01\n" +
+	"\x15DockerConnectionState\x12'\n" +
+	"#DOCKER_CONNECTION_STATE_UNSPECIFIED\x10\x00\x12%\n" +
+	"!DOCKER_CONNECTION_STATE_CONNECTED\x10\x01\x12/\n" +
+	"+DOCKER_CONNECTION_STATE_PARTIALLY_CONNECTED\x10\x02\x12'\n" +
+	"#DOCKER_CONNECTION_STATE_UNAVAILABLE\x10\x032\xd8\b\n" +
 	"\x11DeploymentService\x12T\n" +
 	"\x10CreateDeployment\x12%.deployctl.v1.CreateDeploymentRequest\x1a\x19.deployctl.v1.JobResponse\x12M\n" +
 	"\rGetDeployment\x12\".deployctl.v1.GetDeploymentRequest\x1a\x18.deployctl.v1.Deployment\x12_\n" +
 	"\x13GetDeploymentStatus\x12(.deployctl.v1.GetDeploymentStatusRequest\x1a\x1e.deployctl.v1.DeploymentStatus\x12e\n" +
 	"\x14StreamDeploymentLogs\x12).deployctl.v1.StreamDeploymentLogsRequest\x1a .deployctl.v1.DeploymentLogEntry0\x01\x12^\n" +
-	"\x0fListDeployments\x12$.deployctl.v1.ListDeploymentsRequest\x1a%.deployctl.v1.ListDeploymentsResponse\x12s\n" +
-	"\x16ListDeploymentStatuses\x12+.deployctl.v1.ListDeploymentStatusesRequest\x1a,.deployctl.v1.ListDeploymentStatusesResponse\x12T\n" +
+	"\x0fListDeployments\x12$.deployctl.v1.ListDeploymentsRequest\x1a%.deployctl.v1.ListDeploymentsResponse\x12v\n" +
+	"\x17ListDeploymentSummaries\x12,.deployctl.v1.ListDeploymentSummariesRequest\x1a-.deployctl.v1.ListDeploymentSummariesResponse\x12T\n" +
 	"\x10DeleteDeployment\x12%.deployctl.v1.DeleteDeploymentRequest\x1a\x19.deployctl.v1.JobResponse\x12R\n" +
 	"\x0fBuildDeployment\x12$.deployctl.v1.BuildDeploymentRequest\x1a\x19.deployctl.v1.JobResponse\x12T\n" +
 	"\x10UpdateDeployment\x12%.deployctl.v1.UpdateDeploymentRequest\x1a\x19.deployctl.v1.JobResponse\x12T\n" +
@@ -2556,122 +3003,136 @@ func file_api_deployctl_v1_deployctl_proto_rawDescGZIP() []byte {
 	return file_api_deployctl_v1_deployctl_proto_rawDescData
 }
 
-var file_api_deployctl_v1_deployctl_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
+var file_api_deployctl_v1_deployctl_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_api_deployctl_v1_deployctl_proto_msgTypes = make([]protoimpl.MessageInfo, 46)
 var file_api_deployctl_v1_deployctl_proto_goTypes = []any{
-	(*Deployment)(nil),                     // 0: deployctl.v1.Deployment
-	(*CreateDeploymentRequest)(nil),        // 1: deployctl.v1.CreateDeploymentRequest
-	(*GetDeploymentRequest)(nil),           // 2: deployctl.v1.GetDeploymentRequest
-	(*GetDeploymentStatusRequest)(nil),     // 3: deployctl.v1.GetDeploymentStatusRequest
-	(*StreamDeploymentLogsRequest)(nil),    // 4: deployctl.v1.StreamDeploymentLogsRequest
-	(*DeploymentLogEntry)(nil),             // 5: deployctl.v1.DeploymentLogEntry
-	(*DeploymentStatus)(nil),               // 6: deployctl.v1.DeploymentStatus
-	(*ContainerStatus)(nil),                // 7: deployctl.v1.ContainerStatus
-	(*ListDeploymentsRequest)(nil),         // 8: deployctl.v1.ListDeploymentsRequest
-	(*ListDeploymentsResponse)(nil),        // 9: deployctl.v1.ListDeploymentsResponse
-	(*ListDeploymentStatusesRequest)(nil),  // 10: deployctl.v1.ListDeploymentStatusesRequest
-	(*ListDeploymentStatusesResponse)(nil), // 11: deployctl.v1.ListDeploymentStatusesResponse
-	(*DeploymentListItem)(nil),             // 12: deployctl.v1.DeploymentListItem
-	(*DeleteDeploymentRequest)(nil),        // 13: deployctl.v1.DeleteDeploymentRequest
-	(*BuildDeploymentRequest)(nil),         // 14: deployctl.v1.BuildDeploymentRequest
-	(*UpdateDeploymentRequest)(nil),        // 15: deployctl.v1.UpdateDeploymentRequest
-	(*DeployDeploymentRequest)(nil),        // 16: deployctl.v1.DeployDeploymentRequest
-	(*RestartDeploymentRequest)(nil),       // 17: deployctl.v1.RestartDeploymentRequest
-	(*StopDeploymentRequest)(nil),          // 18: deployctl.v1.StopDeploymentRequest
-	(*ListEnvNamesRequest)(nil),            // 19: deployctl.v1.ListEnvNamesRequest
-	(*ListEnvNamesResponse)(nil),           // 20: deployctl.v1.ListEnvNamesResponse
-	(*ListEnvFilesRequest)(nil),            // 21: deployctl.v1.ListEnvFilesRequest
-	(*EnvFileVariables)(nil),               // 22: deployctl.v1.EnvFileVariables
-	(*ListEnvFilesResponse)(nil),           // 23: deployctl.v1.ListEnvFilesResponse
-	(*SetEnvRequest)(nil),                  // 24: deployctl.v1.SetEnvRequest
-	(*ImportEnvFileRequest)(nil),           // 25: deployctl.v1.ImportEnvFileRequest
-	(*UnsetEnvRequest)(nil),                // 26: deployctl.v1.UnsetEnvRequest
-	(*JobResponse)(nil),                    // 27: deployctl.v1.JobResponse
-	(*Job)(nil),                            // 28: deployctl.v1.Job
-	(*GetJobRequest)(nil),                  // 29: deployctl.v1.GetJobRequest
-	(*ListJobsRequest)(nil),                // 30: deployctl.v1.ListJobsRequest
-	(*ListJobsResponse)(nil),               // 31: deployctl.v1.ListJobsResponse
-	(*ListJobLogsRequest)(nil),             // 32: deployctl.v1.ListJobLogsRequest
-	(*ListJobLogsResponse)(nil),            // 33: deployctl.v1.ListJobLogsResponse
-	(*WatchJobRequest)(nil),                // 34: deployctl.v1.WatchJobRequest
-	(*CancelJobRequest)(nil),               // 35: deployctl.v1.CancelJobRequest
-	(*JobLog)(nil),                         // 36: deployctl.v1.JobLog
-	(*JobEvent)(nil),                       // 37: deployctl.v1.JobEvent
-	(*HealthRequest)(nil),                  // 38: deployctl.v1.HealthRequest
-	(*HealthResponse)(nil),                 // 39: deployctl.v1.HealthResponse
-	(*VersionRequest)(nil),                 // 40: deployctl.v1.VersionRequest
-	(*VersionResponse)(nil),                // 41: deployctl.v1.VersionResponse
-	(*CapabilitiesRequest)(nil),            // 42: deployctl.v1.CapabilitiesRequest
-	(*CapabilitiesResponse)(nil),           // 43: deployctl.v1.CapabilitiesResponse
-	nil,                                    // 44: deployctl.v1.SetEnvRequest.VariablesEntry
+	(DeploymentState)(0),                    // 0: deployctl.v1.DeploymentState
+	(ContainerState)(0),                     // 1: deployctl.v1.ContainerState
+	(JobType)(0),                            // 2: deployctl.v1.JobType
+	(JobStatus)(0),                          // 3: deployctl.v1.JobStatus
+	(DockerConnectionState)(0),              // 4: deployctl.v1.DockerConnectionState
+	(*Deployment)(nil),                      // 5: deployctl.v1.Deployment
+	(*CreateDeploymentRequest)(nil),         // 6: deployctl.v1.CreateDeploymentRequest
+	(*GetDeploymentRequest)(nil),            // 7: deployctl.v1.GetDeploymentRequest
+	(*GetDeploymentStatusRequest)(nil),      // 8: deployctl.v1.GetDeploymentStatusRequest
+	(*StreamDeploymentLogsRequest)(nil),     // 9: deployctl.v1.StreamDeploymentLogsRequest
+	(*DeploymentLogEntry)(nil),              // 10: deployctl.v1.DeploymentLogEntry
+	(*DeploymentStatus)(nil),                // 11: deployctl.v1.DeploymentStatus
+	(*ContainerStatus)(nil),                 // 12: deployctl.v1.ContainerStatus
+	(*ListDeploymentsRequest)(nil),          // 13: deployctl.v1.ListDeploymentsRequest
+	(*ListDeploymentsResponse)(nil),         // 14: deployctl.v1.ListDeploymentsResponse
+	(*ListDeploymentSummariesRequest)(nil),  // 15: deployctl.v1.ListDeploymentSummariesRequest
+	(*ListDeploymentSummariesResponse)(nil), // 16: deployctl.v1.ListDeploymentSummariesResponse
+	(*DeploymentSummary)(nil),               // 17: deployctl.v1.DeploymentSummary
+	(*DeleteDeploymentRequest)(nil),         // 18: deployctl.v1.DeleteDeploymentRequest
+	(*BuildDeploymentRequest)(nil),          // 19: deployctl.v1.BuildDeploymentRequest
+	(*UpdateDeploymentRequest)(nil),         // 20: deployctl.v1.UpdateDeploymentRequest
+	(*DeployDeploymentRequest)(nil),         // 21: deployctl.v1.DeployDeploymentRequest
+	(*RestartDeploymentRequest)(nil),        // 22: deployctl.v1.RestartDeploymentRequest
+	(*StopDeploymentRequest)(nil),           // 23: deployctl.v1.StopDeploymentRequest
+	(*ListEnvNamesRequest)(nil),             // 24: deployctl.v1.ListEnvNamesRequest
+	(*ListEnvNamesResponse)(nil),            // 25: deployctl.v1.ListEnvNamesResponse
+	(*ListEnvFilesRequest)(nil),             // 26: deployctl.v1.ListEnvFilesRequest
+	(*EnvFileVariables)(nil),                // 27: deployctl.v1.EnvFileVariables
+	(*ListEnvFilesResponse)(nil),            // 28: deployctl.v1.ListEnvFilesResponse
+	(*SetEnvRequest)(nil),                   // 29: deployctl.v1.SetEnvRequest
+	(*ImportEnvFileRequest)(nil),            // 30: deployctl.v1.ImportEnvFileRequest
+	(*UnsetEnvRequest)(nil),                 // 31: deployctl.v1.UnsetEnvRequest
+	(*JobResponse)(nil),                     // 32: deployctl.v1.JobResponse
+	(*Job)(nil),                             // 33: deployctl.v1.Job
+	(*GetJobRequest)(nil),                   // 34: deployctl.v1.GetJobRequest
+	(*ListJobsRequest)(nil),                 // 35: deployctl.v1.ListJobsRequest
+	(*ListJobsResponse)(nil),                // 36: deployctl.v1.ListJobsResponse
+	(*ListJobLogsRequest)(nil),              // 37: deployctl.v1.ListJobLogsRequest
+	(*ListJobLogsResponse)(nil),             // 38: deployctl.v1.ListJobLogsResponse
+	(*WatchJobRequest)(nil),                 // 39: deployctl.v1.WatchJobRequest
+	(*CancelJobRequest)(nil),                // 40: deployctl.v1.CancelJobRequest
+	(*JobLog)(nil),                          // 41: deployctl.v1.JobLog
+	(*JobEvent)(nil),                        // 42: deployctl.v1.JobEvent
+	(*HealthRequest)(nil),                   // 43: deployctl.v1.HealthRequest
+	(*DockerHealth)(nil),                    // 44: deployctl.v1.DockerHealth
+	(*HealthResponse)(nil),                  // 45: deployctl.v1.HealthResponse
+	(*VersionRequest)(nil),                  // 46: deployctl.v1.VersionRequest
+	(*VersionResponse)(nil),                 // 47: deployctl.v1.VersionResponse
+	(*CapabilitiesRequest)(nil),             // 48: deployctl.v1.CapabilitiesRequest
+	(*CapabilitiesResponse)(nil),            // 49: deployctl.v1.CapabilitiesResponse
+	nil,                                     // 50: deployctl.v1.SetEnvRequest.VariablesEntry
 }
 var file_api_deployctl_v1_deployctl_proto_depIdxs = []int32{
-	0,  // 0: deployctl.v1.DeploymentStatus.deployment:type_name -> deployctl.v1.Deployment
-	7,  // 1: deployctl.v1.DeploymentStatus.containers:type_name -> deployctl.v1.ContainerStatus
-	28, // 2: deployctl.v1.DeploymentStatus.latest_job:type_name -> deployctl.v1.Job
-	28, // 3: deployctl.v1.DeploymentStatus.latest_update_job:type_name -> deployctl.v1.Job
-	0,  // 4: deployctl.v1.ListDeploymentsResponse.deployments:type_name -> deployctl.v1.Deployment
-	12, // 5: deployctl.v1.ListDeploymentStatusesResponse.deployments:type_name -> deployctl.v1.DeploymentListItem
-	0,  // 6: deployctl.v1.DeploymentListItem.deployment:type_name -> deployctl.v1.Deployment
-	22, // 7: deployctl.v1.ListEnvFilesResponse.env_files:type_name -> deployctl.v1.EnvFileVariables
-	44, // 8: deployctl.v1.SetEnvRequest.variables:type_name -> deployctl.v1.SetEnvRequest.VariablesEntry
-	28, // 9: deployctl.v1.ListJobsResponse.jobs:type_name -> deployctl.v1.Job
-	36, // 10: deployctl.v1.ListJobLogsResponse.logs:type_name -> deployctl.v1.JobLog
-	28, // 11: deployctl.v1.JobEvent.job:type_name -> deployctl.v1.Job
-	1,  // 12: deployctl.v1.DeploymentService.CreateDeployment:input_type -> deployctl.v1.CreateDeploymentRequest
-	2,  // 13: deployctl.v1.DeploymentService.GetDeployment:input_type -> deployctl.v1.GetDeploymentRequest
-	3,  // 14: deployctl.v1.DeploymentService.GetDeploymentStatus:input_type -> deployctl.v1.GetDeploymentStatusRequest
-	4,  // 15: deployctl.v1.DeploymentService.StreamDeploymentLogs:input_type -> deployctl.v1.StreamDeploymentLogsRequest
-	8,  // 16: deployctl.v1.DeploymentService.ListDeployments:input_type -> deployctl.v1.ListDeploymentsRequest
-	10, // 17: deployctl.v1.DeploymentService.ListDeploymentStatuses:input_type -> deployctl.v1.ListDeploymentStatusesRequest
-	13, // 18: deployctl.v1.DeploymentService.DeleteDeployment:input_type -> deployctl.v1.DeleteDeploymentRequest
-	14, // 19: deployctl.v1.DeploymentService.BuildDeployment:input_type -> deployctl.v1.BuildDeploymentRequest
-	15, // 20: deployctl.v1.DeploymentService.UpdateDeployment:input_type -> deployctl.v1.UpdateDeploymentRequest
-	16, // 21: deployctl.v1.DeploymentService.DeployDeployment:input_type -> deployctl.v1.DeployDeploymentRequest
-	17, // 22: deployctl.v1.DeploymentService.RestartDeployment:input_type -> deployctl.v1.RestartDeploymentRequest
-	18, // 23: deployctl.v1.DeploymentService.StopDeployment:input_type -> deployctl.v1.StopDeploymentRequest
-	19, // 24: deployctl.v1.EnvService.ListEnvNames:input_type -> deployctl.v1.ListEnvNamesRequest
-	21, // 25: deployctl.v1.EnvService.ListEnvFiles:input_type -> deployctl.v1.ListEnvFilesRequest
-	24, // 26: deployctl.v1.EnvService.SetEnv:input_type -> deployctl.v1.SetEnvRequest
-	25, // 27: deployctl.v1.EnvService.ImportEnvFile:input_type -> deployctl.v1.ImportEnvFileRequest
-	26, // 28: deployctl.v1.EnvService.UnsetEnv:input_type -> deployctl.v1.UnsetEnvRequest
-	29, // 29: deployctl.v1.JobService.GetJob:input_type -> deployctl.v1.GetJobRequest
-	30, // 30: deployctl.v1.JobService.ListJobs:input_type -> deployctl.v1.ListJobsRequest
-	32, // 31: deployctl.v1.JobService.ListJobLogs:input_type -> deployctl.v1.ListJobLogsRequest
-	34, // 32: deployctl.v1.JobService.WatchJob:input_type -> deployctl.v1.WatchJobRequest
-	35, // 33: deployctl.v1.JobService.CancelJob:input_type -> deployctl.v1.CancelJobRequest
-	38, // 34: deployctl.v1.SystemService.Health:input_type -> deployctl.v1.HealthRequest
-	40, // 35: deployctl.v1.SystemService.Version:input_type -> deployctl.v1.VersionRequest
-	42, // 36: deployctl.v1.SystemService.Capabilities:input_type -> deployctl.v1.CapabilitiesRequest
-	27, // 37: deployctl.v1.DeploymentService.CreateDeployment:output_type -> deployctl.v1.JobResponse
-	0,  // 38: deployctl.v1.DeploymentService.GetDeployment:output_type -> deployctl.v1.Deployment
-	6,  // 39: deployctl.v1.DeploymentService.GetDeploymentStatus:output_type -> deployctl.v1.DeploymentStatus
-	5,  // 40: deployctl.v1.DeploymentService.StreamDeploymentLogs:output_type -> deployctl.v1.DeploymentLogEntry
-	9,  // 41: deployctl.v1.DeploymentService.ListDeployments:output_type -> deployctl.v1.ListDeploymentsResponse
-	11, // 42: deployctl.v1.DeploymentService.ListDeploymentStatuses:output_type -> deployctl.v1.ListDeploymentStatusesResponse
-	27, // 43: deployctl.v1.DeploymentService.DeleteDeployment:output_type -> deployctl.v1.JobResponse
-	27, // 44: deployctl.v1.DeploymentService.BuildDeployment:output_type -> deployctl.v1.JobResponse
-	27, // 45: deployctl.v1.DeploymentService.UpdateDeployment:output_type -> deployctl.v1.JobResponse
-	27, // 46: deployctl.v1.DeploymentService.DeployDeployment:output_type -> deployctl.v1.JobResponse
-	27, // 47: deployctl.v1.DeploymentService.RestartDeployment:output_type -> deployctl.v1.JobResponse
-	27, // 48: deployctl.v1.DeploymentService.StopDeployment:output_type -> deployctl.v1.JobResponse
-	20, // 49: deployctl.v1.EnvService.ListEnvNames:output_type -> deployctl.v1.ListEnvNamesResponse
-	23, // 50: deployctl.v1.EnvService.ListEnvFiles:output_type -> deployctl.v1.ListEnvFilesResponse
-	27, // 51: deployctl.v1.EnvService.SetEnv:output_type -> deployctl.v1.JobResponse
-	27, // 52: deployctl.v1.EnvService.ImportEnvFile:output_type -> deployctl.v1.JobResponse
-	27, // 53: deployctl.v1.EnvService.UnsetEnv:output_type -> deployctl.v1.JobResponse
-	28, // 54: deployctl.v1.JobService.GetJob:output_type -> deployctl.v1.Job
-	31, // 55: deployctl.v1.JobService.ListJobs:output_type -> deployctl.v1.ListJobsResponse
-	33, // 56: deployctl.v1.JobService.ListJobLogs:output_type -> deployctl.v1.ListJobLogsResponse
-	37, // 57: deployctl.v1.JobService.WatchJob:output_type -> deployctl.v1.JobEvent
-	28, // 58: deployctl.v1.JobService.CancelJob:output_type -> deployctl.v1.Job
-	39, // 59: deployctl.v1.SystemService.Health:output_type -> deployctl.v1.HealthResponse
-	41, // 60: deployctl.v1.SystemService.Version:output_type -> deployctl.v1.VersionResponse
-	43, // 61: deployctl.v1.SystemService.Capabilities:output_type -> deployctl.v1.CapabilitiesResponse
-	37, // [37:62] is the sub-list for method output_type
-	12, // [12:37] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	5,  // 0: deployctl.v1.DeploymentStatus.deployment:type_name -> deployctl.v1.Deployment
+	0,  // 1: deployctl.v1.DeploymentStatus.state:type_name -> deployctl.v1.DeploymentState
+	12, // 2: deployctl.v1.DeploymentStatus.containers:type_name -> deployctl.v1.ContainerStatus
+	33, // 3: deployctl.v1.DeploymentStatus.latest_job:type_name -> deployctl.v1.Job
+	33, // 4: deployctl.v1.DeploymentStatus.latest_update_job:type_name -> deployctl.v1.Job
+	1,  // 5: deployctl.v1.ContainerStatus.state:type_name -> deployctl.v1.ContainerState
+	5,  // 6: deployctl.v1.ListDeploymentsResponse.deployments:type_name -> deployctl.v1.Deployment
+	17, // 7: deployctl.v1.ListDeploymentSummariesResponse.deployments:type_name -> deployctl.v1.DeploymentSummary
+	5,  // 8: deployctl.v1.DeploymentSummary.deployment:type_name -> deployctl.v1.Deployment
+	0,  // 9: deployctl.v1.DeploymentSummary.state:type_name -> deployctl.v1.DeploymentState
+	27, // 10: deployctl.v1.ListEnvFilesResponse.env_files:type_name -> deployctl.v1.EnvFileVariables
+	50, // 11: deployctl.v1.SetEnvRequest.variables:type_name -> deployctl.v1.SetEnvRequest.VariablesEntry
+	2,  // 12: deployctl.v1.Job.type:type_name -> deployctl.v1.JobType
+	3,  // 13: deployctl.v1.Job.status:type_name -> deployctl.v1.JobStatus
+	33, // 14: deployctl.v1.ListJobsResponse.jobs:type_name -> deployctl.v1.Job
+	41, // 15: deployctl.v1.ListJobLogsResponse.logs:type_name -> deployctl.v1.JobLog
+	33, // 16: deployctl.v1.JobEvent.job:type_name -> deployctl.v1.Job
+	4,  // 17: deployctl.v1.DockerHealth.state:type_name -> deployctl.v1.DockerConnectionState
+	44, // 18: deployctl.v1.HealthResponse.docker:type_name -> deployctl.v1.DockerHealth
+	6,  // 19: deployctl.v1.DeploymentService.CreateDeployment:input_type -> deployctl.v1.CreateDeploymentRequest
+	7,  // 20: deployctl.v1.DeploymentService.GetDeployment:input_type -> deployctl.v1.GetDeploymentRequest
+	8,  // 21: deployctl.v1.DeploymentService.GetDeploymentStatus:input_type -> deployctl.v1.GetDeploymentStatusRequest
+	9,  // 22: deployctl.v1.DeploymentService.StreamDeploymentLogs:input_type -> deployctl.v1.StreamDeploymentLogsRequest
+	13, // 23: deployctl.v1.DeploymentService.ListDeployments:input_type -> deployctl.v1.ListDeploymentsRequest
+	15, // 24: deployctl.v1.DeploymentService.ListDeploymentSummaries:input_type -> deployctl.v1.ListDeploymentSummariesRequest
+	18, // 25: deployctl.v1.DeploymentService.DeleteDeployment:input_type -> deployctl.v1.DeleteDeploymentRequest
+	19, // 26: deployctl.v1.DeploymentService.BuildDeployment:input_type -> deployctl.v1.BuildDeploymentRequest
+	20, // 27: deployctl.v1.DeploymentService.UpdateDeployment:input_type -> deployctl.v1.UpdateDeploymentRequest
+	21, // 28: deployctl.v1.DeploymentService.DeployDeployment:input_type -> deployctl.v1.DeployDeploymentRequest
+	22, // 29: deployctl.v1.DeploymentService.RestartDeployment:input_type -> deployctl.v1.RestartDeploymentRequest
+	23, // 30: deployctl.v1.DeploymentService.StopDeployment:input_type -> deployctl.v1.StopDeploymentRequest
+	24, // 31: deployctl.v1.EnvService.ListEnvNames:input_type -> deployctl.v1.ListEnvNamesRequest
+	26, // 32: deployctl.v1.EnvService.ListEnvFiles:input_type -> deployctl.v1.ListEnvFilesRequest
+	29, // 33: deployctl.v1.EnvService.SetEnv:input_type -> deployctl.v1.SetEnvRequest
+	30, // 34: deployctl.v1.EnvService.ImportEnvFile:input_type -> deployctl.v1.ImportEnvFileRequest
+	31, // 35: deployctl.v1.EnvService.UnsetEnv:input_type -> deployctl.v1.UnsetEnvRequest
+	34, // 36: deployctl.v1.JobService.GetJob:input_type -> deployctl.v1.GetJobRequest
+	35, // 37: deployctl.v1.JobService.ListJobs:input_type -> deployctl.v1.ListJobsRequest
+	37, // 38: deployctl.v1.JobService.ListJobLogs:input_type -> deployctl.v1.ListJobLogsRequest
+	39, // 39: deployctl.v1.JobService.WatchJob:input_type -> deployctl.v1.WatchJobRequest
+	40, // 40: deployctl.v1.JobService.CancelJob:input_type -> deployctl.v1.CancelJobRequest
+	43, // 41: deployctl.v1.SystemService.Health:input_type -> deployctl.v1.HealthRequest
+	46, // 42: deployctl.v1.SystemService.Version:input_type -> deployctl.v1.VersionRequest
+	48, // 43: deployctl.v1.SystemService.Capabilities:input_type -> deployctl.v1.CapabilitiesRequest
+	32, // 44: deployctl.v1.DeploymentService.CreateDeployment:output_type -> deployctl.v1.JobResponse
+	5,  // 45: deployctl.v1.DeploymentService.GetDeployment:output_type -> deployctl.v1.Deployment
+	11, // 46: deployctl.v1.DeploymentService.GetDeploymentStatus:output_type -> deployctl.v1.DeploymentStatus
+	10, // 47: deployctl.v1.DeploymentService.StreamDeploymentLogs:output_type -> deployctl.v1.DeploymentLogEntry
+	14, // 48: deployctl.v1.DeploymentService.ListDeployments:output_type -> deployctl.v1.ListDeploymentsResponse
+	16, // 49: deployctl.v1.DeploymentService.ListDeploymentSummaries:output_type -> deployctl.v1.ListDeploymentSummariesResponse
+	32, // 50: deployctl.v1.DeploymentService.DeleteDeployment:output_type -> deployctl.v1.JobResponse
+	32, // 51: deployctl.v1.DeploymentService.BuildDeployment:output_type -> deployctl.v1.JobResponse
+	32, // 52: deployctl.v1.DeploymentService.UpdateDeployment:output_type -> deployctl.v1.JobResponse
+	32, // 53: deployctl.v1.DeploymentService.DeployDeployment:output_type -> deployctl.v1.JobResponse
+	32, // 54: deployctl.v1.DeploymentService.RestartDeployment:output_type -> deployctl.v1.JobResponse
+	32, // 55: deployctl.v1.DeploymentService.StopDeployment:output_type -> deployctl.v1.JobResponse
+	25, // 56: deployctl.v1.EnvService.ListEnvNames:output_type -> deployctl.v1.ListEnvNamesResponse
+	28, // 57: deployctl.v1.EnvService.ListEnvFiles:output_type -> deployctl.v1.ListEnvFilesResponse
+	32, // 58: deployctl.v1.EnvService.SetEnv:output_type -> deployctl.v1.JobResponse
+	32, // 59: deployctl.v1.EnvService.ImportEnvFile:output_type -> deployctl.v1.JobResponse
+	32, // 60: deployctl.v1.EnvService.UnsetEnv:output_type -> deployctl.v1.JobResponse
+	33, // 61: deployctl.v1.JobService.GetJob:output_type -> deployctl.v1.Job
+	36, // 62: deployctl.v1.JobService.ListJobs:output_type -> deployctl.v1.ListJobsResponse
+	38, // 63: deployctl.v1.JobService.ListJobLogs:output_type -> deployctl.v1.ListJobLogsResponse
+	42, // 64: deployctl.v1.JobService.WatchJob:output_type -> deployctl.v1.JobEvent
+	33, // 65: deployctl.v1.JobService.CancelJob:output_type -> deployctl.v1.Job
+	45, // 66: deployctl.v1.SystemService.Health:output_type -> deployctl.v1.HealthResponse
+	47, // 67: deployctl.v1.SystemService.Version:output_type -> deployctl.v1.VersionResponse
+	49, // 68: deployctl.v1.SystemService.Capabilities:output_type -> deployctl.v1.CapabilitiesResponse
+	44, // [44:69] is the sub-list for method output_type
+	19, // [19:44] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_api_deployctl_v1_deployctl_proto_init() }
@@ -2684,13 +3145,14 @@ func file_api_deployctl_v1_deployctl_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_deployctl_v1_deployctl_proto_rawDesc), len(file_api_deployctl_v1_deployctl_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   45,
+			NumEnums:      5,
+			NumMessages:   46,
 			NumExtensions: 0,
 			NumServices:   4,
 		},
 		GoTypes:           file_api_deployctl_v1_deployctl_proto_goTypes,
 		DependencyIndexes: file_api_deployctl_v1_deployctl_proto_depIdxs,
+		EnumInfos:         file_api_deployctl_v1_deployctl_proto_enumTypes,
 		MessageInfos:      file_api_deployctl_v1_deployctl_proto_msgTypes,
 	}.Build()
 	File_api_deployctl_v1_deployctl_proto = out.File

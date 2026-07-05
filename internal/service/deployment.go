@@ -175,7 +175,7 @@ func (s *Server) createDeployment(ctx context.Context, req *rpc.CreateDeployment
 func deploymentFromRepository(repository store.Repository) *rpc.Deployment {
 	return &rpc.Deployment{
 		Name:        repository.Name,
-		Url:         repository.URL,
+		RepoUrl:     repository.URL,
 		Location:    repository.Location,
 		ComposePath: repository.ComposePath,
 		EnvPath:     repository.EnvPath,

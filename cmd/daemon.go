@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
+	"io"
 
 	"deployctl/internal"
 	"deployctl/internal/rpc"
@@ -69,13 +69,7 @@ var daemonStatusCmd = &cobra.Command{
 			fmt.Fprintln(cmd.OutOrStdout(), "Daemon")
 			fmt.Fprintln(cmd.OutOrStdout(), "  Status: reachable")
 			fmt.Fprintf(cmd.OutOrStdout(), "  Socket: %s\n\n", socketPath)
-			if strings.TrimSpace(response.Status) == "ok" {
-				fmt.Fprintln(cmd.OutOrStdout(), "Health")
-				fmt.Fprintln(cmd.OutOrStdout(), "  Status: ok")
-				return nil
-			}
-
-			fmt.Fprint(cmd.OutOrStdout(), response.Status)
+			printDockerHealth(cmd.OutOrStdout(), response.GetDocker())
 			return nil
 		})
 	},
@@ -114,4 +108,37 @@ func init() {
 	daemonStartCmd.Flags().String("socket", "", "Unix socket path")
 	daemonRestartCmd.Flags().Bool("user", false, "Restart the user systemd service")
 	daemonRestartCmd.Flags().Bool("system", false, "Restart the system systemd service")
+}
+
+func printDockerHealth(output io.Writer, health *rpc.DockerHealth) {
+	fmt.Fprintln(output, "Docker")
+	fmt.Fprintf(output, "  Status: %s\n", formatDockerConnectionState(health.GetState()))
+	if health.GetHost() != "" {
+		fmt.Fprintf(output, "  Host: %s\n", health.GetHost())
+	}
+	if health.GetServerVersion() != "" {
+		fmt.Fprintf(output, "  Server version: %s\n", health.GetServerVersion())
+	}
+	if health.GetApiVersion() != "" {
+		fmt.Fprintf(output, "  API version: %s\n", health.GetApiVersion())
+	}
+	if health.GetOsType() != "" {
+		fmt.Fprintf(output, "  OS type: %s\n", health.GetOsType())
+	}
+	if health.GetError() != "" {
+		fmt.Fprintf(output, "  Error: %s\n", health.GetError())
+	}
+}
+
+func formatDockerConnectionState(state rpc.DockerConnectionState) string {
+	switch state {
+	case rpc.DockerConnectionState_DOCKER_CONNECTION_STATE_CONNECTED:
+		return "connected"
+	case rpc.DockerConnectionState_DOCKER_CONNECTION_STATE_PARTIALLY_CONNECTED:
+		return "partially connected"
+	case rpc.DockerConnectionState_DOCKER_CONNECTION_STATE_UNAVAILABLE:
+		return "unavailable"
+	default:
+		return "unknown"
+	}
 }
