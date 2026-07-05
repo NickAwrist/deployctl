@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -65,6 +66,9 @@ func (s *JobStore) Get(ctx context.Context, id string) (Job, error) {
 		WHERE id = ?
 	`, id).Scan(&job.ID, &job.Type, &job.DeploymentName, &job.Status, &job.Error, &createdAt, &startedAt, &finishedAt)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Job{}, ErrNotFound
+		}
 		return Job{}, err
 	}
 	job.CreatedAt = fromUnix(createdAt)

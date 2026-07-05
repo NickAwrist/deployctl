@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"deployctl/internal/docker"
 	"deployctl/internal/rpc"
 	"deployctl/internal/store"
 
@@ -77,10 +76,7 @@ func (r *Runner) run(ctx context.Context, job store.Job, fn jobFunc) {
 }
 
 func jobErrorMessage(err error) string {
-	if message, ok := docker.UnavailableMessage(err); ok {
-		return message
-	}
-	return err.Error()
+	return userErrorMessage(err)
 }
 
 func (r *Runner) Cancel(id string) bool {

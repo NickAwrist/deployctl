@@ -36,6 +36,8 @@ type ConnectionStatus struct {
 	Error         string
 }
 
+type Logger func(string)
+
 type UnavailableError struct {
 	Host string
 	Err  error
@@ -157,7 +159,7 @@ func CheckConnection(ctx context.Context) ConnectionStatus {
 	}
 }
 
-func ComposeUp(ctx context.Context, repository *store.Repository) error {
+func ComposeUp(ctx context.Context, repository *store.Repository, log Logger) error {
 	// Load the project
 	service, project, dockerCLI, err := loadProject(ctx, repository)
 	if err != nil {
@@ -165,6 +167,7 @@ func ComposeUp(ctx context.Context, repository *store.Repository) error {
 	}
 
 	// Start the project
+	logf(log, "Starting Compose project")
 	if err := service.Up(ctx, project, api.UpOptions{
 		Create: api.CreateOptions{},
 		Start:  api.StartOptions{},
@@ -270,7 +273,7 @@ func fromUnix(seconds int64) time.Time {
 	return time.Unix(seconds, 0)
 }
 
-func ComposeBuild(ctx context.Context, repository *store.Repository) error {
+func ComposeBuild(ctx context.Context, repository *store.Repository, log Logger) error {
 	// Load the project
 	service, project, dockerCLI, err := loadProject(ctx, repository)
 	if err != nil {
@@ -278,6 +281,7 @@ func ComposeBuild(ctx context.Context, repository *store.Repository) error {
 	}
 
 	// Rebuild project images
+	logf(log, "Building Compose images")
 	if err := service.Build(ctx, project, api.BuildOptions{}); err != nil {
 		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
 			return unavailable
@@ -285,6 +289,21 @@ func ComposeBuild(ctx context.Context, repository *store.Repository) error {
 		return fmt.Errorf("build compose project: %w", err)
 	}
 
+	return nil
+}
+
+func EnsureBuildAvailable(ctx context.Context, repository *store.Repository, log Logger) error {
+	cache, err := ComposeBuildCache(ctx, repository)
+	if err != nil {
+		return err
+	}
+	if len(cache.Tags) > 0 && len(cache.Missing) == 0 {
+		logf(log, "Using cached build: %s", strings.Join(cache.Tags, ", "))
+	}
+	if len(cache.Missing) > 0 {
+		logf(log, "No cached build found for %s. Building now.", strings.Join(cache.Missing, ", "))
+		return ComposeBuild(ctx, repository, log)
+	}
 	return nil
 }
 
@@ -326,7 +345,7 @@ func ComposeBuildCache(ctx context.Context, repository *store.Repository) (Build
 	return cache, nil
 }
 
-func ComposeDown(ctx context.Context, repository *store.Repository) error {
+func ComposeDown(ctx context.Context, repository *store.Repository, log Logger) error {
 	// Load the project
 	service, project, dockerCLI, err := loadProject(ctx, repository)
 	if err != nil {
@@ -334,6 +353,7 @@ func ComposeDown(ctx context.Context, repository *store.Repository) error {
 	}
 
 	// Stop the project
+	logf(log, "Stopping Compose project")
 	if err := service.Down(ctx, project.Name, api.DownOptions{
 		Project: project,
 	}); err != nil {
@@ -344,6 +364,13 @@ func ComposeDown(ctx context.Context, repository *store.Repository) error {
 	}
 
 	return nil
+}
+
+func logf(log Logger, format string, args ...any) {
+	if log == nil {
+		return
+	}
+	log(fmt.Sprintf(format, args...))
 }
 
 func loadProject(ctx context.Context, repository *store.Repository) (api.Compose, *types.Project, *command.DockerCli, error) {

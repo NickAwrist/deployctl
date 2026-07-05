@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"database/sql"
 	"os"
 	"path/filepath"
 	"testing"
@@ -36,6 +35,9 @@ func TestRepositoryStoreCRUD(t *testing.T) {
 	if err := repositories.Insert(ctx, repository); err != nil {
 		t.Fatalf("insert repository: %v", err)
 	}
+	if err := repositories.Insert(ctx, repository); !IsConflict(err) {
+		t.Fatalf("duplicate repository insert error = %v, want conflict", err)
+	}
 
 	got, err := repositories.Get(ctx, "api")
 	if err != nil {
@@ -61,7 +63,7 @@ func TestRepositoryStoreCRUD(t *testing.T) {
 	if err := repositories.Delete(ctx, "api"); err != nil {
 		t.Fatalf("delete repository: %v", err)
 	}
-	if _, err := repositories.Get(ctx, "api"); err != sql.ErrNoRows {
-		t.Fatalf("get deleted repository error = %v, want sql.ErrNoRows", err)
+	if _, err := repositories.Get(ctx, "api"); !IsNotFound(err) {
+		t.Fatalf("get deleted repository error = %v, want not found", err)
 	}
 }

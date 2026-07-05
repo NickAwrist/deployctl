@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,7 +14,7 @@ import (
 )
 
 func (s *Server) ListEnvNames(ctx context.Context, req *rpc.ListEnvNamesRequest) (*rpc.ListEnvNamesResponse, error) {
-	repository, err := s.repositories.Get(ctx, req.DeploymentName)
+	repository, err := s.getRepository(ctx, req.DeploymentName)
 	if err != nil {
 		return nil, err
 	}
@@ -42,15 +41,15 @@ func listEnvNames(repository store.Repository, envFile string) ([]string, error)
 
 func (s *Server) SetEnv(ctx context.Context, req *rpc.SetEnvRequest) (*rpc.JobResponse, error) {
 	if req.DeploymentName == "" {
-		return nil, errors.New("deployment name is required")
+		return nil, invalidArgument("deployment name is required")
 	}
 	for name := range req.Variables {
 		if err := envfile.ValidateName(name); err != nil {
-			return nil, err
+			return nil, invalidArgument(err.Error())
 		}
 	}
 	return s.runner.Enqueue(ctx, "env.set", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.repositories.Get(ctx, req.DeploymentName)
+		repository, err := s.getRepository(ctx, req.DeploymentName)
 		if err != nil {
 			return err
 		}
@@ -67,7 +66,7 @@ func (s *Server) SetEnv(ctx context.Context, req *rpc.SetEnvRequest) (*rpc.JobRe
 		}
 		if isDefaultEnvPath(repository, targetEnvPath) {
 			repository.EnvPath = targetEnvPath
-			if err := s.repositories.Update(ctx, repository); err != nil {
+			if err := s.updateRepository(ctx, repository); err != nil {
 				return err
 			}
 		}
@@ -78,13 +77,13 @@ func (s *Server) SetEnv(ctx context.Context, req *rpc.SetEnvRequest) (*rpc.JobRe
 
 func (s *Server) ImportEnvFile(ctx context.Context, req *rpc.ImportEnvFileRequest) (*rpc.JobResponse, error) {
 	if req.DeploymentName == "" {
-		return nil, errors.New("deployment name is required")
+		return nil, invalidArgument("deployment name is required")
 	}
 	if req.SourcePath == "" {
-		return nil, errors.New("source path is required")
+		return nil, invalidArgument("source path is required")
 	}
 	return s.runner.Enqueue(ctx, "env.import", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.repositories.Get(ctx, req.DeploymentName)
+		repository, err := s.getRepository(ctx, req.DeploymentName)
 		if err != nil {
 			return err
 		}
@@ -98,7 +97,7 @@ func (s *Server) ImportEnvFile(ctx context.Context, req *rpc.ImportEnvFileReques
 		}
 		if isDefaultEnvPath(repository, targetEnvPath) {
 			repository.EnvPath = targetEnvPath
-			if err := s.repositories.Update(ctx, repository); err != nil {
+			if err := s.updateRepository(ctx, repository); err != nil {
 				return err
 			}
 		}
@@ -109,15 +108,15 @@ func (s *Server) ImportEnvFile(ctx context.Context, req *rpc.ImportEnvFileReques
 
 func (s *Server) UnsetEnv(ctx context.Context, req *rpc.UnsetEnvRequest) (*rpc.JobResponse, error) {
 	if req.DeploymentName == "" {
-		return nil, errors.New("deployment name is required")
+		return nil, invalidArgument("deployment name is required")
 	}
 	for _, name := range req.Names {
 		if err := envfile.ValidateName(name); err != nil {
-			return nil, err
+			return nil, invalidArgument(err.Error())
 		}
 	}
 	return s.runner.Enqueue(ctx, "env.unset", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.repositories.Get(ctx, req.DeploymentName)
+		repository, err := s.getRepository(ctx, req.DeploymentName)
 		if err != nil {
 			return err
 		}
@@ -138,7 +137,7 @@ func (s *Server) UnsetEnv(ctx context.Context, req *rpc.UnsetEnvRequest) (*rpc.J
 		}
 		if isDefaultEnvPath(repository, targetEnvPath) {
 			repository.EnvPath = targetEnvPath
-			if err := s.repositories.Update(ctx, repository); err != nil {
+			if err := s.updateRepository(ctx, repository); err != nil {
 				return err
 			}
 		}

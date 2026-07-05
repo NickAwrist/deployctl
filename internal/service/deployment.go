@@ -2,10 +2,8 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"deployctl/internal"
 	"deployctl/internal/docker"
@@ -17,7 +15,7 @@ import (
 
 func (s *Server) CreateDeployment(ctx context.Context, req *rpc.CreateDeploymentRequest) (*rpc.JobResponse, error) {
 	if req.RepoUrl == "" {
-		return nil, errors.New("repo URL is required")
+		return nil, invalidArgument("repo URL is required")
 	}
 	return s.runner.Enqueue(ctx, "create", req.Name, func(ctx context.Context, log func(string)) error {
 		return s.createDeployment(ctx, req, log)
@@ -25,7 +23,7 @@ func (s *Server) CreateDeployment(ctx context.Context, req *rpc.CreateDeployment
 }
 
 func (s *Server) GetDeployment(ctx context.Context, req *rpc.GetDeploymentRequest) (*rpc.Deployment, error) {
-	repository, err := s.repositories.Get(ctx, req.Name)
+	repository, err := s.getRepository(ctx, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -46,10 +44,10 @@ func (s *Server) ListDeployments(ctx context.Context, _ *rpc.ListDeploymentsRequ
 
 func (s *Server) DeleteDeployment(ctx context.Context, req *rpc.DeleteDeploymentRequest) (*rpc.JobResponse, error) {
 	if req.Name == "" {
-		return nil, errors.New("deployment name is required")
+		return nil, invalidArgument("deployment name is required")
 	}
 	return s.runner.Enqueue(ctx, "delete", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.repositories.Get(ctx, req.Name)
+		repository, err := s.getRepository(ctx, req.Name)
 		if err != nil {
 			return err
 		}
@@ -57,30 +55,29 @@ func (s *Server) DeleteDeployment(ctx context.Context, req *rpc.DeleteDeployment
 		if err := internalfile.RemoveAllInside(internal.GetRepositoryDirectory(), repository.Location); err != nil {
 			return err
 		}
-		return s.repositories.Delete(ctx, repository.Name)
+		return s.deleteRepository(ctx, repository.Name)
 	})
 }
 
 func (s *Server) BuildDeployment(ctx context.Context, req *rpc.BuildDeploymentRequest) (*rpc.JobResponse, error) {
 	if req.Name == "" {
-		return nil, errors.New("deployment name is required")
+		return nil, invalidArgument("deployment name is required")
 	}
 	return s.runner.Enqueue(ctx, "build", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.repositories.Get(ctx, req.Name)
+		repository, err := s.getRepository(ctx, req.Name)
 		if err != nil {
 			return err
 		}
-		log("Building Compose images")
-		return docker.ComposeBuild(ctx, &repository)
+		return docker.ComposeBuild(ctx, &repository, log)
 	})
 }
 
 func (s *Server) UpdateDeployment(ctx context.Context, req *rpc.UpdateDeploymentRequest) (*rpc.JobResponse, error) {
 	if req.Name == "" {
-		return nil, errors.New("deployment name is required")
+		return nil, invalidArgument("deployment name is required")
 	}
 	return s.runner.Enqueue(ctx, "update", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.repositories.Get(ctx, req.Name)
+		repository, err := s.getRepository(ctx, req.Name)
 		if err != nil {
 			return err
 		}
@@ -89,7 +86,7 @@ func (s *Server) UpdateDeployment(ctx context.Context, req *rpc.UpdateDeployment
 			return err
 		}
 		if req.Build {
-			return buildComposeImages(ctx, &repository, log)
+			return docker.ComposeBuild(ctx, &repository, log)
 		}
 		return nil
 	})
@@ -97,10 +94,10 @@ func (s *Server) UpdateDeployment(ctx context.Context, req *rpc.UpdateDeployment
 
 func (s *Server) DeployDeployment(ctx context.Context, req *rpc.DeployDeploymentRequest) (*rpc.JobResponse, error) {
 	if req.Name == "" {
-		return nil, errors.New("deployment name is required")
+		return nil, invalidArgument("deployment name is required")
 	}
 	return s.runner.Enqueue(ctx, "deploy", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.repositories.Get(ctx, req.Name)
+		repository, err := s.getRepository(ctx, req.Name)
 		if err != nil {
 			return err
 		}
@@ -114,26 +111,25 @@ func (s *Server) DeployDeployment(ctx context.Context, req *rpc.DeployDeployment
 				return nil
 			}
 
-			if err := ensureBuildAvailable(ctx, &repository, log); err != nil {
+			if err := docker.EnsureBuildAvailable(ctx, &repository, log); err != nil {
 				return err
 			}
 		}
 		if req.Build {
-			if err := buildComposeImages(ctx, &repository, log); err != nil {
+			if err := docker.ComposeBuild(ctx, &repository, log); err != nil {
 				return err
 			}
 		}
-		log("Starting Compose project")
-		return docker.ComposeUp(ctx, &repository)
+		return docker.ComposeUp(ctx, &repository, log)
 	})
 }
 
 func (s *Server) RestartDeployment(ctx context.Context, req *rpc.RestartDeploymentRequest) (*rpc.JobResponse, error) {
 	if req.Name == "" {
-		return nil, errors.New("deployment name is required")
+		return nil, invalidArgument("deployment name is required")
 	}
 	return s.runner.Enqueue(ctx, "restart", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.repositories.Get(ctx, req.Name)
+		repository, err := s.getRepository(ctx, req.Name)
 		if err != nil {
 			return err
 		}
@@ -145,29 +141,27 @@ func (s *Server) RestartDeployment(ctx context.Context, req *rpc.RestartDeployme
 			log("Deployment is not running. Starting it now.")
 		}
 		if req.Build {
-			if err := buildComposeImages(ctx, &repository, log); err != nil {
+			if err := docker.ComposeBuild(ctx, &repository, log); err != nil {
 				return err
 			}
 		} else {
-			if err := ensureBuildAvailable(ctx, &repository, log); err != nil {
+			if err := docker.EnsureBuildAvailable(ctx, &repository, log); err != nil {
 				return err
 			}
 		}
-		log("Stopping Compose project")
-		if err := docker.ComposeDown(ctx, &repository); err != nil {
+		if err := docker.ComposeDown(ctx, &repository, log); err != nil {
 			return err
 		}
-		log("Starting Compose project")
-		return docker.ComposeUp(ctx, &repository)
+		return docker.ComposeUp(ctx, &repository, log)
 	})
 }
 
 func (s *Server) StopDeployment(ctx context.Context, req *rpc.StopDeploymentRequest) (*rpc.JobResponse, error) {
 	if req.Name == "" {
-		return nil, errors.New("deployment name is required")
+		return nil, invalidArgument("deployment name is required")
 	}
 	return s.runner.Enqueue(ctx, "stop", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.repositories.Get(ctx, req.Name)
+		repository, err := s.getRepository(ctx, req.Name)
 		if err != nil {
 			return err
 		}
@@ -179,8 +173,7 @@ func (s *Server) StopDeployment(ctx context.Context, req *rpc.StopDeploymentRequ
 			log("Deployment is not running")
 			return nil
 		}
-		log("Stopping Compose project")
-		return docker.ComposeDown(ctx, &repository)
+		return docker.ComposeDown(ctx, &repository, log)
 	})
 }
 
@@ -208,33 +201,13 @@ func (s *Server) createDeployment(ctx context.Context, req *rpc.CreateDeployment
 		return err
 	}
 
-	return s.repositories.Insert(ctx, store.Repository{
+	return s.insertRepository(ctx, store.Repository{
 		Name:        name,
 		URL:         req.RepoUrl,
 		Location:    location,
 		ComposePath: composePath,
 		EnvPath:     envPath,
 	})
-}
-
-func buildComposeImages(ctx context.Context, repository *store.Repository, log func(string)) error {
-	log("Building Compose images")
-	return docker.ComposeBuild(ctx, repository)
-}
-
-func ensureBuildAvailable(ctx context.Context, repository *store.Repository, log func(string)) error {
-	cache, err := docker.ComposeBuildCache(ctx, repository)
-	if err != nil {
-		return err
-	}
-	if len(cache.Tags) > 0 && len(cache.Missing) == 0 {
-		log(fmt.Sprintf("Using cached build: %s", strings.Join(cache.Tags, ", ")))
-	}
-	if len(cache.Missing) > 0 {
-		log(fmt.Sprintf("No cached build found for %s. Building now.", strings.Join(cache.Missing, ", ")))
-		return buildComposeImages(ctx, repository, log)
-	}
-	return nil
 }
 
 func deploymentFromRepository(repository store.Repository) *rpc.Deployment {

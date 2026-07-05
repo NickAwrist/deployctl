@@ -2,12 +2,16 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"deployctl/internal"
 	"deployctl/internal/rpc"
 	"deployctl/internal/store"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestRunnerSerializesJobsPerDeployment(t *testing.T) {
@@ -96,6 +100,57 @@ func TestCancelJobCancelsRunningJob(t *testing.T) {
 	}
 	if job.Status != store.JobStatusCancelled {
 		t.Fatalf("job status = %s, want %s", job.Status, store.JobStatusCancelled)
+	}
+}
+
+func TestMissingJobUsesScopedNotFoundError(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	internal.InitializeDirectoryStructure()
+
+	server, err := NewServerWithLogger(nil)
+	if err != nil {
+		t.Fatalf("new server: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = server.Close()
+	})
+
+	_, err = server.GetJob(context.Background(), &rpc.GetJobRequest{Id: "missing-job"})
+	if err == nil {
+		t.Fatal("missing job lookup succeeded")
+	}
+	var notFound *NotFoundError
+	if !errors.As(err, &notFound) {
+		t.Fatalf("missing job error = %T %v, want NotFoundError", err, err)
+	}
+	if got, want := err.Error(), `job "missing-job" not found`; got != want {
+		t.Fatalf("missing job error = %q, want %q", got, want)
+	}
+}
+
+func TestNormalizeRPCErrorMapsScopedErrors(t *testing.T) {
+	err := normalizeRPCError(deploymentNotFound("missing-api"))
+	got, ok := status.FromError(err)
+	if !ok {
+		t.Fatalf("normalized error is not a gRPC status: %v", err)
+	}
+	if got.Code() != codes.NotFound {
+		t.Fatalf("normalized code = %s, want %s", got.Code(), codes.NotFound)
+	}
+	if got.Message() != `deployment "missing-api" not found` {
+		t.Fatalf("normalized message = %q", got.Message())
+	}
+
+	err = normalizeRPCError(deploymentConflict("api"))
+	got, ok = status.FromError(err)
+	if !ok {
+		t.Fatalf("normalized conflict is not a gRPC status: %v", err)
+	}
+	if got.Code() != codes.AlreadyExists {
+		t.Fatalf("normalized conflict code = %s, want %s", got.Code(), codes.AlreadyExists)
+	}
+	if got.Message() != `deployment "api" already exists` {
+		t.Fatalf("normalized conflict message = %q", got.Message())
 	}
 }
 

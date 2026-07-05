@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"strings"
 )
 
@@ -28,6 +29,9 @@ func (s *RepositoryStore) Insert(ctx context.Context, repository Repository) err
 		repository.ComposePath,
 		repository.EnvPath,
 	)
+	if err != nil && isUniqueConstraintError(err) {
+		return ErrConflict
+	}
 	return err
 }
 
@@ -65,6 +69,9 @@ func (s *RepositoryStore) Get(ctx context.Context, name string) (Repository, err
 		name,
 	).Scan(&repository.Name, &repository.URL, &repository.Location, &repository.ComposePath, &repository.EnvPath)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Repository{}, ErrNotFound
+		}
 		return Repository{}, err
 	}
 
@@ -124,13 +131,17 @@ func isDuplicateColumnError(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "duplicate column name:")
 }
 
+func isUniqueConstraintError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "UNIQUE constraint failed:")
+}
+
 func requireRowsAffected(result sql.Result) error {
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return err
 	}
 	if rowsAffected == 0 {
-		return sql.ErrNoRows
+		return ErrNotFound
 	}
 
 	return nil

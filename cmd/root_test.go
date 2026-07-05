@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"fmt"
 	"io"
 	"os"
@@ -211,6 +210,24 @@ func TestStatusCommandReportsDockerUnavailableCleanly(t *testing.T) {
 	}
 
 	assertCleanDockerUnavailableOutput(t, output)
+}
+
+func TestStatusCommandReportsMissingDeploymentCleanly(t *testing.T) {
+	setupTestHome(t)
+
+	output, err := executeRoot(t, []string{"status", "missing-api"}, "")
+	if err == nil {
+		t.Fatal("status command succeeded with missing deployment")
+	}
+
+	if !strings.Contains(output, `deployment "missing-api" not found`) {
+		t.Fatalf("status output %q does not contain clean not-found message", output)
+	}
+	for _, unwanted := range []string{"sql: no rows", "rpc error:", "code ="} {
+		if strings.Contains(output, unwanted) {
+			t.Fatalf("status output %q contains %q", output, unwanted)
+		}
+	}
 }
 
 func TestDockerBackedJobCommandsReportDockerUnavailableCleanly(t *testing.T) {
@@ -470,8 +487,8 @@ func TestDeleteCommandCancelsAndForceDeletesDeployment(t *testing.T) {
 	if _, err := os.Stat(location); !os.IsNotExist(err) {
 		t.Fatalf("repository directory still exists or stat failed unexpectedly: %v", err)
 	}
-	if _, err := getRepository(t, "api"); err != sql.ErrNoRows {
-		t.Fatalf("repository lookup after delete error = %v, want sql.ErrNoRows", err)
+	if _, err := getRepository(t, "api"); !store.IsNotFound(err) {
+		t.Fatalf("repository lookup after delete error = %v, want not found", err)
 	}
 }
 

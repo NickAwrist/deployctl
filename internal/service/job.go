@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Server) GetJob(ctx context.Context, req *rpc.GetJobRequest) (*rpc.Job, error) {
-	job, err := s.jobs.Get(ctx, req.Id)
+	job, err := s.getJob(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (s *Server) WatchJob(req *rpc.WatchJobRequest, stream rpc.JobService_WatchJ
 	for {
 		logs, err := s.jobs.LogsAfter(stream.Context(), req.Id, after)
 		if err != nil {
-			return err
+			return normalizeRPCError(err)
 		}
 		for _, log := range logs {
 			after = log.Sequence
@@ -49,9 +49,9 @@ func (s *Server) WatchJob(req *rpc.WatchJobRequest, stream rpc.JobService_WatchJ
 			}
 		}
 
-		job, err := s.jobs.Get(stream.Context(), req.Id)
+		job, err := s.getJob(stream.Context(), req.Id)
 		if err != nil {
-			return err
+			return normalizeRPCError(err)
 		}
 		if isTerminal(job.Status) {
 			return stream.Send(&rpc.JobEvent{JobId: job.ID, Sequence: after, Job: jobToRPC(job)})
@@ -59,14 +59,14 @@ func (s *Server) WatchJob(req *rpc.WatchJobRequest, stream rpc.JobService_WatchJ
 
 		select {
 		case <-stream.Context().Done():
-			return stream.Context().Err()
+			return normalizeRPCError(stream.Context().Err())
 		case <-ticker.C:
 		}
 	}
 }
 
 func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc.Job, error) {
-	job, err := s.jobs.Get(ctx, req.Id)
+	job, err := s.getJob(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc
 
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
-		job, err = s.jobs.Get(ctx, req.Id)
+		job, err = s.getJob(ctx, req.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +94,7 @@ func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc
 		}
 	}
 
-	job, err = s.jobs.Get(ctx, req.Id)
+	job, err = s.getJob(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
