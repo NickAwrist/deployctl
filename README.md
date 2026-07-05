@@ -127,7 +127,7 @@ Manage env variables after creation:
 
 ```sh
 deployctl env set my-deployment ENV_VARIABLE_ONE=123 ENV_VARIABLE_TWO=234
-deployctl env set my-deployment .env
+deployctl env import my-deployment .env
 deployctl env list my-deployment
 deployctl env unset my-deployment ENV_VARIABLE_ONE
 ```
@@ -153,11 +153,15 @@ Compose file:
 
 ```sh
 deployctl env set my-deployment app.env APP_PORT=8080 DEBUG=false
+deployctl env import my-deployment secrets.env ./local-secrets.env
 deployctl env list my-deployment app.env
 deployctl env unset my-deployment app.env DATABASE_URL
 ```
 
-`env list` only shows variable names and masks values as `*****`.
+`env import` copies the source file into the deployment env file; it does not
+link to the source path. `env list` shows env files and variable names, masks
+values as `*****`, and warns when Compose references env files that are not
+present yet.
 
 ## Private Repositories
 

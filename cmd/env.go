@@ -17,7 +17,7 @@ var envCmd = &cobra.Command{
 }
 
 var envSetCmd = &cobra.Command{
-	Use:               "set [repository-name] [env-file] KEY=VALUE...|ENV_FILE",
+	Use:               "set [repository-name] [env-file] KEY=VALUE...",
 	Aliases:           []string{"add"},
 	Short:             "Set deployment env variables",
 	Args:              cobra.MinimumNArgs(2),
@@ -29,20 +29,6 @@ var envSetCmd = &cobra.Command{
 		}
 
 		targetEnvFile, values := resolveEnvSetArgs(args[1:])
-		if len(values) == 1 && !strings.Contains(values[0], "=") {
-			return runWithClient(cmd, func(client *daemonClient) error {
-				response, err := client.Env.ImportEnvFile(cmd.Context(), &rpc.ImportEnvFileRequest{
-					DeploymentName: repositoryName,
-					SourcePath:     values[0],
-					EnvFile:        targetEnvFile,
-				})
-				if err != nil {
-					return err
-				}
-				return handleJob(cmd, client, response, fmt.Sprintf("Updated env file for %s", repositoryName))
-			})
-		}
-
 		variables, err := parseAssignments(values)
 		if err != nil {
 			return err
@@ -63,6 +49,32 @@ var envSetCmd = &cobra.Command{
 				return err
 			}
 			return handleJob(cmd, client, response, fmt.Sprintf("Updated %d env variable(s) for %s", len(values), repositoryName))
+		})
+	},
+}
+
+var envImportCmd = &cobra.Command{
+	Use:               "import [repository-name] [env-file] env-path",
+	Short:             "Import a deployment env file",
+	Args:              cobra.RangeArgs(2, 3),
+	ValidArgsFunction: completeDeploymentNames,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		repositoryName := args[0]
+		if repositoryName == "" {
+			return errors.New("repository name is required")
+		}
+
+		targetEnvFile, sourcePath := resolveEnvImportArgs(args[1:])
+		return runWithClient(cmd, func(client *daemonClient) error {
+			response, err := client.Env.ImportEnvFile(cmd.Context(), &rpc.ImportEnvFileRequest{
+				DeploymentName: repositoryName,
+				SourcePath:     sourcePath,
+				EnvFile:        targetEnvFile,
+			})
+			if err != nil {
+				return err
+			}
+			return handleJob(cmd, client, response, fmt.Sprintf("Imported env file for %s", repositoryName))
 		})
 	},
 }
@@ -117,18 +129,14 @@ var envListCmd = &cobra.Command{
 		}
 
 		return runWithClient(cmd, func(client *daemonClient) error {
-			response, err := client.Env.ListEnvNames(cmd.Context(), &rpc.ListEnvNamesRequest{
+			response, err := client.Env.ListEnvFiles(cmd.Context(), &rpc.ListEnvFilesRequest{
 				DeploymentName: repositoryName,
 				EnvFile:        envFile,
 			})
 			if err != nil {
 				return err
 			}
-			if len(response.Names) == 0 {
-				fmt.Fprintf(cmd.OutOrStdout(), "No env variables found for %s\n", repositoryName)
-				return nil
-			}
-			printMaskedEnv(cmd.OutOrStdout(), response.Names)
+			printEnvFiles(cmd.OutOrStdout(), repositoryName, envFile != "", response)
 			return nil
 		})
 	},
@@ -136,8 +144,9 @@ var envListCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(envCmd)
-	envCmd.AddCommand(envSetCmd, envUnsetCmd, envListCmd)
+	envCmd.AddCommand(envSetCmd, envImportCmd, envUnsetCmd, envListCmd)
 	addJobFlags(envSetCmd)
+	addJobFlags(envImportCmd)
 	addJobFlags(envUnsetCmd)
 }
 
@@ -146,6 +155,13 @@ func resolveEnvSetArgs(values []string) (string, []string) {
 		return values[0], values[1:]
 	}
 	return "", values
+}
+
+func resolveEnvImportArgs(values []string) (string, string) {
+	if len(values) == 1 {
+		return "", values[0]
+	}
+	return values[0], values[1]
 }
 
 func resolveEnvUnsetArgs(names []string) (string, []string) {

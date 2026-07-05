@@ -96,6 +96,37 @@ func printMaskedEnv(output io.Writer, names []string) {
 	}
 }
 
+func printMaskedEnvFile(output io.Writer, envFile string, names []string) {
+	fmt.Fprintln(output, envFile)
+	printMaskedEnv(output, names)
+}
+
+func printEnvFiles(output io.Writer, repositoryName string, explicitFile bool, response *rpc.ListEnvFilesResponse) {
+	if len(response.GetMissingEnvFiles()) > 0 {
+		if explicitFile {
+			fmt.Fprintln(output, "Warning: env file was not found:")
+		} else {
+			fmt.Fprintln(output, "Warning: compose references missing env files:")
+		}
+		for _, envFile := range response.GetMissingEnvFiles() {
+			fmt.Fprintf(output, "  %s\n", envFile)
+		}
+	}
+	if len(response.GetMissingEnvFiles()) > 0 {
+		fmt.Fprintln(output)
+	}
+	if len(response.GetEnvFiles()) == 0 {
+		fmt.Fprintf(output, "No env files found for %s\n", repositoryName)
+		return
+	}
+	for i, envFile := range response.GetEnvFiles() {
+		if i > 0 {
+			fmt.Fprintln(output)
+		}
+		printMaskedEnvFile(output, envFile.GetEnvFile(), envFile.GetNames())
+	}
+}
+
 func parseAssignments(assignments []string) (map[string]string, error) {
 	variables := make(map[string]string, len(assignments))
 	for _, assignment := range assignments {

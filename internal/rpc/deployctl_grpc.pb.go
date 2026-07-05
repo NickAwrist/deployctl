@@ -544,6 +544,7 @@ var DeploymentService_ServiceDesc = grpc.ServiceDesc{
 
 const (
 	EnvService_ListEnvNames_FullMethodName  = "/deployctl.v1.EnvService/ListEnvNames"
+	EnvService_ListEnvFiles_FullMethodName  = "/deployctl.v1.EnvService/ListEnvFiles"
 	EnvService_SetEnv_FullMethodName        = "/deployctl.v1.EnvService/SetEnv"
 	EnvService_ImportEnvFile_FullMethodName = "/deployctl.v1.EnvService/ImportEnvFile"
 	EnvService_UnsetEnv_FullMethodName      = "/deployctl.v1.EnvService/UnsetEnv"
@@ -554,6 +555,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EnvServiceClient interface {
 	ListEnvNames(ctx context.Context, in *ListEnvNamesRequest, opts ...grpc.CallOption) (*ListEnvNamesResponse, error)
+	ListEnvFiles(ctx context.Context, in *ListEnvFilesRequest, opts ...grpc.CallOption) (*ListEnvFilesResponse, error)
 	SetEnv(ctx context.Context, in *SetEnvRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	ImportEnvFile(ctx context.Context, in *ImportEnvFileRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	UnsetEnv(ctx context.Context, in *UnsetEnvRequest, opts ...grpc.CallOption) (*JobResponse, error)
@@ -571,6 +573,16 @@ func (c *envServiceClient) ListEnvNames(ctx context.Context, in *ListEnvNamesReq
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListEnvNamesResponse)
 	err := c.cc.Invoke(ctx, EnvService_ListEnvNames_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *envServiceClient) ListEnvFiles(ctx context.Context, in *ListEnvFilesRequest, opts ...grpc.CallOption) (*ListEnvFilesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListEnvFilesResponse)
+	err := c.cc.Invoke(ctx, EnvService_ListEnvFiles_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -612,6 +624,7 @@ func (c *envServiceClient) UnsetEnv(ctx context.Context, in *UnsetEnvRequest, op
 // for forward compatibility.
 type EnvServiceServer interface {
 	ListEnvNames(context.Context, *ListEnvNamesRequest) (*ListEnvNamesResponse, error)
+	ListEnvFiles(context.Context, *ListEnvFilesRequest) (*ListEnvFilesResponse, error)
 	SetEnv(context.Context, *SetEnvRequest) (*JobResponse, error)
 	ImportEnvFile(context.Context, *ImportEnvFileRequest) (*JobResponse, error)
 	UnsetEnv(context.Context, *UnsetEnvRequest) (*JobResponse, error)
@@ -627,6 +640,9 @@ type UnimplementedEnvServiceServer struct{}
 
 func (UnimplementedEnvServiceServer) ListEnvNames(context.Context, *ListEnvNamesRequest) (*ListEnvNamesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListEnvNames not implemented")
+}
+func (UnimplementedEnvServiceServer) ListEnvFiles(context.Context, *ListEnvFilesRequest) (*ListEnvFilesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListEnvFiles not implemented")
 }
 func (UnimplementedEnvServiceServer) SetEnv(context.Context, *SetEnvRequest) (*JobResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetEnv not implemented")
@@ -672,6 +688,24 @@ func _EnvService_ListEnvNames_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(EnvServiceServer).ListEnvNames(ctx, req.(*ListEnvNamesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EnvService_ListEnvFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListEnvFilesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnvServiceServer).ListEnvFiles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EnvService_ListEnvFiles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnvServiceServer).ListEnvFiles(ctx, req.(*ListEnvFilesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -740,6 +774,10 @@ var EnvService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListEnvNames",
 			Handler:    _EnvService_ListEnvNames_Handler,
+		},
+		{
+			MethodName: "ListEnvFiles",
+			Handler:    _EnvService_ListEnvFiles_Handler,
 		},
 		{
 			MethodName: "SetEnv",
