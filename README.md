@@ -6,7 +6,7 @@ deployctl manages Docker Compose deployments through a local daemon.
 
 - Linux with systemd.
 - Git.
-- Docker available to the deployctl service user.
+- Docker Engine available to the deployctl service user.
 - Go 1.25+ or Docker for installing/building.
 - A Docker Compose project to deploy.
 
@@ -19,6 +19,13 @@ curl -fsSL 'https://github.com/NickAwrist/deployctl/blob/main/scripts/install-li
 The installer builds `deployctl` and `deployctld`, installs them, writes a
 systemd service, starts `deployctld`, and finishes with `deployctl daemon
 status`.
+
+Before installing, the script checks Git as the service user and stops if Git is
+missing or unusable. It also tries to read the Docker server/API version with the
+Docker CLI for install-time logging. If that Docker check cannot run, the
+installer prints that Docker could not be validated and continues; if it can read
+the API version and it is older than `MIN_DOCKER_API_VERSION` (default `1.40`),
+the installer stops.
 
 Run the same command again to update. Set `DEPLOYCTL_REF` to install a branch,
 tag, or commit:
