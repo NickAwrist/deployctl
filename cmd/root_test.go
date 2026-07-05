@@ -15,6 +15,7 @@ import (
 	"deployctl/internal"
 	deployclient "deployctl/internal/client"
 	"deployctl/internal/envfile"
+	"deployctl/internal/rpc"
 	"deployctl/internal/service"
 	"deployctl/internal/store"
 )
@@ -228,6 +229,60 @@ func TestStatusCommandReportsMissingDeploymentCleanly(t *testing.T) {
 			t.Fatalf("status output %q contains %q", output, unwanted)
 		}
 	}
+}
+
+func TestPrintDeploymentLogsShowsEntriesAndHint(t *testing.T) {
+	stream := &fakeDeploymentLogStream{entries: []*rpc.DeploymentLogEntry{
+		{Container: "api-1", Message: "ready"},
+		{Container: "worker-1", Message: "processed job"},
+	}}
+
+	var output bytes.Buffer
+	if err := printDeploymentLogs(&output, stream, false); err != nil {
+		t.Fatalf("print logs: %v", err)
+	}
+
+	for _, want := range []string{
+		"api-1 | ready",
+		"worker-1 | processed job",
+		"Use --follow for live logs or --lines N for more history.",
+	} {
+		if !strings.Contains(output.String(), want) {
+			t.Fatalf("logs output %q does not contain %q", output.String(), want)
+		}
+	}
+}
+
+func TestLogsCommandRejectsNegativeLines(t *testing.T) {
+	t.Cleanup(func() {
+		if err := logsCmd.Flags().Set("lines", fmt.Sprint(defaultLogLines)); err != nil {
+			t.Fatalf("reset logs lines flag: %v", err)
+		}
+	})
+
+	output, err := executeRoot(t, []string{"logs", "api", "--lines", "-1"}, "")
+	if err == nil {
+		t.Fatal("logs command succeeded with negative lines")
+	}
+	if !strings.Contains(output, "lines must be greater than or equal to 0") {
+		t.Fatalf("logs output %q does not contain validation error", output)
+	}
+	if strings.Contains(output, "Usage:") {
+		t.Fatalf("logs output %q unexpectedly contains usage", output)
+	}
+}
+
+func TestLogsCommandReportsDockerUnavailableCleanly(t *testing.T) {
+	setupTestHome(t)
+	t.Setenv("DOCKER_HOST", fakeDockerHost())
+	insertComposeRepository(t, "api")
+
+	output, err := executeRoot(t, []string{"logs", "api"}, "")
+	if err == nil {
+		t.Fatal("logs command succeeded with unavailable Docker")
+	}
+
+	assertCleanDockerUnavailableOutput(t, output)
 }
 
 func TestDockerBackedJobCommandsReportDockerUnavailableCleanly(t *testing.T) {
@@ -707,4 +762,17 @@ func runGit(t *testing.T, directory string, args ...string) {
 	if err != nil {
 		t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, output)
 	}
+}
+
+type fakeDeploymentLogStream struct {
+	entries []*rpc.DeploymentLogEntry
+}
+
+func (s *fakeDeploymentLogStream) Recv() (*rpc.DeploymentLogEntry, error) {
+	if len(s.entries) == 0 {
+		return nil, io.EOF
+	}
+	entry := s.entries[0]
+	s.entries = s.entries[1:]
+	return entry, nil
 }

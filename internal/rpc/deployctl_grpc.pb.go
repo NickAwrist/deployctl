@@ -19,16 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DeploymentService_CreateDeployment_FullMethodName    = "/deployctl.v1.DeploymentService/CreateDeployment"
-	DeploymentService_GetDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/GetDeployment"
-	DeploymentService_GetDeploymentStatus_FullMethodName = "/deployctl.v1.DeploymentService/GetDeploymentStatus"
-	DeploymentService_ListDeployments_FullMethodName     = "/deployctl.v1.DeploymentService/ListDeployments"
-	DeploymentService_DeleteDeployment_FullMethodName    = "/deployctl.v1.DeploymentService/DeleteDeployment"
-	DeploymentService_BuildDeployment_FullMethodName     = "/deployctl.v1.DeploymentService/BuildDeployment"
-	DeploymentService_UpdateDeployment_FullMethodName    = "/deployctl.v1.DeploymentService/UpdateDeployment"
-	DeploymentService_DeployDeployment_FullMethodName    = "/deployctl.v1.DeploymentService/DeployDeployment"
-	DeploymentService_RestartDeployment_FullMethodName   = "/deployctl.v1.DeploymentService/RestartDeployment"
-	DeploymentService_StopDeployment_FullMethodName      = "/deployctl.v1.DeploymentService/StopDeployment"
+	DeploymentService_CreateDeployment_FullMethodName     = "/deployctl.v1.DeploymentService/CreateDeployment"
+	DeploymentService_GetDeployment_FullMethodName        = "/deployctl.v1.DeploymentService/GetDeployment"
+	DeploymentService_GetDeploymentStatus_FullMethodName  = "/deployctl.v1.DeploymentService/GetDeploymentStatus"
+	DeploymentService_StreamDeploymentLogs_FullMethodName = "/deployctl.v1.DeploymentService/StreamDeploymentLogs"
+	DeploymentService_ListDeployments_FullMethodName      = "/deployctl.v1.DeploymentService/ListDeployments"
+	DeploymentService_DeleteDeployment_FullMethodName     = "/deployctl.v1.DeploymentService/DeleteDeployment"
+	DeploymentService_BuildDeployment_FullMethodName      = "/deployctl.v1.DeploymentService/BuildDeployment"
+	DeploymentService_UpdateDeployment_FullMethodName     = "/deployctl.v1.DeploymentService/UpdateDeployment"
+	DeploymentService_DeployDeployment_FullMethodName     = "/deployctl.v1.DeploymentService/DeployDeployment"
+	DeploymentService_RestartDeployment_FullMethodName    = "/deployctl.v1.DeploymentService/RestartDeployment"
+	DeploymentService_StopDeployment_FullMethodName       = "/deployctl.v1.DeploymentService/StopDeployment"
 )
 
 // DeploymentServiceClient is the client API for DeploymentService service.
@@ -38,6 +39,7 @@ type DeploymentServiceClient interface {
 	CreateDeployment(ctx context.Context, in *CreateDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	GetDeployment(ctx context.Context, in *GetDeploymentRequest, opts ...grpc.CallOption) (*Deployment, error)
 	GetDeploymentStatus(ctx context.Context, in *GetDeploymentStatusRequest, opts ...grpc.CallOption) (*DeploymentStatus, error)
+	StreamDeploymentLogs(ctx context.Context, in *StreamDeploymentLogsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DeploymentLogEntry], error)
 	ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error)
 	DeleteDeployment(ctx context.Context, in *DeleteDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	BuildDeployment(ctx context.Context, in *BuildDeploymentRequest, opts ...grpc.CallOption) (*JobResponse, error)
@@ -84,6 +86,25 @@ func (c *deploymentServiceClient) GetDeploymentStatus(ctx context.Context, in *G
 	}
 	return out, nil
 }
+
+func (c *deploymentServiceClient) StreamDeploymentLogs(ctx context.Context, in *StreamDeploymentLogsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DeploymentLogEntry], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &DeploymentService_ServiceDesc.Streams[0], DeploymentService_StreamDeploymentLogs_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[StreamDeploymentLogsRequest, DeploymentLogEntry]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type DeploymentService_StreamDeploymentLogsClient = grpc.ServerStreamingClient[DeploymentLogEntry]
 
 func (c *deploymentServiceClient) ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -162,6 +183,7 @@ type DeploymentServiceServer interface {
 	CreateDeployment(context.Context, *CreateDeploymentRequest) (*JobResponse, error)
 	GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error)
 	GetDeploymentStatus(context.Context, *GetDeploymentStatusRequest) (*DeploymentStatus, error)
+	StreamDeploymentLogs(*StreamDeploymentLogsRequest, grpc.ServerStreamingServer[DeploymentLogEntry]) error
 	ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
 	DeleteDeployment(context.Context, *DeleteDeploymentRequest) (*JobResponse, error)
 	BuildDeployment(context.Context, *BuildDeploymentRequest) (*JobResponse, error)
@@ -187,6 +209,9 @@ func (UnimplementedDeploymentServiceServer) GetDeployment(context.Context, *GetD
 }
 func (UnimplementedDeploymentServiceServer) GetDeploymentStatus(context.Context, *GetDeploymentStatusRequest) (*DeploymentStatus, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetDeploymentStatus not implemented")
+}
+func (UnimplementedDeploymentServiceServer) StreamDeploymentLogs(*StreamDeploymentLogsRequest, grpc.ServerStreamingServer[DeploymentLogEntry]) error {
+	return status.Error(codes.Unimplemented, "method StreamDeploymentLogs not implemented")
 }
 func (UnimplementedDeploymentServiceServer) ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListDeployments not implemented")
@@ -283,6 +308,17 @@ func _DeploymentService_GetDeploymentStatus_Handler(srv interface{}, ctx context
 	}
 	return interceptor(ctx, in, info, handler)
 }
+
+func _DeploymentService_StreamDeploymentLogs_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StreamDeploymentLogsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(DeploymentServiceServer).StreamDeploymentLogs(m, &grpc.GenericServerStream[StreamDeploymentLogsRequest, DeploymentLogEntry]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type DeploymentService_StreamDeploymentLogsServer = grpc.ServerStreamingServer[DeploymentLogEntry]
 
 func _DeploymentService_ListDeployments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListDeploymentsRequest)
@@ -458,7 +494,13 @@ var DeploymentService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DeploymentService_StopDeployment_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamDeploymentLogs",
+			Handler:       _DeploymentService_StreamDeploymentLogs_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "api/deployctl/v1/deployctl.proto",
 }
 

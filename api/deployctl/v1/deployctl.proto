@@ -8,6 +8,7 @@ service DeploymentService {
   rpc CreateDeployment(CreateDeploymentRequest) returns (JobResponse);
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment);
   rpc GetDeploymentStatus(GetDeploymentStatusRequest) returns (DeploymentStatus);
+  rpc StreamDeploymentLogs(StreamDeploymentLogsRequest) returns (stream DeploymentLogEntry);
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
   rpc DeleteDeployment(DeleteDeploymentRequest) returns (JobResponse);
   rpc BuildDeployment(BuildDeploymentRequest) returns (JobResponse);
@@ -54,6 +55,15 @@ message CreateDeploymentRequest {
 
 message GetDeploymentRequest { string name = 1; }
 message GetDeploymentStatusRequest { string name = 1; string env_file = 2; }
+message StreamDeploymentLogsRequest {
+  string name = 1;
+  bool follow = 2;
+  int32 lines = 3;
+}
+message DeploymentLogEntry {
+  string container = 1;
+  string message = 2;
+}
 message DeploymentStatus {
   Deployment deployment = 1;
   string state = 2;
