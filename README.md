@@ -1,31 +1,55 @@
-# Deploy Control
+# deployctl
 
-## Current Status: `DEVELOPMENT`
-
-deployctl is a cli tool to quickly create and run deployments
+deployctl manages Docker Compose deployments through a local daemon.
 
 ## Requirements
 
-- Go 1.25 or newer to build from source. The module currently targets `go 1.25.0`. On Linux, the installer can also build with Docker using the `golang:1.25` image when local `go` is unavailable.
-- Git installed and working from your terminal. deployctl runs `git clone` and `git pull --ff-only` directly.
-- Docker Engine or Docker Desktop installed, running, and reachable by the current user.
-- Docker Engine 19.03 or newer. deployctl uses the Docker Go SDK, and the current Docker Engine API compatibility floor is API v1.40, which maps to Docker Engine 19.03. For alpha testing, Docker Engine 25 or newer is recommended because older Docker releases are outside current support.
-- Docker Compose-compatible projects.
+- Linux with systemd.
+- Git.
+- Docker available to the deployctl service user.
+- Go 1.25+ or Docker for installing/building.
+- A Docker Compose project to deploy.
 
-## Run
+## Install
 
 ```sh
-go run .
+curl -fsSL 'https://github.com/NickAwrist/deployctl/blob/main/scripts/install-linux.sh?raw=1' | bash
+```
+
+The installer builds `deployctl` and `deployctld`, installs them, writes a
+systemd service, starts `deployctld`, and finishes with `deployctl daemon
+status`.
+
+Run the same command again to update. Set `DEPLOYCTL_REF` to install a branch,
+tag, or commit:
+
+```sh
+curl -fsSL 'https://github.com/NickAwrist/deployctl/blob/main/scripts/install-linux.sh?raw=1' | DEPLOYCTL_REF=1f0c104 bash
+```
+
+Without `sudo`, the installer creates a user service and installs to
+`~/.local/bin`. For a system service:
+
+```sh
+curl -fsSL 'https://github.com/NickAwrist/deployctl/blob/main/scripts/install-linux.sh?raw=1' | sudo env DEPLOYCTL_USER=deploy bash
+```
+
+The service user needs Docker access plus Git credentials and SSH keys for any
+private repositories it deploys.
+
+To uninstall:
+
+```sh
+curl -fsSL 'https://github.com/NickAwrist/deployctl/blob/main/scripts/uninstall-linux.sh?raw=1' | bash
+```
+
+Use `sudo` for system-service uninstalls. To remove deployment state too:
+
+```sh
+curl -fsSL 'https://github.com/NickAwrist/deployctl/blob/main/scripts/uninstall-linux.sh?raw=1' | REMOVE_DATA=1 bash
 ```
 
 ## Build
-
-```sh
-go build -o deployctl .
-go build -o deployctld ./cmd/deployctld
-```
-
-Or use the repository task runner:
 
 ```sh
 make test
@@ -33,178 +57,27 @@ make generate
 make build
 ```
 
-`make generate` installs the protobuf generator plugins into `./bin` and
-regenerates the gRPC stubs from `api/deployctl/v1/deployctl.proto`.
-
-On Windows PowerShell, build an `.exe`:
-
-```powershell
-go build -o deployctl.exe .
-```
-
-## Install on a Linux server
-
-Clone the repo on the server, then run the installer:
-
-```sh
-git clone https://github.com/NickAwrist/deployctl.git
-cd deployctl
-sudo ./scripts/install-linux.sh
-```
-
-The installer builds `deployctl` and `deployctld`, installs them to
-`/usr/local/bin`, writes `/etc/systemd/system/deployctld.service`, enables the
-daemon, starts it, and checks `deployctl daemon status`.
-
-By default the system service runs as the sudo user. To choose a different
-service user:
-
-```sh
-sudo DEPLOYCTL_USER=deploy ./scripts/install-linux.sh
-```
-
-The service user needs access to Docker, Git credentials, and any SSH keys used
-for private repositories.
-
-To update from the same checkout:
-
-```sh
-git pull
-sudo ./scripts/install-linux.sh
-```
-
-Re-running the installer rebuilds the binaries, replaces them, reloads systemd,
-and restarts `deployctld`. For a user service install, run it without `sudo`:
-
-```sh
-git pull
-./scripts/install-linux.sh
-```
-
-You can also update from GitHub without keeping a checkout on the server:
-
-```sh
-curl -fsSL 'https://github.com/NickAwrist/deployctl/blob/main/scripts/install-linux.sh?raw=1' | bash
-```
-
-That downloaded installer clones the repo, builds the binaries, installs them,
-and restarts the service. Set `DEPLOYCTL_REF` to pin a branch, tag, or commit:
-
-```sh
-curl -fsSL 'https://github.com/NickAwrist/deployctl/blob/main/scripts/install-linux.sh?raw=1' | DEPLOYCTL_REF=1f0c104 bash
-```
-
-When updating a user install, the installer also updates other writable
-`deployctl` client copies it finds in common locations such as `/usr/local/bin`
-and `~/.local/bin`, so an older binary earlier in `PATH` does not keep shadowing
-the updated one.
-
-To uninstall:
-
-```sh
-sudo ./scripts/uninstall-linux.sh
-```
-
-To remove deployment state too:
-
-```sh
-sudo REMOVE_DATA=1 ./scripts/uninstall-linux.sh
-```
+`make build` writes binaries to `bin/`. `make generate` updates the protobuf
+and gRPC stubs from `api/deployctl/v1/deployctl.proto`.
 
 ## Daemon
 
-deployctl runs as a client/server tool. Start the local daemon before running
-deployment commands:
-
-```sh
-deployctl daemon start
-```
-
-The CLI talks to the daemon over a local Unix socket. Override the socket path
-with `DEPLOYCTL_SOCKET_PATH` when needed.
-
-Daemon logs are written to `~/.deployctl/deployctld.log` by default. Override
-the log path with `DEPLOYCTL_LOG_PATH`.
-
-Check daemon health:
+The installer starts `deployctld` automatically unless `SKIP_SERVICE=1` is set.
 
 ```sh
 deployctl daemon status
-```
-
-The status command reports whether the CLI can reach `deployctld`, which socket
-it used, and whether the daemon can reach Docker. For systemd installs, restart
-the daemon service with:
-
-```sh
 deployctl daemon restart
 ```
 
-Use `deployctl daemon restart --user` or `deployctl daemon restart --system` to
-target a specific installer mode.
+Use `deployctl daemon start` only to run a foreground daemon manually. The CLI
+talks to the daemon over a Unix socket; override it with `DEPLOYCTL_SOCKET_PATH`.
+Daemon logs default to `~/.deployctl/deployctld.log`; override with
+`DEPLOYCTL_LOG_PATH`.
 
-Deployment mutations run as daemon jobs. By default, the CLI follows the job
-until it finishes; pass `--detach` to return immediately after the job starts.
-The CLI only parses arguments and calls the daemon; cloning, pulling, env-file
-updates, Docker Compose builds, starts, stops, and deletes happen in the daemon.
+Deployment commands run as daemon jobs. Pass `--detach` to start a job and
+return immediately.
 
-## Shell completion
-
-## Install
-
-For local use, build the binary and put it in a directory that is already on your system `PATH`, or add the build directory to `PATH`.
-
-### Windows PowerShell
-
-Build and move the executable into a user-local tools directory:
-
-```powershell
-go build -o deployctl.exe .
-New-Item -ItemType Directory -Force "$env:USERPROFILE\bin"
-Move-Item -Force .\deployctl.exe "$env:USERPROFILE\bin\deployctl.exe"
-```
-
-Add that directory to your user `PATH` if it is not already there:
-
-```powershell
-[Environment]::SetEnvironmentVariable(
-  "Path",
-  [Environment]::GetEnvironmentVariable("Path", "User") + ";$env:USERPROFILE\bin",
-  "User"
-)
-```
-
-Open a new terminal and verify the install:
-
-```powershell
-deployctl --help
-```
-
-### macOS and Linux
-
-Build and install into `/usr/local/bin`:
-
-```sh
-go build -o deployctl .
-sudo install -m 0755 deployctl /usr/local/bin/deployctl
-deployctl --help
-```
-
-If you prefer a user-local install, use `~/.local/bin` and make sure it is on your `PATH`:
-
-```sh
-go build -o deployctl .
-mkdir -p "$HOME/.local/bin"
-install -m 0755 deployctl "$HOME/.local/bin/deployctl"
-export PATH="$HOME/.local/bin:$PATH"
-deployctl --help
-```
-
-Deployment-name arguments complete from your saved deployments.
-
-## Deployment flow
-
-Create a deployment from a repository without building images immediately. This lets you configure env files or variables before the first build:
+## Deployment Flow
 
 ```sh
 deployctl create https://github.com/owner/repo.git --name my-deployment
@@ -213,60 +86,31 @@ deployctl build my-deployment
 deployctl deploy my-deployment
 ```
 
-`deploy` starts the deployment with the existing local build. If every service is already running, deployctl reports the running containers and their Docker status instead of running Compose again. If the Compose build image is already cached, deployctl prints the cached image tag it will use. If no cached build exists, the daemon builds before starting.
-
-You can also build as part of deploy when you want a fresh image:
+`deploy` uses an existing build when available. Add `--build` to force a rebuild:
 
 ```sh
 deployctl deploy my-deployment --build
-```
-
-Restart a running deployment with the existing local build:
-
-```sh
-deployctl restart my-deployment
-```
-
-Rebuild images before restarting when you want fresh containers:
-
-```sh
 deployctl restart my-deployment --build
-```
-
-## Deployment status
-
-Show the current Compose/container state for one deployment:
-
-```sh
-deployctl status my-deployment
-```
-
-The status output includes the deployment state, compose file, running/stopped
-containers, container image names and IDs, recent job timing, latest update job,
-and env variable names with values masked. Env values are not returned by the
-daemon. To inspect a compose service env file other than the default `.env`:
-
-```sh
-deployctl status my-deployment --env-file app.env
-```
-
-## Updating deployments
-
-Pull the latest changes for a saved deployment without rebuilding images:
-
-```sh
-deployctl update my-deployment
-```
-
-Pull and rebuild in one command when you want the new source reflected in the local image:
-
-```sh
 deployctl update my-deployment --build
 ```
 
-## Environment variables
+Common commands:
 
-Import an env file when you create a deployment:
+```sh
+deployctl list
+deployctl status my-deployment
+deployctl restart my-deployment
+deployctl stop my-deployment
+deployctl update my-deployment
+deployctl delete my-deployment
+```
+
+`deployctl status` shows container state, image details, recent job timing, the
+latest update job, and env variable names with values masked.
+
+## Environment
+
+Import an env file when creating a deployment:
 
 ```sh
 deployctl create https://github.com/owner/repo.git --env-file .env
@@ -281,22 +125,15 @@ deployctl env list my-deployment
 deployctl env unset my-deployment ENV_VARIABLE_ONE
 ```
 
-When no env file is specified, `env set`, `env list`, and `env unset` use the deployment's default `.env` file.
-This is ideal for basic compose env setups like:
-
-```yaml
-services:
-  app:
-    env_file:
-      - .env
-```
-
-Compose also reads this default `.env` file when it interpolates values in the Compose file itself. If your Compose file uses an env variable for an image tag, build arg, port, volume, or other Compose field, set that variable in the default `.env` setup:
+When no env file is specified, `env set`, `env list`, and `env unset` use the
+deployment's default `.env` file. Put Compose interpolation values there:
 
 ```yaml
 services:
   app:
     image: ghcr.io/owner/app:${APP_TAG}
+    env_file:
+      - .env
 ```
 
 ```sh
@@ -304,34 +141,23 @@ deployctl env set my-deployment APP_TAG=1.2.3
 deployctl deploy my-deployment
 ```
 
-Do not put Compose interpolation variables only in a service-specific `env_file` such as `app.env`. Service `env_file` entries are passed to the container environment after Compose has already resolved fields like `image: ...:${APP_TAG}`. Variables needed by the Compose file must be present in the deployment's default `.env` file, either with `deployctl create --env-file .env`, `deployctl env set my-deployment .env`, or `deployctl env set my-deployment APP_TAG=1.2.3`.
-
-For Compose files with multiple service env files, pass the env file path exactly as it appears in the Compose file:
-
-```yaml
-services:
-  my-app:
-    env_file:
-      - app.env
-  backend:
-    env_file:
-      - backend.env
-```
+For service-specific env files, pass the path exactly as it appears in the
+Compose file:
 
 ```sh
 deployctl env set my-deployment app.env APP_PORT=8080 DEBUG=false
-deployctl env set my-deployment backend.env ./local-backend.env
 deployctl env list my-deployment app.env
-deployctl env unset my-deployment backend.env DATABASE_URL
+deployctl env unset my-deployment app.env DATABASE_URL
 ```
 
 `env list` only shows variable names and masks values as `*****`.
 
-## Private repositories
+## Private Repositories
 
-deployctl clones repositories by running `git clone`, so it uses the same local Git, SSH, and credential configuration as cloning manually in your terminal.
+deployctl runs Git directly, so repository access uses the service user's Git,
+SSH, and credential configuration.
 
-For HTTPS repository URLs, authenticate Git with GitHub CLI or Git Credential Manager before running deployctl:
+HTTPS:
 
 ```sh
 gh auth login
@@ -339,22 +165,17 @@ gh auth setup-git
 deployctl create https://github.com/owner/repo.git
 ```
 
-For SSH repository URLs, deployctl uses your on-device SSH configuration through Git, including your SSH agent and `~/.ssh/config`:
+SSH:
 
 ```sh
 deployctl create git@github.com:owner/repo.git
 ```
 
-## Shell completion
+## Shell Completion
 
-deployctl can generate shell completion scripts. For zsh:
+For zsh:
 
 ```sh
 deployctl completion zsh > "${fpath[1]}/_deployctl"
-```
-
-Then restart your shell, or run:
-
-```sh
 exec zsh
 ```
