@@ -5,10 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"slices"
 	"sort"
 	"strings"
+	"syscall"
+	"time"
 
 	"deployctl/internal/envfile"
 	"deployctl/internal/store"
@@ -20,7 +23,7 @@ import (
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/docker/compose/v5/pkg/compose"
-	"github.com/moby/moby/api/types/container"
+	containerpkg "github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 )
 
@@ -31,6 +34,35 @@ type ConnectionStatus struct {
 	APIVersion    string
 	OSType        string
 	Error         string
+}
+
+type UnavailableError struct {
+	Host string
+	Err  error
+}
+
+func (e *UnavailableError) Error() string {
+	if e.Host == "" {
+		return "Docker is unavailable: is the Docker daemon running?"
+	}
+	return fmt.Sprintf("Docker is unavailable at %s: is the Docker daemon running?", e.Host)
+}
+
+func (e *UnavailableError) Unwrap() error {
+	return e.Err
+}
+
+func IsUnavailable(err error) bool {
+	var unavailable *UnavailableError
+	return errors.As(err, &unavailable)
+}
+
+func UnavailableMessage(err error) (string, bool) {
+	var unavailable *UnavailableError
+	if !errors.As(err, &unavailable) {
+		return "", false
+	}
+	return unavailable.Error(), true
 }
 
 type BuildCache struct {
@@ -44,10 +76,15 @@ type DeploymentStatus struct {
 }
 
 type ContainerStatus struct {
-	Service string
-	Name    string
-	Status  string
-	State   string
+	Service    string
+	Name       string
+	Status     string
+	State      string
+	Image      string
+	ImageID    string
+	CreatedAt  time.Time
+	StartedAt  time.Time
+	FinishedAt time.Time
 }
 
 func (s DeploymentStatus) AllRunning() bool {
@@ -55,12 +92,20 @@ func (s DeploymentStatus) AllRunning() bool {
 }
 
 func (s DeploymentStatus) AnyRunning() bool {
-	return len(s.Containers) > 0
+	for _, container := range s.Containers {
+		if container.State == string(containerpkg.StateRunning) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s DeploymentStatus) Summary() string {
 	parts := make([]string, 0, len(s.Containers))
 	for _, container := range s.Containers {
+		if container.State != string(containerpkg.StateRunning) {
+			continue
+		}
 		parts = append(parts, fmt.Sprintf("%s (%s)", container.Name, container.Status))
 	}
 
@@ -80,6 +125,12 @@ func CheckConnection(ctx context.Context) ConnectionStatus {
 	host := dockerCLI.Client().DaemonHost()
 	ping, err := dockerCLI.Client().Ping(ctx, client.PingOptions{})
 	if err != nil {
+		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
+			return ConnectionStatus{
+				Host:  host,
+				Error: unavailable.Error(),
+			}
+		}
 		return ConnectionStatus{
 			Host:  host,
 			Error: fmt.Sprintf("ping Docker daemon: %v", err),
@@ -108,7 +159,7 @@ func CheckConnection(ctx context.Context) ConnectionStatus {
 
 func ComposeUp(ctx context.Context, repository *store.Repository) error {
 	// Load the project
-	service, project, _, err := loadProject(ctx, repository)
+	service, project, dockerCLI, err := loadProject(ctx, repository)
 	if err != nil {
 		return err
 	}
@@ -118,6 +169,9 @@ func ComposeUp(ctx context.Context, repository *store.Repository) error {
 		Create: api.CreateOptions{},
 		Start:  api.StartOptions{},
 	}); err != nil {
+		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
+			return unavailable
+		}
 		return fmt.Errorf("start compose project: %w", err)
 	}
 
@@ -148,6 +202,9 @@ func ComposeStatus(ctx context.Context, repository *store.Repository) (Deploymen
 			Add("label", api.ContainerNumberLabel),
 	})
 	if err != nil {
+		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
+			return DeploymentStatus{}, unavailable
+		}
 		return DeploymentStatus{}, fmt.Errorf("list compose containers: %w", err)
 	}
 
@@ -156,16 +213,25 @@ func ComposeStatus(ctx context.Context, repository *store.Repository) (Deploymen
 
 	for _, item := range containers.Items {
 		serviceName := item.Labels[api.ServiceLabel]
-		if serviceName == "" || item.State != container.StateRunning {
+		if serviceName == "" {
 			continue
 		}
 
-		running[serviceName] = true
+		if item.State == containerpkg.StateRunning {
+			running[serviceName] = true
+		}
+
+		startedAt, finishedAt := inspectContainerTimes(ctx, dockerCLI, item.ID)
 		status.Containers = append(status.Containers, ContainerStatus{
-			Service: serviceName,
-			Name:    containerName(item.Names),
-			Status:  item.Status,
-			State:   string(item.State),
+			Service:    serviceName,
+			Name:       containerName(item.Names),
+			Status:     item.Status,
+			State:      string(item.State),
+			Image:      item.Image,
+			ImageID:    item.ImageID,
+			CreatedAt:  fromUnix(item.Created),
+			StartedAt:  startedAt,
+			FinishedAt: finishedAt,
 		})
 	}
 
@@ -186,15 +252,36 @@ func ComposeStatus(ctx context.Context, repository *store.Repository) (Deploymen
 	return status, nil
 }
 
+func inspectContainerTimes(ctx context.Context, dockerCLI *command.DockerCli, id string) (time.Time, time.Time) {
+	inspected, err := dockerCLI.Client().ContainerInspect(ctx, id, client.ContainerInspectOptions{})
+	if err != nil || inspected.Container.State == nil {
+		return time.Time{}, time.Time{}
+	}
+
+	startedAt, _ := time.Parse(time.RFC3339Nano, inspected.Container.State.StartedAt)
+	finishedAt, _ := time.Parse(time.RFC3339Nano, inspected.Container.State.FinishedAt)
+	return startedAt, finishedAt
+}
+
+func fromUnix(seconds int64) time.Time {
+	if seconds == 0 {
+		return time.Time{}
+	}
+	return time.Unix(seconds, 0)
+}
+
 func ComposeBuild(ctx context.Context, repository *store.Repository) error {
 	// Load the project
-	service, project, _, err := loadProject(ctx, repository)
+	service, project, dockerCLI, err := loadProject(ctx, repository)
 	if err != nil {
 		return err
 	}
 
 	// Rebuild project images
 	if err := service.Build(ctx, project, api.BuildOptions{}); err != nil {
+		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
+			return unavailable
+		}
 		return fmt.Errorf("build compose project: %w", err)
 	}
 
@@ -226,6 +313,9 @@ func ComposeBuildCache(ctx context.Context, repository *store.Repository) (Build
 				cache.Missing = append(cache.Missing, tag)
 				continue
 			}
+			if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
+				return BuildCache{}, unavailable
+			}
 
 			return BuildCache{}, fmt.Errorf("inspect build image %s: %w", tag, err)
 		}
@@ -238,7 +328,7 @@ func ComposeBuildCache(ctx context.Context, repository *store.Repository) (Build
 
 func ComposeDown(ctx context.Context, repository *store.Repository) error {
 	// Load the project
-	service, project, _, err := loadProject(ctx, repository)
+	service, project, dockerCLI, err := loadProject(ctx, repository)
 	if err != nil {
 		return err
 	}
@@ -247,6 +337,9 @@ func ComposeDown(ctx context.Context, repository *store.Repository) error {
 	if err := service.Down(ctx, project.Name, api.DownOptions{
 		Project: project,
 	}); err != nil {
+		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
+			return unavailable
+		}
 		return fmt.Errorf("stop compose project: %w", err)
 	}
 
@@ -295,6 +388,9 @@ func loadProject(ctx context.Context, repository *store.Repository) (api.Compose
 
 	project, err := service.LoadProject(ctx, loadOptions)
 	if err != nil {
+		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
+			return nil, nil, nil, unavailable
+		}
 		return nil, nil, nil, fmt.Errorf("load compose project: %w", err)
 	}
 
@@ -307,6 +403,41 @@ func containerName(names []string) string {
 	}
 
 	return strings.TrimPrefix(names[0], "/")
+}
+
+func dockerUnavailableError(dockerCLI *command.DockerCli, err error) *UnavailableError {
+	if err == nil || !isDockerConnectionError(err) {
+		return nil
+	}
+
+	host := ""
+	if dockerCLI != nil && dockerCLI.Client() != nil {
+		host = dockerCLI.Client().DaemonHost()
+	}
+	return &UnavailableError{Host: host, Err: err}
+}
+
+func isDockerConnectionError(err error) bool {
+	if errors.Is(err, os.ErrNotExist) ||
+		errors.Is(err, syscall.ECONNREFUSED) ||
+		errors.Is(err, syscall.ECONNRESET) ||
+		errors.Is(err, syscall.ENOTCONN) {
+		return true
+	}
+
+	message := strings.ToLower(err.Error())
+	for _, marker := range []string{
+		"cannot connect to the docker daemon",
+		"failed to connect to the docker api",
+		"is the docker daemon running",
+		"connection refused",
+		"connect: no such file or directory",
+	} {
+		if strings.Contains(message, marker) {
+			return true
+		}
+	}
+	return false
 }
 
 func mirrorDefaultEnvFile(repository *store.Repository) error {

@@ -209,6 +209,274 @@ func (x *GetDeploymentRequest) GetName() string {
 	return ""
 }
 
+type GetDeploymentStatusRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	EnvFile       string                 `protobuf:"bytes,2,opt,name=env_file,json=envFile,proto3" json:"env_file,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetDeploymentStatusRequest) Reset() {
+	*x = GetDeploymentStatusRequest{}
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDeploymentStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDeploymentStatusRequest) ProtoMessage() {}
+
+func (x *GetDeploymentStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDeploymentStatusRequest.ProtoReflect.Descriptor instead.
+func (*GetDeploymentStatusRequest) Descriptor() ([]byte, []int) {
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetDeploymentStatusRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *GetDeploymentStatusRequest) GetEnvFile() string {
+	if x != nil {
+		return x.EnvFile
+	}
+	return ""
+}
+
+type DeploymentStatus struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Deployment       *Deployment            `protobuf:"bytes,1,opt,name=deployment,proto3" json:"deployment,omitempty"`
+	State            string                 `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"`
+	Containers       []*ContainerStatus     `protobuf:"bytes,3,rep,name=containers,proto3" json:"containers,omitempty"`
+	MissingServices  []string               `protobuf:"bytes,4,rep,name=missing_services,json=missingServices,proto3" json:"missing_services,omitempty"`
+	EnvNames         []string               `protobuf:"bytes,5,rep,name=env_names,json=envNames,proto3" json:"env_names,omitempty"`
+	LatestJob        *Job                   `protobuf:"bytes,6,opt,name=latest_job,json=latestJob,proto3" json:"latest_job,omitempty"`
+	LatestUpdateJob  *Job                   `protobuf:"bytes,7,opt,name=latest_update_job,json=latestUpdateJob,proto3" json:"latest_update_job,omitempty"`
+	RunningSinceUnix int64                  `protobuf:"varint,8,opt,name=running_since_unix,json=runningSinceUnix,proto3" json:"running_since_unix,omitempty"`
+	StoppedAtUnix    int64                  `protobuf:"varint,9,opt,name=stopped_at_unix,json=stoppedAtUnix,proto3" json:"stopped_at_unix,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *DeploymentStatus) Reset() {
+	*x = DeploymentStatus{}
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeploymentStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeploymentStatus) ProtoMessage() {}
+
+func (x *DeploymentStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeploymentStatus.ProtoReflect.Descriptor instead.
+func (*DeploymentStatus) Descriptor() ([]byte, []int) {
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *DeploymentStatus) GetDeployment() *Deployment {
+	if x != nil {
+		return x.Deployment
+	}
+	return nil
+}
+
+func (x *DeploymentStatus) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+func (x *DeploymentStatus) GetContainers() []*ContainerStatus {
+	if x != nil {
+		return x.Containers
+	}
+	return nil
+}
+
+func (x *DeploymentStatus) GetMissingServices() []string {
+	if x != nil {
+		return x.MissingServices
+	}
+	return nil
+}
+
+func (x *DeploymentStatus) GetEnvNames() []string {
+	if x != nil {
+		return x.EnvNames
+	}
+	return nil
+}
+
+func (x *DeploymentStatus) GetLatestJob() *Job {
+	if x != nil {
+		return x.LatestJob
+	}
+	return nil
+}
+
+func (x *DeploymentStatus) GetLatestUpdateJob() *Job {
+	if x != nil {
+		return x.LatestUpdateJob
+	}
+	return nil
+}
+
+func (x *DeploymentStatus) GetRunningSinceUnix() int64 {
+	if x != nil {
+		return x.RunningSinceUnix
+	}
+	return 0
+}
+
+func (x *DeploymentStatus) GetStoppedAtUnix() int64 {
+	if x != nil {
+		return x.StoppedAtUnix
+	}
+	return 0
+}
+
+type ContainerStatus struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Service        string                 `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty"`
+	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Status         string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	State          string                 `protobuf:"bytes,4,opt,name=state,proto3" json:"state,omitempty"`
+	Image          string                 `protobuf:"bytes,5,opt,name=image,proto3" json:"image,omitempty"`
+	ImageId        string                 `protobuf:"bytes,6,opt,name=image_id,json=imageId,proto3" json:"image_id,omitempty"`
+	CreatedAtUnix  int64                  `protobuf:"varint,7,opt,name=created_at_unix,json=createdAtUnix,proto3" json:"created_at_unix,omitempty"`
+	StartedAtUnix  int64                  `protobuf:"varint,8,opt,name=started_at_unix,json=startedAtUnix,proto3" json:"started_at_unix,omitempty"`
+	FinishedAtUnix int64                  `protobuf:"varint,9,opt,name=finished_at_unix,json=finishedAtUnix,proto3" json:"finished_at_unix,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ContainerStatus) Reset() {
+	*x = ContainerStatus{}
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ContainerStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ContainerStatus) ProtoMessage() {}
+
+func (x *ContainerStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ContainerStatus.ProtoReflect.Descriptor instead.
+func (*ContainerStatus) Descriptor() ([]byte, []int) {
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ContainerStatus) GetService() string {
+	if x != nil {
+		return x.Service
+	}
+	return ""
+}
+
+func (x *ContainerStatus) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ContainerStatus) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *ContainerStatus) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+func (x *ContainerStatus) GetImage() string {
+	if x != nil {
+		return x.Image
+	}
+	return ""
+}
+
+func (x *ContainerStatus) GetImageId() string {
+	if x != nil {
+		return x.ImageId
+	}
+	return ""
+}
+
+func (x *ContainerStatus) GetCreatedAtUnix() int64 {
+	if x != nil {
+		return x.CreatedAtUnix
+	}
+	return 0
+}
+
+func (x *ContainerStatus) GetStartedAtUnix() int64 {
+	if x != nil {
+		return x.StartedAtUnix
+	}
+	return 0
+}
+
+func (x *ContainerStatus) GetFinishedAtUnix() int64 {
+	if x != nil {
+		return x.FinishedAtUnix
+	}
+	return 0
+}
+
 type ListDeploymentsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -217,7 +485,7 @@ type ListDeploymentsRequest struct {
 
 func (x *ListDeploymentsRequest) Reset() {
 	*x = ListDeploymentsRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[3]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -229,7 +497,7 @@ func (x *ListDeploymentsRequest) String() string {
 func (*ListDeploymentsRequest) ProtoMessage() {}
 
 func (x *ListDeploymentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[3]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -242,7 +510,7 @@ func (x *ListDeploymentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDeploymentsRequest.ProtoReflect.Descriptor instead.
 func (*ListDeploymentsRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{3}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{6}
 }
 
 type ListDeploymentsResponse struct {
@@ -254,7 +522,7 @@ type ListDeploymentsResponse struct {
 
 func (x *ListDeploymentsResponse) Reset() {
 	*x = ListDeploymentsResponse{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[4]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -266,7 +534,7 @@ func (x *ListDeploymentsResponse) String() string {
 func (*ListDeploymentsResponse) ProtoMessage() {}
 
 func (x *ListDeploymentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[4]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -279,7 +547,7 @@ func (x *ListDeploymentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDeploymentsResponse.ProtoReflect.Descriptor instead.
 func (*ListDeploymentsResponse) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{4}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ListDeploymentsResponse) GetDeployments() []*Deployment {
@@ -298,7 +566,7 @@ type DeleteDeploymentRequest struct {
 
 func (x *DeleteDeploymentRequest) Reset() {
 	*x = DeleteDeploymentRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[5]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -310,7 +578,7 @@ func (x *DeleteDeploymentRequest) String() string {
 func (*DeleteDeploymentRequest) ProtoMessage() {}
 
 func (x *DeleteDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[5]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -323,7 +591,7 @@ func (x *DeleteDeploymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDeploymentRequest.ProtoReflect.Descriptor instead.
 func (*DeleteDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{5}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeleteDeploymentRequest) GetName() string {
@@ -342,7 +610,7 @@ type BuildDeploymentRequest struct {
 
 func (x *BuildDeploymentRequest) Reset() {
 	*x = BuildDeploymentRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[6]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -354,7 +622,7 @@ func (x *BuildDeploymentRequest) String() string {
 func (*BuildDeploymentRequest) ProtoMessage() {}
 
 func (x *BuildDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[6]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -367,7 +635,7 @@ func (x *BuildDeploymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BuildDeploymentRequest.ProtoReflect.Descriptor instead.
 func (*BuildDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{6}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *BuildDeploymentRequest) GetName() string {
@@ -387,7 +655,7 @@ type UpdateDeploymentRequest struct {
 
 func (x *UpdateDeploymentRequest) Reset() {
 	*x = UpdateDeploymentRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[7]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -399,7 +667,7 @@ func (x *UpdateDeploymentRequest) String() string {
 func (*UpdateDeploymentRequest) ProtoMessage() {}
 
 func (x *UpdateDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[7]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -412,7 +680,7 @@ func (x *UpdateDeploymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateDeploymentRequest.ProtoReflect.Descriptor instead.
 func (*UpdateDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{7}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UpdateDeploymentRequest) GetName() string {
@@ -439,7 +707,7 @@ type DeployDeploymentRequest struct {
 
 func (x *DeployDeploymentRequest) Reset() {
 	*x = DeployDeploymentRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[8]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -451,7 +719,7 @@ func (x *DeployDeploymentRequest) String() string {
 func (*DeployDeploymentRequest) ProtoMessage() {}
 
 func (x *DeployDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[8]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -464,7 +732,7 @@ func (x *DeployDeploymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeployDeploymentRequest.ProtoReflect.Descriptor instead.
 func (*DeployDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{8}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *DeployDeploymentRequest) GetName() string {
@@ -491,7 +759,7 @@ type RestartDeploymentRequest struct {
 
 func (x *RestartDeploymentRequest) Reset() {
 	*x = RestartDeploymentRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[9]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -503,7 +771,7 @@ func (x *RestartDeploymentRequest) String() string {
 func (*RestartDeploymentRequest) ProtoMessage() {}
 
 func (x *RestartDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[9]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -516,7 +784,7 @@ func (x *RestartDeploymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RestartDeploymentRequest.ProtoReflect.Descriptor instead.
 func (*RestartDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{9}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *RestartDeploymentRequest) GetName() string {
@@ -542,7 +810,7 @@ type StopDeploymentRequest struct {
 
 func (x *StopDeploymentRequest) Reset() {
 	*x = StopDeploymentRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[10]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -554,7 +822,7 @@ func (x *StopDeploymentRequest) String() string {
 func (*StopDeploymentRequest) ProtoMessage() {}
 
 func (x *StopDeploymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[10]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -567,7 +835,7 @@ func (x *StopDeploymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StopDeploymentRequest.ProtoReflect.Descriptor instead.
 func (*StopDeploymentRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{10}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *StopDeploymentRequest) GetName() string {
@@ -587,7 +855,7 @@ type ListEnvNamesRequest struct {
 
 func (x *ListEnvNamesRequest) Reset() {
 	*x = ListEnvNamesRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[11]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -599,7 +867,7 @@ func (x *ListEnvNamesRequest) String() string {
 func (*ListEnvNamesRequest) ProtoMessage() {}
 
 func (x *ListEnvNamesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[11]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -612,7 +880,7 @@ func (x *ListEnvNamesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEnvNamesRequest.ProtoReflect.Descriptor instead.
 func (*ListEnvNamesRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{11}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ListEnvNamesRequest) GetDeploymentName() string {
@@ -638,7 +906,7 @@ type ListEnvNamesResponse struct {
 
 func (x *ListEnvNamesResponse) Reset() {
 	*x = ListEnvNamesResponse{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[12]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -650,7 +918,7 @@ func (x *ListEnvNamesResponse) String() string {
 func (*ListEnvNamesResponse) ProtoMessage() {}
 
 func (x *ListEnvNamesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[12]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -663,7 +931,7 @@ func (x *ListEnvNamesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEnvNamesResponse.ProtoReflect.Descriptor instead.
 func (*ListEnvNamesResponse) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{12}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListEnvNamesResponse) GetNames() []string {
@@ -684,7 +952,7 @@ type SetEnvRequest struct {
 
 func (x *SetEnvRequest) Reset() {
 	*x = SetEnvRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[13]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -696,7 +964,7 @@ func (x *SetEnvRequest) String() string {
 func (*SetEnvRequest) ProtoMessage() {}
 
 func (x *SetEnvRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[13]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -709,7 +977,7 @@ func (x *SetEnvRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetEnvRequest.ProtoReflect.Descriptor instead.
 func (*SetEnvRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{13}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *SetEnvRequest) GetDeploymentName() string {
@@ -744,7 +1012,7 @@ type ImportEnvFileRequest struct {
 
 func (x *ImportEnvFileRequest) Reset() {
 	*x = ImportEnvFileRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[14]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -756,7 +1024,7 @@ func (x *ImportEnvFileRequest) String() string {
 func (*ImportEnvFileRequest) ProtoMessage() {}
 
 func (x *ImportEnvFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[14]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -769,7 +1037,7 @@ func (x *ImportEnvFileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportEnvFileRequest.ProtoReflect.Descriptor instead.
 func (*ImportEnvFileRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{14}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ImportEnvFileRequest) GetDeploymentName() string {
@@ -804,7 +1072,7 @@ type UnsetEnvRequest struct {
 
 func (x *UnsetEnvRequest) Reset() {
 	*x = UnsetEnvRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[15]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -816,7 +1084,7 @@ func (x *UnsetEnvRequest) String() string {
 func (*UnsetEnvRequest) ProtoMessage() {}
 
 func (x *UnsetEnvRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[15]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -829,7 +1097,7 @@ func (x *UnsetEnvRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnsetEnvRequest.ProtoReflect.Descriptor instead.
 func (*UnsetEnvRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{15}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *UnsetEnvRequest) GetDeploymentName() string {
@@ -862,7 +1130,7 @@ type JobResponse struct {
 
 func (x *JobResponse) Reset() {
 	*x = JobResponse{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[16]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -874,7 +1142,7 @@ func (x *JobResponse) String() string {
 func (*JobResponse) ProtoMessage() {}
 
 func (x *JobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[16]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -887,7 +1155,7 @@ func (x *JobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JobResponse.ProtoReflect.Descriptor instead.
 func (*JobResponse) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{16}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *JobResponse) GetJobId() string {
@@ -913,7 +1181,7 @@ type Job struct {
 
 func (x *Job) Reset() {
 	*x = Job{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[17]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -925,7 +1193,7 @@ func (x *Job) String() string {
 func (*Job) ProtoMessage() {}
 
 func (x *Job) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[17]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -938,7 +1206,7 @@ func (x *Job) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Job.ProtoReflect.Descriptor instead.
 func (*Job) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{17}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *Job) GetId() string {
@@ -1006,7 +1274,7 @@ type GetJobRequest struct {
 
 func (x *GetJobRequest) Reset() {
 	*x = GetJobRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[18]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1018,7 +1286,7 @@ func (x *GetJobRequest) String() string {
 func (*GetJobRequest) ProtoMessage() {}
 
 func (x *GetJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[18]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1031,7 +1299,7 @@ func (x *GetJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobRequest.ProtoReflect.Descriptor instead.
 func (*GetJobRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{18}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GetJobRequest) GetId() string {
@@ -1050,7 +1318,7 @@ type ListJobsRequest struct {
 
 func (x *ListJobsRequest) Reset() {
 	*x = ListJobsRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[19]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1062,7 +1330,7 @@ func (x *ListJobsRequest) String() string {
 func (*ListJobsRequest) ProtoMessage() {}
 
 func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[19]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1075,7 +1343,7 @@ func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJobsRequest.ProtoReflect.Descriptor instead.
 func (*ListJobsRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{19}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ListJobsRequest) GetDeploymentName() string {
@@ -1094,7 +1362,7 @@ type ListJobsResponse struct {
 
 func (x *ListJobsResponse) Reset() {
 	*x = ListJobsResponse{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[20]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1106,7 +1374,7 @@ func (x *ListJobsResponse) String() string {
 func (*ListJobsResponse) ProtoMessage() {}
 
 func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[20]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1119,7 +1387,7 @@ func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJobsResponse.ProtoReflect.Descriptor instead.
 func (*ListJobsResponse) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{20}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ListJobsResponse) GetJobs() []*Job {
@@ -1139,7 +1407,7 @@ type WatchJobRequest struct {
 
 func (x *WatchJobRequest) Reset() {
 	*x = WatchJobRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[21]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1151,7 +1419,7 @@ func (x *WatchJobRequest) String() string {
 func (*WatchJobRequest) ProtoMessage() {}
 
 func (x *WatchJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[21]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1164,7 +1432,7 @@ func (x *WatchJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WatchJobRequest.ProtoReflect.Descriptor instead.
 func (*WatchJobRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{21}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *WatchJobRequest) GetId() string {
@@ -1190,7 +1458,7 @@ type CancelJobRequest struct {
 
 func (x *CancelJobRequest) Reset() {
 	*x = CancelJobRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[22]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1202,7 +1470,7 @@ func (x *CancelJobRequest) String() string {
 func (*CancelJobRequest) ProtoMessage() {}
 
 func (x *CancelJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[22]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1215,7 +1483,7 @@ func (x *CancelJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelJobRequest.ProtoReflect.Descriptor instead.
 func (*CancelJobRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{22}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *CancelJobRequest) GetId() string {
@@ -1237,7 +1505,7 @@ type JobEvent struct {
 
 func (x *JobEvent) Reset() {
 	*x = JobEvent{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[23]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1249,7 +1517,7 @@ func (x *JobEvent) String() string {
 func (*JobEvent) ProtoMessage() {}
 
 func (x *JobEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[23]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1262,7 +1530,7 @@ func (x *JobEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JobEvent.ProtoReflect.Descriptor instead.
 func (*JobEvent) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{23}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *JobEvent) GetJobId() string {
@@ -1301,7 +1569,7 @@ type HealthRequest struct {
 
 func (x *HealthRequest) Reset() {
 	*x = HealthRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[24]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1313,7 +1581,7 @@ func (x *HealthRequest) String() string {
 func (*HealthRequest) ProtoMessage() {}
 
 func (x *HealthRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[24]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1326,7 +1594,7 @@ func (x *HealthRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthRequest.ProtoReflect.Descriptor instead.
 func (*HealthRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{24}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{27}
 }
 
 type HealthResponse struct {
@@ -1338,7 +1606,7 @@ type HealthResponse struct {
 
 func (x *HealthResponse) Reset() {
 	*x = HealthResponse{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[25]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1350,7 +1618,7 @@ func (x *HealthResponse) String() string {
 func (*HealthResponse) ProtoMessage() {}
 
 func (x *HealthResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[25]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1363,7 +1631,7 @@ func (x *HealthResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthResponse.ProtoReflect.Descriptor instead.
 func (*HealthResponse) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{25}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *HealthResponse) GetStatus() string {
@@ -1381,7 +1649,7 @@ type VersionRequest struct {
 
 func (x *VersionRequest) Reset() {
 	*x = VersionRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[26]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1393,7 +1661,7 @@ func (x *VersionRequest) String() string {
 func (*VersionRequest) ProtoMessage() {}
 
 func (x *VersionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[26]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1406,7 +1674,7 @@ func (x *VersionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VersionRequest.ProtoReflect.Descriptor instead.
 func (*VersionRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{26}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{29}
 }
 
 type VersionResponse struct {
@@ -1418,7 +1686,7 @@ type VersionResponse struct {
 
 func (x *VersionResponse) Reset() {
 	*x = VersionResponse{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[27]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1430,7 +1698,7 @@ func (x *VersionResponse) String() string {
 func (*VersionResponse) ProtoMessage() {}
 
 func (x *VersionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[27]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1443,7 +1711,7 @@ func (x *VersionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VersionResponse.ProtoReflect.Descriptor instead.
 func (*VersionResponse) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{27}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *VersionResponse) GetVersion() string {
@@ -1461,7 +1729,7 @@ type CapabilitiesRequest struct {
 
 func (x *CapabilitiesRequest) Reset() {
 	*x = CapabilitiesRequest{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[28]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1473,7 +1741,7 @@ func (x *CapabilitiesRequest) String() string {
 func (*CapabilitiesRequest) ProtoMessage() {}
 
 func (x *CapabilitiesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[28]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1486,7 +1754,7 @@ func (x *CapabilitiesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CapabilitiesRequest.ProtoReflect.Descriptor instead.
 func (*CapabilitiesRequest) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{28}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{31}
 }
 
 type CapabilitiesResponse struct {
@@ -1498,7 +1766,7 @@ type CapabilitiesResponse struct {
 
 func (x *CapabilitiesResponse) Reset() {
 	*x = CapabilitiesResponse{}
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[29]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1510,7 +1778,7 @@ func (x *CapabilitiesResponse) String() string {
 func (*CapabilitiesResponse) ProtoMessage() {}
 
 func (x *CapabilitiesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[29]
+	mi := &file_api_deployctl_v1_deployctl_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1523,7 +1791,7 @@ func (x *CapabilitiesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CapabilitiesResponse.ProtoReflect.Descriptor instead.
 func (*CapabilitiesResponse) Descriptor() ([]byte, []int) {
-	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{29}
+	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *CapabilitiesResponse) GetCapabilities() []string {
@@ -1551,7 +1819,35 @@ const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"\fcompose_file\x18\x03 \x01(\tR\vcomposeFile\x12\x19\n" +
 	"\benv_file\x18\x04 \x01(\tR\aenvFile\"*\n" +
 	"\x14GetDeploymentRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"\x18\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"K\n" +
+	"\x1aGetDeploymentStatusRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n" +
+	"\benv_file\x18\x02 \x01(\tR\aenvFile\"\xb0\x03\n" +
+	"\x10DeploymentStatus\x128\n" +
+	"\n" +
+	"deployment\x18\x01 \x01(\v2\x18.deployctl.v1.DeploymentR\n" +
+	"deployment\x12\x14\n" +
+	"\x05state\x18\x02 \x01(\tR\x05state\x12=\n" +
+	"\n" +
+	"containers\x18\x03 \x03(\v2\x1d.deployctl.v1.ContainerStatusR\n" +
+	"containers\x12)\n" +
+	"\x10missing_services\x18\x04 \x03(\tR\x0fmissingServices\x12\x1b\n" +
+	"\tenv_names\x18\x05 \x03(\tR\benvNames\x120\n" +
+	"\n" +
+	"latest_job\x18\x06 \x01(\v2\x11.deployctl.v1.JobR\tlatestJob\x12=\n" +
+	"\x11latest_update_job\x18\a \x01(\v2\x11.deployctl.v1.JobR\x0flatestUpdateJob\x12,\n" +
+	"\x12running_since_unix\x18\b \x01(\x03R\x10runningSinceUnix\x12&\n" +
+	"\x0fstopped_at_unix\x18\t \x01(\x03R\rstoppedAtUnix\"\x98\x02\n" +
+	"\x0fContainerStatus\x12\x18\n" +
+	"\aservice\x18\x01 \x01(\tR\aservice\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\x12\x14\n" +
+	"\x05state\x18\x04 \x01(\tR\x05state\x12\x14\n" +
+	"\x05image\x18\x05 \x01(\tR\x05image\x12\x19\n" +
+	"\bimage_id\x18\x06 \x01(\tR\aimageId\x12&\n" +
+	"\x0fcreated_at_unix\x18\a \x01(\x03R\rcreatedAtUnix\x12&\n" +
+	"\x0fstarted_at_unix\x18\b \x01(\x03R\rstartedAtUnix\x12(\n" +
+	"\x10finished_at_unix\x18\t \x01(\x03R\x0efinishedAtUnix\"\x18\n" +
 	"\x16ListDeploymentsRequest\"U\n" +
 	"\x17ListDeploymentsResponse\x12:\n" +
 	"\vdeployments\x18\x01 \x03(\v2\x18.deployctl.v1.DeploymentR\vdeployments\"-\n" +
@@ -1626,10 +1922,11 @@ const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"\aversion\x18\x01 \x01(\tR\aversion\"\x15\n" +
 	"\x13CapabilitiesRequest\":\n" +
 	"\x14CapabilitiesResponse\x12\"\n" +
-	"\fcapabilities\x18\x01 \x03(\tR\fcapabilities2\x98\x06\n" +
+	"\fcapabilities\x18\x01 \x03(\tR\fcapabilities2\xf9\x06\n" +
 	"\x11DeploymentService\x12T\n" +
 	"\x10CreateDeployment\x12%.deployctl.v1.CreateDeploymentRequest\x1a\x19.deployctl.v1.JobResponse\x12M\n" +
-	"\rGetDeployment\x12\".deployctl.v1.GetDeploymentRequest\x1a\x18.deployctl.v1.Deployment\x12^\n" +
+	"\rGetDeployment\x12\".deployctl.v1.GetDeploymentRequest\x1a\x18.deployctl.v1.Deployment\x12_\n" +
+	"\x13GetDeploymentStatus\x12(.deployctl.v1.GetDeploymentStatusRequest\x1a\x1e.deployctl.v1.DeploymentStatus\x12^\n" +
 	"\x0fListDeployments\x12$.deployctl.v1.ListDeploymentsRequest\x1a%.deployctl.v1.ListDeploymentsResponse\x12T\n" +
 	"\x10DeleteDeployment\x12%.deployctl.v1.DeleteDeploymentRequest\x1a\x19.deployctl.v1.JobResponse\x12R\n" +
 	"\x0fBuildDeployment\x12$.deployctl.v1.BuildDeploymentRequest\x1a\x19.deployctl.v1.JobResponse\x12T\n" +
@@ -1666,90 +1963,99 @@ func file_api_deployctl_v1_deployctl_proto_rawDescGZIP() []byte {
 	return file_api_deployctl_v1_deployctl_proto_rawDescData
 }
 
-var file_api_deployctl_v1_deployctl_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
+var file_api_deployctl_v1_deployctl_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
 var file_api_deployctl_v1_deployctl_proto_goTypes = []any{
-	(*Deployment)(nil),               // 0: deployctl.v1.Deployment
-	(*CreateDeploymentRequest)(nil),  // 1: deployctl.v1.CreateDeploymentRequest
-	(*GetDeploymentRequest)(nil),     // 2: deployctl.v1.GetDeploymentRequest
-	(*ListDeploymentsRequest)(nil),   // 3: deployctl.v1.ListDeploymentsRequest
-	(*ListDeploymentsResponse)(nil),  // 4: deployctl.v1.ListDeploymentsResponse
-	(*DeleteDeploymentRequest)(nil),  // 5: deployctl.v1.DeleteDeploymentRequest
-	(*BuildDeploymentRequest)(nil),   // 6: deployctl.v1.BuildDeploymentRequest
-	(*UpdateDeploymentRequest)(nil),  // 7: deployctl.v1.UpdateDeploymentRequest
-	(*DeployDeploymentRequest)(nil),  // 8: deployctl.v1.DeployDeploymentRequest
-	(*RestartDeploymentRequest)(nil), // 9: deployctl.v1.RestartDeploymentRequest
-	(*StopDeploymentRequest)(nil),    // 10: deployctl.v1.StopDeploymentRequest
-	(*ListEnvNamesRequest)(nil),      // 11: deployctl.v1.ListEnvNamesRequest
-	(*ListEnvNamesResponse)(nil),     // 12: deployctl.v1.ListEnvNamesResponse
-	(*SetEnvRequest)(nil),            // 13: deployctl.v1.SetEnvRequest
-	(*ImportEnvFileRequest)(nil),     // 14: deployctl.v1.ImportEnvFileRequest
-	(*UnsetEnvRequest)(nil),          // 15: deployctl.v1.UnsetEnvRequest
-	(*JobResponse)(nil),              // 16: deployctl.v1.JobResponse
-	(*Job)(nil),                      // 17: deployctl.v1.Job
-	(*GetJobRequest)(nil),            // 18: deployctl.v1.GetJobRequest
-	(*ListJobsRequest)(nil),          // 19: deployctl.v1.ListJobsRequest
-	(*ListJobsResponse)(nil),         // 20: deployctl.v1.ListJobsResponse
-	(*WatchJobRequest)(nil),          // 21: deployctl.v1.WatchJobRequest
-	(*CancelJobRequest)(nil),         // 22: deployctl.v1.CancelJobRequest
-	(*JobEvent)(nil),                 // 23: deployctl.v1.JobEvent
-	(*HealthRequest)(nil),            // 24: deployctl.v1.HealthRequest
-	(*HealthResponse)(nil),           // 25: deployctl.v1.HealthResponse
-	(*VersionRequest)(nil),           // 26: deployctl.v1.VersionRequest
-	(*VersionResponse)(nil),          // 27: deployctl.v1.VersionResponse
-	(*CapabilitiesRequest)(nil),      // 28: deployctl.v1.CapabilitiesRequest
-	(*CapabilitiesResponse)(nil),     // 29: deployctl.v1.CapabilitiesResponse
-	nil,                              // 30: deployctl.v1.SetEnvRequest.VariablesEntry
+	(*Deployment)(nil),                 // 0: deployctl.v1.Deployment
+	(*CreateDeploymentRequest)(nil),    // 1: deployctl.v1.CreateDeploymentRequest
+	(*GetDeploymentRequest)(nil),       // 2: deployctl.v1.GetDeploymentRequest
+	(*GetDeploymentStatusRequest)(nil), // 3: deployctl.v1.GetDeploymentStatusRequest
+	(*DeploymentStatus)(nil),           // 4: deployctl.v1.DeploymentStatus
+	(*ContainerStatus)(nil),            // 5: deployctl.v1.ContainerStatus
+	(*ListDeploymentsRequest)(nil),     // 6: deployctl.v1.ListDeploymentsRequest
+	(*ListDeploymentsResponse)(nil),    // 7: deployctl.v1.ListDeploymentsResponse
+	(*DeleteDeploymentRequest)(nil),    // 8: deployctl.v1.DeleteDeploymentRequest
+	(*BuildDeploymentRequest)(nil),     // 9: deployctl.v1.BuildDeploymentRequest
+	(*UpdateDeploymentRequest)(nil),    // 10: deployctl.v1.UpdateDeploymentRequest
+	(*DeployDeploymentRequest)(nil),    // 11: deployctl.v1.DeployDeploymentRequest
+	(*RestartDeploymentRequest)(nil),   // 12: deployctl.v1.RestartDeploymentRequest
+	(*StopDeploymentRequest)(nil),      // 13: deployctl.v1.StopDeploymentRequest
+	(*ListEnvNamesRequest)(nil),        // 14: deployctl.v1.ListEnvNamesRequest
+	(*ListEnvNamesResponse)(nil),       // 15: deployctl.v1.ListEnvNamesResponse
+	(*SetEnvRequest)(nil),              // 16: deployctl.v1.SetEnvRequest
+	(*ImportEnvFileRequest)(nil),       // 17: deployctl.v1.ImportEnvFileRequest
+	(*UnsetEnvRequest)(nil),            // 18: deployctl.v1.UnsetEnvRequest
+	(*JobResponse)(nil),                // 19: deployctl.v1.JobResponse
+	(*Job)(nil),                        // 20: deployctl.v1.Job
+	(*GetJobRequest)(nil),              // 21: deployctl.v1.GetJobRequest
+	(*ListJobsRequest)(nil),            // 22: deployctl.v1.ListJobsRequest
+	(*ListJobsResponse)(nil),           // 23: deployctl.v1.ListJobsResponse
+	(*WatchJobRequest)(nil),            // 24: deployctl.v1.WatchJobRequest
+	(*CancelJobRequest)(nil),           // 25: deployctl.v1.CancelJobRequest
+	(*JobEvent)(nil),                   // 26: deployctl.v1.JobEvent
+	(*HealthRequest)(nil),              // 27: deployctl.v1.HealthRequest
+	(*HealthResponse)(nil),             // 28: deployctl.v1.HealthResponse
+	(*VersionRequest)(nil),             // 29: deployctl.v1.VersionRequest
+	(*VersionResponse)(nil),            // 30: deployctl.v1.VersionResponse
+	(*CapabilitiesRequest)(nil),        // 31: deployctl.v1.CapabilitiesRequest
+	(*CapabilitiesResponse)(nil),       // 32: deployctl.v1.CapabilitiesResponse
+	nil,                                // 33: deployctl.v1.SetEnvRequest.VariablesEntry
 }
 var file_api_deployctl_v1_deployctl_proto_depIdxs = []int32{
-	0,  // 0: deployctl.v1.ListDeploymentsResponse.deployments:type_name -> deployctl.v1.Deployment
-	30, // 1: deployctl.v1.SetEnvRequest.variables:type_name -> deployctl.v1.SetEnvRequest.VariablesEntry
-	17, // 2: deployctl.v1.ListJobsResponse.jobs:type_name -> deployctl.v1.Job
-	17, // 3: deployctl.v1.JobEvent.job:type_name -> deployctl.v1.Job
-	1,  // 4: deployctl.v1.DeploymentService.CreateDeployment:input_type -> deployctl.v1.CreateDeploymentRequest
-	2,  // 5: deployctl.v1.DeploymentService.GetDeployment:input_type -> deployctl.v1.GetDeploymentRequest
-	3,  // 6: deployctl.v1.DeploymentService.ListDeployments:input_type -> deployctl.v1.ListDeploymentsRequest
-	5,  // 7: deployctl.v1.DeploymentService.DeleteDeployment:input_type -> deployctl.v1.DeleteDeploymentRequest
-	6,  // 8: deployctl.v1.DeploymentService.BuildDeployment:input_type -> deployctl.v1.BuildDeploymentRequest
-	7,  // 9: deployctl.v1.DeploymentService.UpdateDeployment:input_type -> deployctl.v1.UpdateDeploymentRequest
-	8,  // 10: deployctl.v1.DeploymentService.DeployDeployment:input_type -> deployctl.v1.DeployDeploymentRequest
-	9,  // 11: deployctl.v1.DeploymentService.RestartDeployment:input_type -> deployctl.v1.RestartDeploymentRequest
-	10, // 12: deployctl.v1.DeploymentService.StopDeployment:input_type -> deployctl.v1.StopDeploymentRequest
-	11, // 13: deployctl.v1.EnvService.ListEnvNames:input_type -> deployctl.v1.ListEnvNamesRequest
-	13, // 14: deployctl.v1.EnvService.SetEnv:input_type -> deployctl.v1.SetEnvRequest
-	14, // 15: deployctl.v1.EnvService.ImportEnvFile:input_type -> deployctl.v1.ImportEnvFileRequest
-	15, // 16: deployctl.v1.EnvService.UnsetEnv:input_type -> deployctl.v1.UnsetEnvRequest
-	18, // 17: deployctl.v1.JobService.GetJob:input_type -> deployctl.v1.GetJobRequest
-	19, // 18: deployctl.v1.JobService.ListJobs:input_type -> deployctl.v1.ListJobsRequest
-	21, // 19: deployctl.v1.JobService.WatchJob:input_type -> deployctl.v1.WatchJobRequest
-	22, // 20: deployctl.v1.JobService.CancelJob:input_type -> deployctl.v1.CancelJobRequest
-	24, // 21: deployctl.v1.SystemService.Health:input_type -> deployctl.v1.HealthRequest
-	26, // 22: deployctl.v1.SystemService.Version:input_type -> deployctl.v1.VersionRequest
-	28, // 23: deployctl.v1.SystemService.Capabilities:input_type -> deployctl.v1.CapabilitiesRequest
-	16, // 24: deployctl.v1.DeploymentService.CreateDeployment:output_type -> deployctl.v1.JobResponse
-	0,  // 25: deployctl.v1.DeploymentService.GetDeployment:output_type -> deployctl.v1.Deployment
-	4,  // 26: deployctl.v1.DeploymentService.ListDeployments:output_type -> deployctl.v1.ListDeploymentsResponse
-	16, // 27: deployctl.v1.DeploymentService.DeleteDeployment:output_type -> deployctl.v1.JobResponse
-	16, // 28: deployctl.v1.DeploymentService.BuildDeployment:output_type -> deployctl.v1.JobResponse
-	16, // 29: deployctl.v1.DeploymentService.UpdateDeployment:output_type -> deployctl.v1.JobResponse
-	16, // 30: deployctl.v1.DeploymentService.DeployDeployment:output_type -> deployctl.v1.JobResponse
-	16, // 31: deployctl.v1.DeploymentService.RestartDeployment:output_type -> deployctl.v1.JobResponse
-	16, // 32: deployctl.v1.DeploymentService.StopDeployment:output_type -> deployctl.v1.JobResponse
-	12, // 33: deployctl.v1.EnvService.ListEnvNames:output_type -> deployctl.v1.ListEnvNamesResponse
-	16, // 34: deployctl.v1.EnvService.SetEnv:output_type -> deployctl.v1.JobResponse
-	16, // 35: deployctl.v1.EnvService.ImportEnvFile:output_type -> deployctl.v1.JobResponse
-	16, // 36: deployctl.v1.EnvService.UnsetEnv:output_type -> deployctl.v1.JobResponse
-	17, // 37: deployctl.v1.JobService.GetJob:output_type -> deployctl.v1.Job
-	20, // 38: deployctl.v1.JobService.ListJobs:output_type -> deployctl.v1.ListJobsResponse
-	23, // 39: deployctl.v1.JobService.WatchJob:output_type -> deployctl.v1.JobEvent
-	17, // 40: deployctl.v1.JobService.CancelJob:output_type -> deployctl.v1.Job
-	25, // 41: deployctl.v1.SystemService.Health:output_type -> deployctl.v1.HealthResponse
-	27, // 42: deployctl.v1.SystemService.Version:output_type -> deployctl.v1.VersionResponse
-	29, // 43: deployctl.v1.SystemService.Capabilities:output_type -> deployctl.v1.CapabilitiesResponse
-	24, // [24:44] is the sub-list for method output_type
-	4,  // [4:24] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	0,  // 0: deployctl.v1.DeploymentStatus.deployment:type_name -> deployctl.v1.Deployment
+	5,  // 1: deployctl.v1.DeploymentStatus.containers:type_name -> deployctl.v1.ContainerStatus
+	20, // 2: deployctl.v1.DeploymentStatus.latest_job:type_name -> deployctl.v1.Job
+	20, // 3: deployctl.v1.DeploymentStatus.latest_update_job:type_name -> deployctl.v1.Job
+	0,  // 4: deployctl.v1.ListDeploymentsResponse.deployments:type_name -> deployctl.v1.Deployment
+	33, // 5: deployctl.v1.SetEnvRequest.variables:type_name -> deployctl.v1.SetEnvRequest.VariablesEntry
+	20, // 6: deployctl.v1.ListJobsResponse.jobs:type_name -> deployctl.v1.Job
+	20, // 7: deployctl.v1.JobEvent.job:type_name -> deployctl.v1.Job
+	1,  // 8: deployctl.v1.DeploymentService.CreateDeployment:input_type -> deployctl.v1.CreateDeploymentRequest
+	2,  // 9: deployctl.v1.DeploymentService.GetDeployment:input_type -> deployctl.v1.GetDeploymentRequest
+	3,  // 10: deployctl.v1.DeploymentService.GetDeploymentStatus:input_type -> deployctl.v1.GetDeploymentStatusRequest
+	6,  // 11: deployctl.v1.DeploymentService.ListDeployments:input_type -> deployctl.v1.ListDeploymentsRequest
+	8,  // 12: deployctl.v1.DeploymentService.DeleteDeployment:input_type -> deployctl.v1.DeleteDeploymentRequest
+	9,  // 13: deployctl.v1.DeploymentService.BuildDeployment:input_type -> deployctl.v1.BuildDeploymentRequest
+	10, // 14: deployctl.v1.DeploymentService.UpdateDeployment:input_type -> deployctl.v1.UpdateDeploymentRequest
+	11, // 15: deployctl.v1.DeploymentService.DeployDeployment:input_type -> deployctl.v1.DeployDeploymentRequest
+	12, // 16: deployctl.v1.DeploymentService.RestartDeployment:input_type -> deployctl.v1.RestartDeploymentRequest
+	13, // 17: deployctl.v1.DeploymentService.StopDeployment:input_type -> deployctl.v1.StopDeploymentRequest
+	14, // 18: deployctl.v1.EnvService.ListEnvNames:input_type -> deployctl.v1.ListEnvNamesRequest
+	16, // 19: deployctl.v1.EnvService.SetEnv:input_type -> deployctl.v1.SetEnvRequest
+	17, // 20: deployctl.v1.EnvService.ImportEnvFile:input_type -> deployctl.v1.ImportEnvFileRequest
+	18, // 21: deployctl.v1.EnvService.UnsetEnv:input_type -> deployctl.v1.UnsetEnvRequest
+	21, // 22: deployctl.v1.JobService.GetJob:input_type -> deployctl.v1.GetJobRequest
+	22, // 23: deployctl.v1.JobService.ListJobs:input_type -> deployctl.v1.ListJobsRequest
+	24, // 24: deployctl.v1.JobService.WatchJob:input_type -> deployctl.v1.WatchJobRequest
+	25, // 25: deployctl.v1.JobService.CancelJob:input_type -> deployctl.v1.CancelJobRequest
+	27, // 26: deployctl.v1.SystemService.Health:input_type -> deployctl.v1.HealthRequest
+	29, // 27: deployctl.v1.SystemService.Version:input_type -> deployctl.v1.VersionRequest
+	31, // 28: deployctl.v1.SystemService.Capabilities:input_type -> deployctl.v1.CapabilitiesRequest
+	19, // 29: deployctl.v1.DeploymentService.CreateDeployment:output_type -> deployctl.v1.JobResponse
+	0,  // 30: deployctl.v1.DeploymentService.GetDeployment:output_type -> deployctl.v1.Deployment
+	4,  // 31: deployctl.v1.DeploymentService.GetDeploymentStatus:output_type -> deployctl.v1.DeploymentStatus
+	7,  // 32: deployctl.v1.DeploymentService.ListDeployments:output_type -> deployctl.v1.ListDeploymentsResponse
+	19, // 33: deployctl.v1.DeploymentService.DeleteDeployment:output_type -> deployctl.v1.JobResponse
+	19, // 34: deployctl.v1.DeploymentService.BuildDeployment:output_type -> deployctl.v1.JobResponse
+	19, // 35: deployctl.v1.DeploymentService.UpdateDeployment:output_type -> deployctl.v1.JobResponse
+	19, // 36: deployctl.v1.DeploymentService.DeployDeployment:output_type -> deployctl.v1.JobResponse
+	19, // 37: deployctl.v1.DeploymentService.RestartDeployment:output_type -> deployctl.v1.JobResponse
+	19, // 38: deployctl.v1.DeploymentService.StopDeployment:output_type -> deployctl.v1.JobResponse
+	15, // 39: deployctl.v1.EnvService.ListEnvNames:output_type -> deployctl.v1.ListEnvNamesResponse
+	19, // 40: deployctl.v1.EnvService.SetEnv:output_type -> deployctl.v1.JobResponse
+	19, // 41: deployctl.v1.EnvService.ImportEnvFile:output_type -> deployctl.v1.JobResponse
+	19, // 42: deployctl.v1.EnvService.UnsetEnv:output_type -> deployctl.v1.JobResponse
+	20, // 43: deployctl.v1.JobService.GetJob:output_type -> deployctl.v1.Job
+	23, // 44: deployctl.v1.JobService.ListJobs:output_type -> deployctl.v1.ListJobsResponse
+	26, // 45: deployctl.v1.JobService.WatchJob:output_type -> deployctl.v1.JobEvent
+	20, // 46: deployctl.v1.JobService.CancelJob:output_type -> deployctl.v1.Job
+	28, // 47: deployctl.v1.SystemService.Health:output_type -> deployctl.v1.HealthResponse
+	30, // 48: deployctl.v1.SystemService.Version:output_type -> deployctl.v1.VersionResponse
+	32, // 49: deployctl.v1.SystemService.Capabilities:output_type -> deployctl.v1.CapabilitiesResponse
+	29, // [29:50] is the sub-list for method output_type
+	8,  // [8:29] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_api_deployctl_v1_deployctl_proto_init() }
@@ -1763,7 +2069,7 @@ func file_api_deployctl_v1_deployctl_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_deployctl_v1_deployctl_proto_rawDesc), len(file_api_deployctl_v1_deployctl_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   31,
+			NumMessages:   34,
 			NumExtensions: 0,
 			NumServices:   4,
 		},

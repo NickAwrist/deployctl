@@ -222,6 +222,23 @@ Rebuild images before restarting when you want fresh containers:
 deployctl restart my-deployment --build
 ```
 
+## Deployment status
+
+Show the current Compose/container state for one deployment:
+
+```sh
+deployctl status my-deployment
+```
+
+The status output includes the deployment state, compose file, running/stopped
+containers, container image names and IDs, recent job timing, latest update job,
+and env variable names with values masked. Env values are not returned by the
+daemon. To inspect a compose service env file other than the default `.env`:
+
+```sh
+deployctl status my-deployment --env-file app.env
+```
+
 ## Updating deployments
 
 Pull the latest changes for a saved deployment without rebuilding images:

@@ -7,6 +7,7 @@ option go_package = "deployctl/internal/rpc;rpc";
 service DeploymentService {
   rpc CreateDeployment(CreateDeploymentRequest) returns (JobResponse);
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment);
+  rpc GetDeploymentStatus(GetDeploymentStatusRequest) returns (DeploymentStatus);
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
   rpc DeleteDeployment(DeleteDeploymentRequest) returns (JobResponse);
   rpc BuildDeployment(BuildDeploymentRequest) returns (JobResponse);
@@ -52,6 +53,29 @@ message CreateDeploymentRequest {
 }
 
 message GetDeploymentRequest { string name = 1; }
+message GetDeploymentStatusRequest { string name = 1; string env_file = 2; }
+message DeploymentStatus {
+  Deployment deployment = 1;
+  string state = 2;
+  repeated ContainerStatus containers = 3;
+  repeated string missing_services = 4;
+  repeated string env_names = 5;
+  Job latest_job = 6;
+  Job latest_update_job = 7;
+  int64 running_since_unix = 8;
+  int64 stopped_at_unix = 9;
+}
+message ContainerStatus {
+  string service = 1;
+  string name = 2;
+  string status = 3;
+  string state = 4;
+  string image = 5;
+  string image_id = 6;
+  int64 created_at_unix = 7;
+  int64 started_at_unix = 8;
+  int64 finished_at_unix = 9;
+}
 message ListDeploymentsRequest {}
 message ListDeploymentsResponse { repeated Deployment deployments = 1; }
 message DeleteDeploymentRequest { string name = 1; }

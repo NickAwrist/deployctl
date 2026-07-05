@@ -25,6 +25,7 @@ func (s *Server) Capabilities(context.Context, *rpc.CapabilitiesRequest) (*rpc.C
 		"job-log-streaming",
 		"per-deployment-locking",
 		"masked-env-listing",
+		"deployment-status",
 	}}, nil
 }
 

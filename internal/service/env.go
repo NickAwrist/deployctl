@@ -19,7 +19,15 @@ func (s *Server) ListEnvNames(ctx context.Context, req *rpc.ListEnvNamesRequest)
 	if err != nil {
 		return nil, err
 	}
-	targetEnvPath := resolveEnvTargetPath(repository, req.EnvFile)
+	names, err := listEnvNames(repository, req.EnvFile)
+	if err != nil {
+		return nil, err
+	}
+	return &rpc.ListEnvNamesResponse{Names: names}, nil
+}
+
+func listEnvNames(repository store.Repository, envFile string) ([]string, error) {
+	targetEnvPath := resolveEnvTargetPath(repository, envFile)
 	variables, err := envfile.Read(targetEnvPath)
 	if err != nil {
 		return nil, err
@@ -29,7 +37,7 @@ func (s *Server) ListEnvNames(ctx context.Context, req *rpc.ListEnvNamesRequest)
 		names = append(names, name)
 	}
 	sort.Strings(names)
-	return &rpc.ListEnvNamesResponse{Names: names}, nil
+	return names, nil
 }
 
 func (s *Server) SetEnv(ctx context.Context, req *rpc.SetEnvRequest) (*rpc.JobResponse, error) {

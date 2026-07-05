@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"deployctl/internal/docker"
 	"deployctl/internal/rpc"
 	"deployctl/internal/store"
 
@@ -66,13 +67,20 @@ func (r *Runner) run(ctx context.Context, job store.Job, fn jobFunc) {
 		r.log(context.Background(), job.ID, fmt.Sprintf("Cancelled: %s", ctx.Err()))
 	} else if err != nil {
 		job.Status = store.JobStatusFailed
-		job.Error = err.Error()
-		r.log(ctx, job.ID, fmt.Sprintf("Failed: %s", err))
+		job.Error = jobErrorMessage(err)
+		r.log(ctx, job.ID, fmt.Sprintf("Failed: %s", job.Error))
 	} else {
 		job.Status = store.JobStatusSucceeded
 		r.log(ctx, job.ID, "Succeeded")
 	}
 	_ = r.jobs.Update(context.Background(), job)
+}
+
+func jobErrorMessage(err error) string {
+	if message, ok := docker.UnavailableMessage(err); ok {
+		return message
+	}
+	return err.Error()
 }
 
 func (r *Runner) Cancel(id string) bool {

@@ -5,8 +5,8 @@ import "testing"
 func TestDeploymentStatusAllRunningAndSummary(t *testing.T) {
 	status := DeploymentStatus{
 		Containers: []ContainerStatus{
-			{Name: "api-web-1", Status: "Up 20 minutes"},
-			{Name: "api-worker-1", Status: "Up 10 minutes"},
+			{Name: "api-web-1", Status: "Up 20 minutes", State: "running"},
+			{Name: "api-worker-1", Status: "Up 10 minutes", State: "running"},
 		},
 	}
 
@@ -25,7 +25,7 @@ func TestDeploymentStatusAllRunningAndSummary(t *testing.T) {
 
 func TestDeploymentStatusAllRunningWithMissingService(t *testing.T) {
 	status := DeploymentStatus{
-		Containers: []ContainerStatus{{Name: "api-web-1", Status: "Up 20 minutes"}},
+		Containers: []ContainerStatus{{Name: "api-web-1", Status: "Up 20 minutes", State: "running"}},
 		Missing:    []string{"worker"},
 	}
 
@@ -40,5 +40,15 @@ func TestDeploymentStatusAllRunningWithMissingService(t *testing.T) {
 func TestDeploymentStatusAnyRunningWithNoContainers(t *testing.T) {
 	if (DeploymentStatus{}).AnyRunning() {
 		t.Fatal("empty status should not have running containers")
+	}
+}
+
+func TestDeploymentStatusAnyRunningWithStoppedContainer(t *testing.T) {
+	status := DeploymentStatus{Containers: []ContainerStatus{{Name: "api-web-1", Status: "Exited", State: "exited"}}}
+	if status.AnyRunning() {
+		t.Fatal("stopped containers should not count as running")
+	}
+	if got := status.Summary(); got != "" {
+		t.Fatalf("summary = %q, want empty", got)
 	}
 }

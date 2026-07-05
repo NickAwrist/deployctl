@@ -37,7 +37,7 @@ func waitForJob(cmd *cobra.Command, client *deployclient.Client, jobID string) e
 		if err != nil {
 			return err
 		}
-		if event.Message != "" {
+		if shouldPrintJobMessage(event.Message) {
 			fmt.Fprintln(cmd.OutOrStdout(), event.Message)
 		}
 		if event.Job != nil {
@@ -50,6 +50,13 @@ func waitForJob(cmd *cobra.Command, client *deployclient.Client, jobID string) e
 			return nil
 		}
 	}
+}
+
+func shouldPrintJobMessage(message string) bool {
+	if message == "" {
+		return false
+	}
+	return !strings.HasPrefix(message, "Failed: ") && !strings.HasPrefix(message, "Cancelled: ")
 }
 
 func handleJob(cmd *cobra.Command, client *deployclient.Client, response *rpc.JobResponse, success string) error {

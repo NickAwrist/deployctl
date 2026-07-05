@@ -151,6 +151,135 @@ func TestListCommandShowsDeployments(t *testing.T) {
 	}
 }
 
+func TestStatusCommandShowsMaskedEnvAndLatestUpdate(t *testing.T) {
+	setupTestHome(t)
+	location := t.TempDir()
+	envPath := filepath.Join(location, ".env")
+	if err := os.WriteFile(envPath, []byte("PORT=8080\nAUTH_URI=https://example.test\n"), 0600); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+	insertRepository(t, store.Repository{
+		Name:     "api_prod",
+		URL:      "https://example.test/api.git",
+		Location: location,
+		EnvPath:  envPath,
+	})
+	finishedAt := time.Unix(1_800_000_000, 0)
+	if err := store.NewJobStore().Insert(context.Background(), store.Job{
+		ID:             "job-1",
+		Type:           "update",
+		DeploymentName: "api_prod",
+		Status:         store.JobStatusSucceeded,
+		CreatedAt:      finishedAt.Add(-time.Minute),
+		StartedAt:      finishedAt.Add(-30 * time.Second),
+		FinishedAt:     finishedAt,
+		Error:          "bad PORT=8080",
+	}); err != nil {
+		t.Fatalf("insert job: %v", err)
+	}
+
+	output, err := executeRoot(t, []string{"status", "api_prod"}, "")
+	if err != nil {
+		t.Fatalf("status command: %v", err)
+	}
+
+	for _, want := range []string{
+		"Deployment: api_prod",
+		"State: not_configured",
+		"Latest update: update succeeded",
+		"Containers:\n  none",
+		"  AUTH_URI=*****",
+		"  PORT=*****",
+	} {
+		if !strings.Contains(output, want) {
+			t.Fatalf("status output %q does not contain %q", output, want)
+		}
+	}
+	for _, leaked := range []string{"8080", "https://example.test\n"} {
+		if strings.Contains(output, leaked) {
+			t.Fatalf("status output leaked env value %q: %q", leaked, output)
+		}
+	}
+}
+
+func TestStatusCommandReportsDockerUnavailableCleanly(t *testing.T) {
+	setupTestHome(t)
+	t.Setenv("DOCKER_HOST", fakeDockerHost())
+	insertComposeRepository(t, "api")
+
+	output, err := executeRoot(t, []string{"status", "api"}, "")
+	if err == nil {
+		t.Fatal("status command succeeded with unavailable Docker")
+	}
+
+	assertCleanDockerUnavailableOutput(t, output)
+}
+
+func TestDockerBackedJobCommandsReportDockerUnavailableCleanly(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		args []string
+	}{
+		{name: "build", args: []string{"build", "api"}},
+		{name: "deploy", args: []string{"deploy", "api"}},
+		{name: "stop", args: []string{"stop", "api"}},
+		{name: "restart", args: []string{"restart", "api"}},
+		{name: "update build", args: []string{"update", "api", "--build"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			setupTestHome(t)
+			t.Setenv("DOCKER_HOST", fakeDockerHost())
+			if tc.name == "update build" {
+				sourceRepo := createGitRepository(t, map[string]string{
+					"compose.yml": "services:\n  api:\n    build:\n      context: .\n",
+					"Dockerfile":  "FROM scratch\n",
+				})
+				if output, err := executeRoot(t, []string{"create", sourceRepo, "--name", "api"}, ""); err != nil {
+					t.Fatalf("create command: %v\n%s", err, output)
+				}
+			} else {
+				insertComposeRepository(t, "api")
+			}
+
+			output, err := executeRoot(t, tc.args, "")
+			if err == nil {
+				t.Fatalf("%v succeeded with unavailable Docker", tc.args)
+			}
+
+			assertCleanDockerUnavailableOutput(t, output)
+		})
+	}
+}
+
+func TestRuntimeErrorsDoNotHideUsageErrors(t *testing.T) {
+	output, err := executeRoot(t, []string{"status"}, "")
+	if err == nil {
+		t.Fatal("status command without args succeeded")
+	}
+	if !strings.Contains(output, "Usage:") {
+		t.Fatalf("usage error output %q does not contain Usage", output)
+	}
+	if !strings.Contains(output, "deployctl status [repository-name]") {
+		t.Fatalf("usage error output %q does not contain status usage", output)
+	}
+}
+
+func TestDaemonStatusReportsDockerUnavailable(t *testing.T) {
+	setupTestHome(t)
+	t.Setenv("DOCKER_HOST", fakeDockerHost())
+
+	output, err := executeRoot(t, []string{"daemon", "status"}, "")
+	if err != nil {
+		t.Fatalf("daemon status command: %v", err)
+	}
+	if !strings.Contains(output, "Docker") || !strings.Contains(output, "  Status: unavailable") {
+		t.Fatalf("daemon status output %q does not report Docker unavailable", output)
+	}
+	if !strings.Contains(output, "Docker is unavailable") {
+		t.Fatalf("daemon status output %q does not contain clean Docker error", output)
+	}
+}
+
 func TestEnvCommandsSetListAndUnsetVariables(t *testing.T) {
 	setupTestHome(t)
 	location := t.TempDir()
@@ -414,7 +543,7 @@ func executeRoot(t *testing.T, args []string, input string) (string, error) {
 	rootCmd.SetOut(&output)
 	rootCmd.SetErr(io.Discard)
 
-	err := rootCmd.Execute()
+	_, err := executeRootCommand(&output)
 	return output.String(), err
 }
 
@@ -461,6 +590,42 @@ func insertRepository(t *testing.T, repository store.Repository) {
 	if err := store.NewRepositoryStore().Insert(context.Background(), repository); err != nil {
 		t.Fatalf("insert repository: %v", err)
 	}
+}
+
+func insertComposeRepository(t *testing.T, name string) {
+	t.Helper()
+
+	location := t.TempDir()
+	composePath := filepath.Join(location, "compose.yml")
+	if err := os.WriteFile(composePath, []byte("services:\n  api:\n    build:\n      context: .\n"), 0644); err != nil {
+		t.Fatalf("write compose file: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(location, "Dockerfile"), []byte("FROM scratch\n"), 0644); err != nil {
+		t.Fatalf("write Dockerfile: %v", err)
+	}
+	insertRepository(t, store.Repository{
+		Name:        name,
+		URL:         "https://example.test/api.git",
+		Location:    location,
+		ComposePath: composePath,
+	})
+}
+
+func assertCleanDockerUnavailableOutput(t *testing.T, output string) {
+	t.Helper()
+
+	if count := strings.Count(output, "Docker is unavailable"); count != 1 {
+		t.Fatalf("Docker unavailable output count = %d, output = %q", count, output)
+	}
+	for _, unwanted := range []string{"Usage:", "rpc error:", "code = Unknown"} {
+		if strings.Contains(output, unwanted) {
+			t.Fatalf("Docker unavailable output %q contains %q", output, unwanted)
+		}
+	}
+}
+
+func fakeDockerHost() string {
+	return "unix://" + filepath.Join(os.TempDir(), fmt.Sprintf("dct-missing-%d-%d.sock", os.Getpid(), time.Now().UnixNano()))
 }
 
 func createGitRepository(t *testing.T, files map[string]string) string {

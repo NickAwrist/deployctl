@@ -38,7 +38,7 @@ func NewServerWithLogger(logger *Logger) *Server {
 }
 
 func NewGRPCServer(server *Server) *grpc.Server {
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(normalizeUnaryError))
 	rpc.RegisterDeploymentServiceServer(grpcServer, server)
 	rpc.RegisterEnvServiceServer(grpcServer, server)
 	rpc.RegisterJobServiceServer(grpcServer, server)
