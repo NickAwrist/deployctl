@@ -183,7 +183,7 @@ func (s *Server) SetEnv(ctx context.Context, req *rpc.SetEnvRequest) (*rpc.JobRe
 				return err
 			}
 		}
-		log(fmt.Sprintf("Updated %d env variable(s)", len(req.Variables)))
+		log(fmt.Sprintf("Updated %s", countEnvVariables(len(req.Variables))))
 		return nil
 	})
 }
@@ -240,9 +240,16 @@ func (s *Server) UnsetEnv(ctx context.Context, req *rpc.UnsetEnvRequest) (*rpc.J
 				return err
 			}
 		}
-		log(fmt.Sprintf("Deleted %d env variable(s)", deleted))
+		log(fmt.Sprintf("Deleted %s", countEnvVariables(deleted)))
 		return nil
 	})
+}
+
+func countEnvVariables(count int) string {
+	if count == 1 {
+		return "1 env variable"
+	}
+	return fmt.Sprintf("%d env variables", count)
 }
 
 func resolveEnvFile(repositoryLocation string, envFile string) (string, error) {
@@ -360,9 +367,9 @@ func composeEnvFileReferences(ctx context.Context, repository store.Repository) 
 		return nil, nil
 	}
 	if exists, err := regularFileExists(repository.ComposePath); err != nil {
-		return nil, fmt.Errorf("inspect compose env files: %w", err)
+		return nil, fmt.Errorf("inspect Compose env files: %w", err)
 	} else if !exists {
-		return nil, fmt.Errorf("inspect compose env files: compose file %q was not found", repository.ComposePath)
+		return nil, fmt.Errorf("inspect Compose env files: Compose file %q was not found", repository.ComposePath)
 	}
 
 	optionsFns := []composecli.ProjectOptionsFn{
@@ -386,11 +393,11 @@ func composeEnvFileReferences(ctx context.Context, repository store.Repository) 
 
 	options, err := composecli.NewProjectOptions([]string{repository.ComposePath}, optionsFns...)
 	if err != nil {
-		return nil, fmt.Errorf("inspect compose env files: %w", err)
+		return nil, fmt.Errorf("inspect Compose env files: %w", err)
 	}
 	project, err := options.LoadProject(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("inspect compose env files: %w", err)
+		return nil, fmt.Errorf("inspect Compose env files: %w", err)
 	}
 
 	refsByPath := map[string]struct{}{}

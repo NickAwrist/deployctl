@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"strings"
 
 	"deployctl/internal/envfile"
@@ -47,7 +46,7 @@ var envSetCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			return handleJob(cmd, client, response, fmt.Sprintf("Updated %d env variable(s) for %s", len(values), deploymentName))
+			return handleJob(cmd, client, response, envChangeSuccess("Updated", len(variables), "for", deploymentName))
 		})
 	},
 }
@@ -73,7 +72,7 @@ var envImportCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			return handleJob(cmd, client, response, fmt.Sprintf("Imported env file for %s", deploymentName))
+			return handleJob(cmd, client, response, envFileImportedSuccess(deploymentName))
 		})
 	},
 }
@@ -106,7 +105,7 @@ var envUnsetCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			return handleJob(cmd, client, response, fmt.Sprintf("Deleted env variable(s) from %s", deploymentName))
+			return handleJob(cmd, client, response, envChangeSuccess("Deleted", len(names), "from", deploymentName))
 		})
 	},
 }

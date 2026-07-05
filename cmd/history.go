@@ -26,7 +26,7 @@ var historyCmd = &cobra.Command{
 				return err
 			}
 			if len(response.GetJobs()) == 0 {
-				fmt.Fprintf(cmd.OutOrStdout(), "No jobs found for deployment %q\n", deploymentName)
+				fmt.Fprintf(cmd.OutOrStdout(), "No jobs found for deployment %q.\n", deploymentName)
 				return nil
 			}
 			printJobHistory(cmd.OutOrStdout(), response.GetJobs())

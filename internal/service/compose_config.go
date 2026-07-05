@@ -23,7 +23,7 @@ func resolveComposePath(repositoryLocation string, composeFile string) (string, 
 			if path, ok := internalfile.ExistingFile(composeFile); ok {
 				destination := filepath.Join(repositoryLocation, "compose.yml")
 				if err := internalfile.Copy(path, destination); err != nil {
-					return "", fmt.Errorf("copy compose file: %w", err)
+					return "", fmt.Errorf("copy Compose file: %w", err)
 				}
 				return destination, nil
 			}
@@ -43,7 +43,7 @@ func resolveComposePath(repositoryLocation string, composeFile string) (string, 
 
 			destination := filepath.Join(repositoryLocation, "compose.yml")
 			if err := internalfile.Copy(path, destination); err != nil {
-				return "", fmt.Errorf("copy compose file: %w", err)
+				return "", fmt.Errorf("copy Compose file: %w", err)
 			}
 			return destination, nil
 		}

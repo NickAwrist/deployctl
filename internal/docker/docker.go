@@ -171,7 +171,7 @@ func ComposeUp(ctx context.Context, repository *store.Repository, log Logger) er
 		Create: api.CreateOptions{},
 		Start:  api.StartOptions{},
 	}); err != nil {
-		return composeOperationError(dockerCLI, "start compose project", err)
+		return composeOperationError(dockerCLI, "start Compose project", err)
 	}
 
 	return nil
@@ -201,7 +201,7 @@ func ComposeStatus(ctx context.Context, repository *store.Repository) (Deploymen
 			Add("label", api.ContainerNumberLabel),
 	})
 	if err != nil {
-		return DeploymentStatus{}, composeOperationError(dockerCLI, "list compose containers", err)
+		return DeploymentStatus{}, composeOperationError(dockerCLI, "list Compose containers", err)
 	}
 
 	var status DeploymentStatus
@@ -274,7 +274,7 @@ func ComposeBuild(ctx context.Context, repository *store.Repository, log Logger)
 
 	logf(log, "Building Compose images")
 	if err := service.Build(ctx, project, api.BuildOptions{}); err != nil {
-		return composeOperationError(dockerCLI, "build compose project", err)
+		return composeOperationError(dockerCLI, "build Compose project", err)
 	}
 
 	return nil
@@ -339,7 +339,7 @@ func ComposeDown(ctx context.Context, repository *store.Repository, log Logger) 
 	if err := service.Down(ctx, project.Name, api.DownOptions{
 		Project: project,
 	}); err != nil {
-		return composeOperationError(dockerCLI, "stop compose project", err)
+		return composeOperationError(dockerCLI, "stop Compose project", err)
 	}
 
 	return nil
@@ -361,7 +361,7 @@ func composeOperationError(dockerCLI *command.DockerCli, operation string, err e
 
 func loadProject(ctx context.Context, repository *store.Repository) (api.Compose, *types.Project, *command.DockerCli, error) {
 	if repository.ComposePath == "" {
-		return nil, nil, nil, errors.New("repository does not have a compose file configured")
+		return nil, nil, nil, errors.New("repository does not have a Compose file configured")
 	}
 
 	dockerCLI, err := command.NewDockerCli()
@@ -375,7 +375,7 @@ func loadProject(ctx context.Context, repository *store.Repository) (api.Compose
 
 	service, err := compose.NewComposeService(dockerCLI)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("create compose service: %w", err)
+		return nil, nil, nil, fmt.Errorf("create Compose service: %w", err)
 	}
 
 	loadOptions := api.ProjectLoadOptions{
@@ -404,11 +404,11 @@ func loadProject(ctx context.Context, repository *store.Repository) (api.Compose
 		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
 			return nil, nil, nil, unavailable
 		}
-		return nil, nil, nil, fmt.Errorf("load compose project: %w", err)
+		return nil, nil, nil, fmt.Errorf("load Compose project: %w", err)
 	}
 	project, err = resolveServiceEnvFiles(project)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("load compose project: %w", err)
+		return nil, nil, nil, fmt.Errorf("load Compose project: %w", err)
 	}
 
 	return service, project, dockerCLI, nil
@@ -482,7 +482,7 @@ func mirrorDefaultEnvFile(repository *store.Repository) error {
 		return fmt.Errorf("read deployctl env file: %w", err)
 	}
 	if err := envfile.Write(defaultEnvPath, variables); err != nil {
-		return fmt.Errorf("prepare compose env file: %w", err)
+		return fmt.Errorf("prepare Compose env file: %w", err)
 	}
 
 	return nil

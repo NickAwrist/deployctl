@@ -25,7 +25,7 @@ var listCmd = &cobra.Command{
 				return err
 			}
 			if len(response.Deployments) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "No deployments found")
+				fmt.Fprintln(cmd.OutOrStdout(), "No deployments found.")
 				return nil
 			}
 			printDeploymentList(cmd.OutOrStdout(), response.Deployments)
@@ -44,10 +44,10 @@ func printDeploymentList(output io.Writer, deployments []*rpc.DeploymentSummary)
 			"%s\t%s\t%s\t%s\t%s\t%s\n",
 			deployment.GetName(),
 			formatDeploymentState(item.GetState()),
-			emptyAs(deployment.GetRepoUrl(), "unknown"),
-			emptyAs(deployment.GetLocation(), "unknown"),
-			emptyAs(deployment.GetComposePath(), "none"),
-			emptyAs(deployment.GetEnvPath(), "none"),
+			emptyAs(deployment.GetRepoUrl(), unknownValue),
+			emptyAs(deployment.GetLocation(), unknownValue),
+			emptyAs(deployment.GetComposePath(), noneValue),
+			emptyAs(deployment.GetEnvPath(), noneValue),
 		)
 	}
 	_ = table.Flush()

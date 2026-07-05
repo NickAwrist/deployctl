@@ -36,7 +36,7 @@ var daemonStartCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(cmd.OutOrStdout(), "deployctld listening on %s\n", socketPath)
+		fmt.Fprintf(cmd.OutOrStdout(), "deployctld listening: %s\n", socketPath)
 		logger, err := service.NewDaemonLogger()
 		if err != nil {
 			_ = listener.Close()
@@ -68,7 +68,8 @@ var daemonStatusCmd = &cobra.Command{
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), "Daemon")
 			fmt.Fprintln(cmd.OutOrStdout(), "  Status: reachable")
-			fmt.Fprintf(cmd.OutOrStdout(), "  Socket: %s\n\n", socketPath)
+			fmt.Fprintf(cmd.OutOrStdout(), "  Socket: %s\n", socketPath)
+			fmt.Fprintln(cmd.OutOrStdout())
 			printDockerHealth(cmd.OutOrStdout(), response.GetDocker())
 			return nil
 		})
@@ -97,7 +98,7 @@ var daemonRestartCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Fprintf(cmd.OutOrStdout(), "deployctld restart requested via systemd %s service\n", scope)
+		fmt.Fprintf(cmd.OutOrStdout(), "deployctld restart requested via systemd %s service.\n", scope)
 		return nil
 	},
 }
@@ -139,6 +140,6 @@ func formatDockerConnectionState(state rpc.DockerConnectionState) string {
 	case rpc.DockerConnectionState_DOCKER_CONNECTION_STATE_UNAVAILABLE:
 		return "unavailable"
 	default:
-		return "unknown"
+		return unknownValue
 	}
 }

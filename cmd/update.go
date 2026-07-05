@@ -27,7 +27,7 @@ var updateCmd = &cobra.Command{
 			return err
 		}
 
-		return runDeploymentJob(cmd, args, "Deployment updated successfully", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
+		return runDeploymentJob(cmd, args, "updated", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
 			return client.Deployment.UpdateDeployment(cmd.Context(), &rpc.UpdateDeploymentRequest{
 				DeploymentName: deploymentName,
 				Build:          build,

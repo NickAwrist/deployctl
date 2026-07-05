@@ -17,7 +17,7 @@ Arguments:
 
 	<repo-url>   The URL of the repository to create a new deployment from
 	--name <name> The name of the deployment
-	--compose-file <compose-file> The compose file name in the repository or a local compose file path to copy into the repository
+	--compose-file <compose-file> The Compose file name in the repository or a local Compose file path to copy into the repository
 	--env-file <env-file> The env file name in the repository or a local env file path to copy into the repository
 */
 var createCmd = &cobra.Command{
@@ -25,7 +25,6 @@ var createCmd = &cobra.Command{
 	Short: "Create a new deployment",
 	Args:  cobra.MaximumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Get the repository URL from the command line arguments or flags
 		repoURL, err := cmd.Flags().GetString("repo-url")
 		if err != nil {
 			return err
@@ -37,19 +36,16 @@ var createCmd = &cobra.Command{
 			return errors.New("repo URL is required")
 		}
 
-		// Get the name of the deployment from the command line arguments or flags
 		name, err := cmd.Flags().GetString("name")
 		if err != nil {
 			return err
 		}
 
-		// Get the compose file name from the command line arguments or flags
 		composeFile, err := cmd.Flags().GetString("compose-file")
 		if err != nil {
 			return err
 		}
 
-		// Get the env file name from the command line arguments or flags
 		envFile, err := cmd.Flags().GetString("env-file")
 		if err != nil {
 			return err
@@ -65,7 +61,7 @@ var createCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			return handleJob(cmd, client, response, "Deployment created successfully")
+			return handleJob(cmd, client, response, deploymentSuccess(name, "created"))
 		})
 	},
 }
@@ -75,7 +71,7 @@ func init() {
 
 	createCmd.Flags().StringP("name", "n", "", "The name of the deployment")
 	createCmd.Flags().StringP("repo-url", "r", "", "The URL of the repository to create a new deployment from")
-	createCmd.Flags().String("compose-file", "", "The compose file name in the repository or a local compose file path to copy into the repository")
+	createCmd.Flags().String("compose-file", "", "The Compose file name in the repository or a local Compose file path to copy into the repository")
 	createCmd.Flags().String("env-file", "", "The env file name in the repository or a local env file path to copy into the repository")
 	addJobFlags(createCmd)
 }

@@ -50,10 +50,10 @@ func printDeploymentStatus(output io.Writer, status *rpc.DeploymentStatus) {
 	deployment := status.GetDeployment()
 	fmt.Fprintf(output, "Deployment: %s\n", deployment.GetName())
 	fmt.Fprintf(output, "State: %s\n", formatDeploymentState(status.GetState()))
-	fmt.Fprintf(output, "Repository: %s\n", emptyAs(deployment.GetRepoUrl(), "unknown"))
-	fmt.Fprintf(output, "Location: %s\n", emptyAs(deployment.GetLocation(), "unknown"))
-	fmt.Fprintf(output, "Compose file: %s\n", emptyAs(deployment.GetComposePath(), "none"))
-	fmt.Fprintf(output, "Env file: %s\n", emptyAs(deployment.GetEnvPath(), "none"))
+	fmt.Fprintf(output, "Repository: %s\n", emptyAs(deployment.GetRepoUrl(), unknownValue))
+	fmt.Fprintf(output, "Location: %s\n", emptyAs(deployment.GetLocation(), unknownValue))
+	fmt.Fprintf(output, "Compose file: %s\n", emptyAs(deployment.GetComposePath(), noneValue))
+	fmt.Fprintf(output, "Env file: %s\n", emptyAs(deployment.GetEnvPath(), noneValue))
 
 	if status.GetRunningSinceUnix() > 0 {
 		fmt.Fprintf(output, "Running since: %s\n", formatUnixTime(status.GetRunningSinceUnix()))
@@ -71,14 +71,14 @@ func printDeploymentStatus(output io.Writer, status *rpc.DeploymentStatus) {
 
 	fmt.Fprintln(output, "Containers:")
 	if len(status.GetContainers()) == 0 {
-		fmt.Fprintln(output, "  none")
+		fmt.Fprintf(output, "  %s\n", noneValue)
 	} else {
 		for _, container := range status.GetContainers() {
 			fmt.Fprintf(output, "  %s: %s\n", container.GetService(), emptyAs(container.GetName(), "unnamed"))
 			fmt.Fprintf(output, "    State: %s\n", formatContainerState(container.GetState()))
-			fmt.Fprintf(output, "    Status: %s\n", emptyAs(container.GetStatus(), "unknown"))
-			fmt.Fprintf(output, "    Image: %s\n", emptyAs(container.GetImage(), "unknown"))
-			fmt.Fprintf(output, "    Image ID: %s\n", emptyAs(container.GetImageId(), "unknown"))
+			fmt.Fprintf(output, "    Status: %s\n", emptyAs(container.GetStatus(), unknownValue))
+			fmt.Fprintf(output, "    Image: %s\n", emptyAs(container.GetImage(), unknownValue))
+			fmt.Fprintf(output, "    Image ID: %s\n", emptyAs(container.GetImageId(), unknownValue))
 			if container.GetStartedAtUnix() > 0 {
 				fmt.Fprintf(output, "    Started: %s\n", formatUnixTime(container.GetStartedAtUnix()))
 			}
@@ -100,11 +100,11 @@ func printDeploymentStatus(output io.Writer, status *rpc.DeploymentStatus) {
 
 	fmt.Fprintln(output, "Env:")
 	if len(status.GetEnvNames()) == 0 {
-		fmt.Fprintln(output, "  none")
+		fmt.Fprintf(output, "  %s\n", noneValue)
 		return
 	}
 	for _, name := range status.GetEnvNames() {
-		fmt.Fprintf(output, "  %s=*****\n", name)
+		fmt.Fprintf(output, "  %s=%s\n", name, maskedValue)
 	}
 }
 
@@ -141,7 +141,7 @@ func formatOptionalUnixTime(seconds int64, fallback string) string {
 }
 
 func formatJobDate(job *rpc.Job) string {
-	return formatOptionalUnixTime(jobTimestamp(job), "unknown")
+	return formatOptionalUnixTime(jobTimestamp(job), unknownValue)
 }
 
 func formatDuration(duration time.Duration) string {

@@ -27,7 +27,7 @@ var deployCmd = &cobra.Command{
 			return err
 		}
 
-		return runDeploymentJob(cmd, args, "Deployment deployed successfully", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
+		return runDeploymentJob(cmd, args, "started", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
 			return client.Deployment.DeployDeployment(cmd.Context(), &rpc.DeployDeploymentRequest{
 				DeploymentName: deploymentName,
 				Build:          build,

@@ -85,7 +85,7 @@ exit 1
 	if err != nil {
 		t.Fatalf("daemon restart command: %v", err)
 	}
-	if !strings.Contains(output, "deployctld restart requested via systemd user service") {
+	if !strings.Contains(output, "deployctld restart requested via systemd user service.") {
 		t.Fatalf("daemon restart output = %q", output)
 	}
 	if _, err := os.Stat(marker); err != nil {
@@ -665,7 +665,7 @@ func TestEnvListDiscoversMultipleEnvFiles(t *testing.T) {
 			t.Fatalf("env list output %q does not contain %q", output, want)
 		}
 	}
-	for _, want := range []string{"Warning: compose references missing env files:", "env.missing"} {
+	for _, want := range []string{"Warning: Compose references missing env files:", "env.missing"} {
 		if !strings.Contains(output, want) {
 			t.Fatalf("env list output %q does not contain %q", output, want)
 		}
@@ -677,6 +677,21 @@ func TestEnvListDiscoversMultipleEnvFiles(t *testing.T) {
 	}
 	if strings.Contains(output, ".env.example") || strings.Contains(output, "EXAMPLE_ONLY") {
 		t.Fatalf("env list output included example env file: %q", output)
+	}
+}
+
+func TestOutputHelpersFormatSuccessAndCounts(t *testing.T) {
+	if got, want := deploymentSuccess("api", "updated"), "Deployment api updated successfully"; got != want {
+		t.Fatalf("deployment success = %q, want %q", got, want)
+	}
+	if got, want := deploymentSuccess("", "created"), "Deployment created successfully"; got != want {
+		t.Fatalf("deployment success without name = %q, want %q", got, want)
+	}
+	if got, want := countPhrase(1, "env variable"), "1 env variable"; got != want {
+		t.Fatalf("count phrase = %q, want %q", got, want)
+	}
+	if got, want := countPhrase(2, "env variable"), "2 env variables"; got != want {
+		t.Fatalf("count phrase = %q, want %q", got, want)
 	}
 }
 
@@ -722,8 +737,8 @@ func TestDeploymentCommandsReportMissingComposeFile(t *testing.T) {
 		{"restart", "api", "--build"},
 	} {
 		_, err := executeRoot(t, args, "")
-		if err == nil || !strings.Contains(err.Error(), "compose file") {
-			t.Fatalf("%v error = %v, want missing compose file", args, err)
+		if err == nil || !strings.Contains(err.Error(), "Compose file") {
+			t.Fatalf("%v error = %v, want missing Compose file", args, err)
 		}
 	}
 }

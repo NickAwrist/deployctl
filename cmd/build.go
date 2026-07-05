@@ -21,7 +21,7 @@ var buildCmd = &cobra.Command{
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runDeploymentJob(cmd, args, "Deployment built successfully", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
+		return runDeploymentJob(cmd, args, "built", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
 			return client.Deployment.BuildDeployment(cmd.Context(), &rpc.BuildDeploymentRequest{DeploymentName: deploymentName})
 		})
 	},

@@ -46,9 +46,9 @@ var jobCmd = &cobra.Command{
 func printJobDetails(output io.Writer, job *rpc.Job) {
 	fmt.Fprintf(output, "Job: %s\n", job.GetId())
 	fmt.Fprintf(output, "Type: %s\n", formatJobType(job.GetType()))
-	fmt.Fprintf(output, "Deployment: %s\n", emptyAs(job.GetDeploymentName(), "none"))
+	fmt.Fprintf(output, "Deployment: %s\n", emptyAs(job.GetDeploymentName(), noneValue))
 	fmt.Fprintf(output, "Status: %s\n", formatJobStatus(job.GetStatus()))
-	fmt.Fprintf(output, "Created: %s\n", formatOptionalUnixTime(job.GetCreatedAtUnix(), "unknown"))
+	fmt.Fprintf(output, "Created: %s\n", formatOptionalUnixTime(job.GetCreatedAtUnix(), unknownValue))
 	fmt.Fprintf(output, "Started: %s\n", formatOptionalUnixTime(job.GetStartedAtUnix(), "not started"))
 	fmt.Fprintf(output, "Finished: %s\n", formatOptionalUnixTime(job.GetFinishedAtUnix(), "not finished"))
 	if job.GetError() != "" {
@@ -59,7 +59,7 @@ func printJobDetails(output io.Writer, job *rpc.Job) {
 func printJobLogs(output io.Writer, logs []*rpc.JobLog) {
 	fmt.Fprintln(output, "Logs:")
 	if len(logs) == 0 {
-		fmt.Fprintln(output, "  none")
+		fmt.Fprintf(output, "  %s\n", noneValue)
 		return
 	}
 	for _, log := range logs {

@@ -72,7 +72,8 @@ func printDeploymentLogs(output io.Writer, stream deploymentLogStream, follow bo
 				if entries == 0 {
 					fmt.Fprintln(output, "No logs found.")
 				}
-				fmt.Fprintln(output, "\nUse --follow for live logs or --lines N for more history.")
+				fmt.Fprintln(output)
+				fmt.Fprintln(output, "Use --follow for live logs or --lines N for more history.")
 			}
 			return nil
 		}

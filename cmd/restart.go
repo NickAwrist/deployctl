@@ -26,7 +26,7 @@ var restartCmd = &cobra.Command{
 			return err
 		}
 
-		return runDeploymentJob(cmd, args, "Deployment restarted successfully", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
+		return runDeploymentJob(cmd, args, "restarted", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
 			return client.Deployment.RestartDeployment(cmd.Context(), &rpc.RestartDeploymentRequest{
 				DeploymentName: deploymentName,
 				Build:          build,

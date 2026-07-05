@@ -53,7 +53,7 @@ func (r *Runner) run(ctx context.Context, job store.Job, fn jobFunc) {
 	job.Status = store.JobStatusRunning
 	job.StartedAt = time.Now()
 	_ = r.jobs.Update(context.Background(), job)
-	r.log(ctx, job.ID, fmt.Sprintf("Started %s job", job.Type))
+	r.log(ctx, job.ID, fmt.Sprintf("Job started: %s", job.Type))
 
 	err := fn(ctx, func(message string) {
 		r.log(ctx, job.ID, message)
@@ -63,14 +63,14 @@ func (r *Runner) run(ctx context.Context, job store.Job, fn jobFunc) {
 	if ctx.Err() != nil {
 		job.Status = store.JobStatusCancelled
 		job.Error = ctx.Err().Error()
-		r.log(context.Background(), job.ID, fmt.Sprintf("Cancelled: %s", ctx.Err()))
+		r.log(context.Background(), job.ID, fmt.Sprintf("Job cancelled: %s", ctx.Err()))
 	} else if err != nil {
 		job.Status = store.JobStatusFailed
 		job.Error = jobErrorMessage(err)
-		r.log(ctx, job.ID, fmt.Sprintf("Failed: %s", job.Error))
+		r.log(ctx, job.ID, fmt.Sprintf("Job failed: %s", job.Error))
 	} else {
 		job.Status = store.JobStatusSucceeded
-		r.log(ctx, job.ID, "Succeeded")
+		r.log(ctx, job.ID, "Job succeeded.")
 	}
 	_ = r.jobs.Update(context.Background(), job)
 }

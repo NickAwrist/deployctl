@@ -107,7 +107,7 @@ func (s *Server) RestartDeployment(ctx context.Context, req *rpc.RestartDeployme
 			return err
 		}
 		if !status.AnyRunning() {
-			log("Deployment is not running. Starting it now.")
+			log("Deployment is not running; starting it now")
 		}
 		if req.Build {
 			if err := docker.ComposeBuild(ctx, &repository, log); err != nil {
@@ -155,7 +155,7 @@ func (s *Server) createDeployment(ctx context.Context, req *rpc.CreateDeployment
 		return err
 	}
 	if composePath == "" {
-		log("No compose file found. Deployment will not work until a compose file is configured.")
+		log("No Compose file found; configure one before deploying")
 	}
 
 	envPath, err := resolveEnvFile(location, req.EnvFile)

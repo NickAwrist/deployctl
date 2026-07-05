@@ -32,23 +32,21 @@ var deleteCmd = &cobra.Command{
 			return err
 		}
 
-		// Get the force flag from the command line arguments or flags
 		force, err := cmd.Flags().GetBool("force")
 		if err != nil {
 			return err
 		}
 
-		// Prompt the user for confirmation
 		confirmed, err := confirmDelete(cmd.InOrStdin(), cmd.OutOrStdout(), deploymentName, force)
 		if err != nil {
 			return err
 		}
 		if !confirmed && !force {
-			fmt.Fprintln(cmd.OutOrStdout(), "Delete cancelled")
+			fmt.Fprintln(cmd.OutOrStdout(), "Delete cancelled.")
 			return nil
 		}
 
-		return runDeploymentJob(cmd, args, fmt.Sprintf("Deleted deployment %s", deploymentName), func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
+		return runDeploymentJob(cmd, args, "deleted", func(client *daemonClient, deploymentName string) (*rpc.JobResponse, error) {
 			return client.Deployment.DeleteDeployment(cmd.Context(), &rpc.DeleteDeploymentRequest{DeploymentName: deploymentName})
 		})
 	},
@@ -66,7 +64,7 @@ func confirmDelete(input io.Reader, output io.Writer, deploymentName string, for
 		return true, nil
 	}
 
-	fmt.Fprintf(output, "Are you sure you want to permanently delete %s? (Y/n) ", deploymentName)
+	fmt.Fprintf(output, "Permanently delete deployment %s? (y/N) ", deploymentName)
 
 	reader := bufio.NewReader(input)
 	answer, err := reader.ReadString('\n')

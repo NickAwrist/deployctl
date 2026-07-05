@@ -45,7 +45,8 @@ func executeRootCommand(errorOutput io.Writer) (*cobra.Command, error) {
 
 func printCommandError(output io.Writer, command *cobra.Command, err error) {
 	if isUsageError(err) && command != nil {
-		fmt.Fprintf(output, "Error: %s\n\n", err)
+		fmt.Fprintf(output, "Error: %s\n", err)
+		fmt.Fprintln(output)
 		fmt.Fprint(output, command.UsageString())
 		return
 	}

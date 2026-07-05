@@ -55,7 +55,7 @@ func shouldPrintJobMessage(message string) bool {
 	if message == "" {
 		return false
 	}
-	return !strings.HasPrefix(message, "Failed: ") && !strings.HasPrefix(message, "Cancelled: ")
+	return !strings.HasPrefix(message, "Job failed: ") && !strings.HasPrefix(message, "Job cancelled: ")
 }
 
 func handleJob(cmd *cobra.Command, client *deployclient.Client, response *rpc.JobResponse, success string) error {
@@ -64,7 +64,7 @@ func handleJob(cmd *cobra.Command, client *deployclient.Client, response *rpc.Jo
 		return err
 	}
 	if detach {
-		fmt.Fprintf(cmd.OutOrStdout(), "Started job %s\n", response.JobId)
+		fmt.Fprintf(cmd.OutOrStdout(), "Job started: %s\n", response.JobId)
 		return nil
 	}
 	if err := waitForJob(cmd, client, response.JobId); err != nil {
@@ -86,7 +86,7 @@ func deploymentNameArg(args []string) (string, error) {
 func runDeploymentJob(
 	cmd *cobra.Command,
 	args []string,
-	success string,
+	successAction string,
 	call func(*daemonClient, string) (*rpc.JobResponse, error),
 ) error {
 	deploymentName, err := deploymentNameArg(args)
@@ -99,7 +99,7 @@ func runDeploymentJob(
 		if err != nil {
 			return err
 		}
-		return handleJob(cmd, client, response, success)
+		return handleJob(cmd, client, response, deploymentSuccess(deploymentName, successAction))
 	})
 }
 
@@ -118,7 +118,7 @@ func runWithClient(cmd *cobra.Command, fn func(*deployclient.Client) error) erro
 
 func printMaskedEnv(output io.Writer, names []string) {
 	for _, name := range names {
-		fmt.Fprintf(output, "%s=*****\n", name)
+		fmt.Fprintf(output, "%s=%s\n", name, maskedValue)
 	}
 }
 
@@ -130,9 +130,9 @@ func printMaskedEnvFile(output io.Writer, envFile string, names []string) {
 func printEnvFiles(output io.Writer, deploymentName string, explicitFile bool, response *rpc.ListEnvFilesResponse) {
 	if len(response.GetMissingEnvFiles()) > 0 {
 		if explicitFile {
-			fmt.Fprintln(output, "Warning: env file was not found:")
+			fmt.Fprintln(output, "Warning: env file not found:")
 		} else {
-			fmt.Fprintln(output, "Warning: compose references missing env files:")
+			fmt.Fprintln(output, "Warning: Compose references missing env files:")
 		}
 		for _, envFile := range response.GetMissingEnvFiles() {
 			fmt.Fprintf(output, "  %s\n", envFile)
@@ -142,7 +142,7 @@ func printEnvFiles(output io.Writer, deploymentName string, explicitFile bool, r
 		fmt.Fprintln(output)
 	}
 	if len(response.GetEnvFiles()) == 0 {
-		fmt.Fprintf(output, "No env files found for %s\n", deploymentName)
+		fmt.Fprintf(output, "No env files found for %s.\n", deploymentName)
 		return
 	}
 	for i, envFile := range response.GetEnvFiles() {
@@ -166,7 +166,7 @@ func formatDeploymentState(state rpc.DeploymentState) string {
 	case rpc.DeploymentState_DEPLOYMENT_STATE_STOPPED:
 		return "stopped"
 	default:
-		return "unknown"
+		return unknownValue
 	}
 }
 
@@ -187,7 +187,7 @@ func formatContainerState(state rpc.ContainerState) string {
 	case rpc.ContainerState_CONTAINER_STATE_DEAD:
 		return "dead"
 	default:
-		return "unknown"
+		return unknownValue
 	}
 }
 
@@ -231,7 +231,7 @@ func formatJobStatus(status rpc.JobStatus) string {
 	case rpc.JobStatus_JOB_STATUS_CANCELLED:
 		return "cancelled"
 	default:
-		return "unknown"
+		return unknownValue
 	}
 }
 
