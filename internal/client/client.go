@@ -23,7 +23,11 @@ type Client struct {
 
 func Dial(ctx context.Context, socketPath string) (*Client, error) {
 	if socketPath == "" {
-		socketPath = internal.GetSocketPath()
+		defaultSocketPath, err := internal.SocketPath()
+		if err != nil {
+			return nil, err
+		}
+		socketPath = defaultSocketPath
 	}
 
 	connection, err := grpc.DialContext(

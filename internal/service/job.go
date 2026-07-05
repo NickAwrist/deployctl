@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Server) GetJob(ctx context.Context, req *rpc.GetJobRequest) (*rpc.Job, error) {
-	job, err := s.getJob(ctx, req.Id)
+	job, err := s.getJob(ctx, req.JobId)
 	if err != nil {
 		return nil, err
 	}
@@ -34,10 +34,10 @@ func (s *Server) ListJobs(ctx context.Context, req *rpc.ListJobsRequest) (*rpc.L
 }
 
 func (s *Server) ListJobLogs(ctx context.Context, req *rpc.ListJobLogsRequest) (*rpc.ListJobLogsResponse, error) {
-	if _, err := s.getJob(ctx, req.Id); err != nil {
+	if _, err := s.getJob(ctx, req.JobId); err != nil {
 		return nil, err
 	}
-	logs, err := s.jobs.LogsAfter(ctx, req.Id, 0)
+	logs, err := s.jobs.LogsAfter(ctx, req.JobId, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (s *Server) WatchJob(req *rpc.WatchJobRequest, stream rpc.JobService_WatchJ
 	defer ticker.Stop()
 
 	for {
-		logs, err := s.jobs.LogsAfter(stream.Context(), req.Id, after)
+		logs, err := s.jobs.LogsAfter(stream.Context(), req.JobId, after)
 		if err != nil {
 			return normalizeRPCError(err)
 		}
@@ -69,7 +69,7 @@ func (s *Server) WatchJob(req *rpc.WatchJobRequest, stream rpc.JobService_WatchJ
 			}
 		}
 
-		job, err := s.getJob(stream.Context(), req.Id)
+		job, err := s.getJob(stream.Context(), req.JobId)
 		if err != nil {
 			return normalizeRPCError(err)
 		}
@@ -86,7 +86,7 @@ func (s *Server) WatchJob(req *rpc.WatchJobRequest, stream rpc.JobService_WatchJ
 }
 
 func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc.Job, error) {
-	job, err := s.getJob(ctx, req.Id)
+	job, err := s.getJob(ctx, req.JobId)
 	if err != nil {
 		return nil, err
 	}
@@ -94,13 +94,13 @@ func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc
 		return jobToRPC(job), nil
 	}
 
-	if !s.runner.Cancel(req.Id) {
+	if !s.runner.Cancel(req.JobId) {
 		return jobToRPC(job), nil
 	}
 
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
-		job, err = s.getJob(ctx, req.Id)
+		job, err = s.getJob(ctx, req.JobId)
 		if err != nil {
 			return nil, err
 		}
@@ -114,7 +114,7 @@ func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc
 		}
 	}
 
-	job, err = s.getJob(ctx, req.Id)
+	job, err = s.getJob(ctx, req.JobId)
 	if err != nil {
 		return nil, err
 	}

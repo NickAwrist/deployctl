@@ -109,7 +109,11 @@ func TestCreateCommandClonesRepoAndStoresDeployment(t *testing.T) {
 		t.Fatalf("get repository: %v", err)
 	}
 
-	wantLocation := filepath.Join(internal.GetRepositoryDirectory(), "api")
+	repositoryDirectory, err := internal.RepositoryDirectory()
+	if err != nil {
+		t.Fatalf("repository directory: %v", err)
+	}
+	wantLocation := filepath.Join(repositoryDirectory, "api")
 	if repository.URL != sourceRepo || repository.Location != wantLocation {
 		t.Fatalf("stored repository = %+v", repository)
 	}
@@ -678,7 +682,11 @@ func TestEnvListDiscoversMultipleEnvFiles(t *testing.T) {
 
 func TestDeleteCommandCancelsAndForceDeletesDeployment(t *testing.T) {
 	setupTestHome(t)
-	location := filepath.Join(internal.GetRepositoryDirectory(), "api")
+	repositoryDirectory, err := internal.RepositoryDirectory()
+	if err != nil {
+		t.Fatalf("repository directory: %v", err)
+	}
+	location := filepath.Join(repositoryDirectory, "api")
 	if err := os.MkdirAll(location, 0755); err != nil {
 		t.Fatalf("create repository directory: %v", err)
 	}
@@ -783,14 +791,20 @@ func setupTestHome(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Remove(socketPath)
 	})
-	internal.InitializeDirectoryStructure()
+	if err := internal.InitializeDirectoryStructure(); err != nil {
+		t.Fatalf("initialize directory structure: %v", err)
+	}
 	startTestDaemon(t)
 }
 
 func startTestDaemon(t *testing.T) {
 	t.Helper()
 
-	listener, err := service.ListenUnix(internal.GetSocketPath())
+	socketPath, err := internal.SocketPath()
+	if err != nil {
+		t.Fatalf("socket path: %v", err)
+	}
+	listener, err := service.ListenUnix(socketPath)
 	if err != nil {
 		t.Fatalf("listen test daemon: %v", err)
 	}

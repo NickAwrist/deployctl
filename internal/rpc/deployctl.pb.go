@@ -98,13 +98,13 @@ func (x *Deployment) GetEnvPath() string {
 }
 
 type CreateDeploymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	RepoUrl       string                 `protobuf:"bytes,1,opt,name=repo_url,json=repoUrl,proto3" json:"repo_url,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	ComposeFile   string                 `protobuf:"bytes,3,opt,name=compose_file,json=composeFile,proto3" json:"compose_file,omitempty"`
-	EnvFile       string                 `protobuf:"bytes,4,opt,name=env_file,json=envFile,proto3" json:"env_file,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	RepoUrl        string                 `protobuf:"bytes,1,opt,name=repo_url,json=repoUrl,proto3" json:"repo_url,omitempty"`
+	DeploymentName string                 `protobuf:"bytes,2,opt,name=deployment_name,json=deploymentName,proto3" json:"deployment_name,omitempty"`
+	ComposeFile    string                 `protobuf:"bytes,3,opt,name=compose_file,json=composeFile,proto3" json:"compose_file,omitempty"`
+	EnvFile        string                 `protobuf:"bytes,4,opt,name=env_file,json=envFile,proto3" json:"env_file,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *CreateDeploymentRequest) Reset() {
@@ -144,9 +144,9 @@ func (x *CreateDeploymentRequest) GetRepoUrl() string {
 	return ""
 }
 
-func (x *CreateDeploymentRequest) GetName() string {
+func (x *CreateDeploymentRequest) GetDeploymentName() string {
 	if x != nil {
-		return x.Name
+		return x.DeploymentName
 	}
 	return ""
 }
@@ -166,10 +166,10 @@ func (x *CreateDeploymentRequest) GetEnvFile() string {
 }
 
 type GetDeploymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	DeploymentName string                 `protobuf:"bytes,1,opt,name=deployment_name,json=deploymentName,proto3" json:"deployment_name,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *GetDeploymentRequest) Reset() {
@@ -202,19 +202,19 @@ func (*GetDeploymentRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetDeploymentRequest) GetName() string {
+func (x *GetDeploymentRequest) GetDeploymentName() string {
 	if x != nil {
-		return x.Name
+		return x.DeploymentName
 	}
 	return ""
 }
 
 type GetDeploymentStatusRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	EnvFile       string                 `protobuf:"bytes,2,opt,name=env_file,json=envFile,proto3" json:"env_file,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	DeploymentName string                 `protobuf:"bytes,1,opt,name=deployment_name,json=deploymentName,proto3" json:"deployment_name,omitempty"`
+	EnvFile        string                 `protobuf:"bytes,2,opt,name=env_file,json=envFile,proto3" json:"env_file,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *GetDeploymentStatusRequest) Reset() {
@@ -247,9 +247,9 @@ func (*GetDeploymentStatusRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetDeploymentStatusRequest) GetName() string {
+func (x *GetDeploymentStatusRequest) GetDeploymentName() string {
 	if x != nil {
-		return x.Name
+		return x.DeploymentName
 	}
 	return ""
 }
@@ -262,12 +262,12 @@ func (x *GetDeploymentStatusRequest) GetEnvFile() string {
 }
 
 type StreamDeploymentLogsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Follow        bool                   `protobuf:"varint,2,opt,name=follow,proto3" json:"follow,omitempty"`
-	Lines         int32                  `protobuf:"varint,3,opt,name=lines,proto3" json:"lines,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	DeploymentName string                 `protobuf:"bytes,1,opt,name=deployment_name,json=deploymentName,proto3" json:"deployment_name,omitempty"`
+	Follow         bool                   `protobuf:"varint,2,opt,name=follow,proto3" json:"follow,omitempty"`
+	Lines          int32                  `protobuf:"varint,3,opt,name=lines,proto3" json:"lines,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *StreamDeploymentLogsRequest) Reset() {
@@ -300,9 +300,9 @@ func (*StreamDeploymentLogsRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *StreamDeploymentLogsRequest) GetName() string {
+func (x *StreamDeploymentLogsRequest) GetDeploymentName() string {
 	if x != nil {
-		return x.Name
+		return x.DeploymentName
 	}
 	return ""
 }
@@ -802,10 +802,10 @@ func (x *DeploymentListItem) GetState() string {
 }
 
 type DeleteDeploymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	DeploymentName string                 `protobuf:"bytes,1,opt,name=deployment_name,json=deploymentName,proto3" json:"deployment_name,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *DeleteDeploymentRequest) Reset() {
@@ -838,18 +838,18 @@ func (*DeleteDeploymentRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *DeleteDeploymentRequest) GetName() string {
+func (x *DeleteDeploymentRequest) GetDeploymentName() string {
 	if x != nil {
-		return x.Name
+		return x.DeploymentName
 	}
 	return ""
 }
 
 type BuildDeploymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	DeploymentName string                 `protobuf:"bytes,1,opt,name=deployment_name,json=deploymentName,proto3" json:"deployment_name,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *BuildDeploymentRequest) Reset() {
@@ -882,19 +882,19 @@ func (*BuildDeploymentRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *BuildDeploymentRequest) GetName() string {
+func (x *BuildDeploymentRequest) GetDeploymentName() string {
 	if x != nil {
-		return x.Name
+		return x.DeploymentName
 	}
 	return ""
 }
 
 type UpdateDeploymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Build         bool                   `protobuf:"varint,2,opt,name=build,proto3" json:"build,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	DeploymentName string                 `protobuf:"bytes,1,opt,name=deployment_name,json=deploymentName,proto3" json:"deployment_name,omitempty"`
+	Build          bool                   `protobuf:"varint,2,opt,name=build,proto3" json:"build,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *UpdateDeploymentRequest) Reset() {
@@ -927,9 +927,9 @@ func (*UpdateDeploymentRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *UpdateDeploymentRequest) GetName() string {
+func (x *UpdateDeploymentRequest) GetDeploymentName() string {
 	if x != nil {
-		return x.Name
+		return x.DeploymentName
 	}
 	return ""
 }
@@ -942,11 +942,11 @@ func (x *UpdateDeploymentRequest) GetBuild() bool {
 }
 
 type DeployDeploymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Build         bool                   `protobuf:"varint,2,opt,name=build,proto3" json:"build,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	DeploymentName string                 `protobuf:"bytes,1,opt,name=deployment_name,json=deploymentName,proto3" json:"deployment_name,omitempty"`
+	Build          bool                   `protobuf:"varint,2,opt,name=build,proto3" json:"build,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *DeployDeploymentRequest) Reset() {
@@ -979,9 +979,9 @@ func (*DeployDeploymentRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *DeployDeploymentRequest) GetName() string {
+func (x *DeployDeploymentRequest) GetDeploymentName() string {
 	if x != nil {
-		return x.Name
+		return x.DeploymentName
 	}
 	return ""
 }
@@ -994,11 +994,11 @@ func (x *DeployDeploymentRequest) GetBuild() bool {
 }
 
 type RestartDeploymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Build         bool                   `protobuf:"varint,2,opt,name=build,proto3" json:"build,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	DeploymentName string                 `protobuf:"bytes,1,opt,name=deployment_name,json=deploymentName,proto3" json:"deployment_name,omitempty"`
+	Build          bool                   `protobuf:"varint,2,opt,name=build,proto3" json:"build,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *RestartDeploymentRequest) Reset() {
@@ -1031,9 +1031,9 @@ func (*RestartDeploymentRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{17}
 }
 
-func (x *RestartDeploymentRequest) GetName() string {
+func (x *RestartDeploymentRequest) GetDeploymentName() string {
 	if x != nil {
-		return x.Name
+		return x.DeploymentName
 	}
 	return ""
 }
@@ -1046,10 +1046,10 @@ func (x *RestartDeploymentRequest) GetBuild() bool {
 }
 
 type StopDeploymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	DeploymentName string                 `protobuf:"bytes,1,opt,name=deployment_name,json=deploymentName,proto3" json:"deployment_name,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *StopDeploymentRequest) Reset() {
@@ -1082,9 +1082,9 @@ func (*StopDeploymentRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *StopDeploymentRequest) GetName() string {
+func (x *StopDeploymentRequest) GetDeploymentName() string {
 	if x != nil {
-		return x.Name
+		return x.DeploymentName
 	}
 	return ""
 }
@@ -1667,7 +1667,7 @@ func (x *Job) GetFinishedAtUnix() int64 {
 
 type GetJobRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1702,9 +1702,9 @@ func (*GetJobRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{29}
 }
 
-func (x *GetJobRequest) GetId() string {
+func (x *GetJobRequest) GetJobId() string {
 	if x != nil {
-		return x.Id
+		return x.JobId
 	}
 	return ""
 }
@@ -1799,7 +1799,7 @@ func (x *ListJobsResponse) GetJobs() []*Job {
 
 type ListJobLogsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1834,9 +1834,9 @@ func (*ListJobLogsRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{32}
 }
 
-func (x *ListJobLogsRequest) GetId() string {
+func (x *ListJobLogsRequest) GetJobId() string {
 	if x != nil {
-		return x.Id
+		return x.JobId
 	}
 	return ""
 }
@@ -1887,7 +1887,7 @@ func (x *ListJobLogsResponse) GetLogs() []*JobLog {
 
 type WatchJobRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	AfterSequence int64                  `protobuf:"varint,2,opt,name=after_sequence,json=afterSequence,proto3" json:"after_sequence,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1923,9 +1923,9 @@ func (*WatchJobRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{34}
 }
 
-func (x *WatchJobRequest) GetId() string {
+func (x *WatchJobRequest) GetJobId() string {
 	if x != nil {
-		return x.Id
+		return x.JobId
 	}
 	return ""
 }
@@ -1939,7 +1939,7 @@ func (x *WatchJobRequest) GetAfterSequence() int64 {
 
 type CancelJobRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1974,9 +1974,9 @@ func (*CancelJobRequest) Descriptor() ([]byte, []int) {
 	return file_api_deployctl_v1_deployctl_proto_rawDescGZIP(), []int{35}
 }
 
-func (x *CancelJobRequest) GetId() string {
+func (x *CancelJobRequest) GetJobId() string {
 	if x != nil {
-		return x.Id
+		return x.JobId
 	}
 	return ""
 }
@@ -2368,19 +2368,19 @@ const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"\x03url\x18\x02 \x01(\tR\x03url\x12\x1a\n" +
 	"\blocation\x18\x03 \x01(\tR\blocation\x12!\n" +
 	"\fcompose_path\x18\x04 \x01(\tR\vcomposePath\x12\x19\n" +
-	"\benv_path\x18\x05 \x01(\tR\aenvPath\"\x86\x01\n" +
+	"\benv_path\x18\x05 \x01(\tR\aenvPath\"\x9b\x01\n" +
 	"\x17CreateDeploymentRequest\x12\x19\n" +
-	"\brepo_url\x18\x01 \x01(\tR\arepoUrl\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12!\n" +
+	"\brepo_url\x18\x01 \x01(\tR\arepoUrl\x12'\n" +
+	"\x0fdeployment_name\x18\x02 \x01(\tR\x0edeploymentName\x12!\n" +
 	"\fcompose_file\x18\x03 \x01(\tR\vcomposeFile\x12\x19\n" +
-	"\benv_file\x18\x04 \x01(\tR\aenvFile\"*\n" +
-	"\x14GetDeploymentRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"K\n" +
-	"\x1aGetDeploymentStatusRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x19\n" +
-	"\benv_file\x18\x02 \x01(\tR\aenvFile\"_\n" +
-	"\x1bStreamDeploymentLogsRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
+	"\benv_file\x18\x04 \x01(\tR\aenvFile\"?\n" +
+	"\x14GetDeploymentRequest\x12'\n" +
+	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\"`\n" +
+	"\x1aGetDeploymentStatusRequest\x12'\n" +
+	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\x12\x19\n" +
+	"\benv_file\x18\x02 \x01(\tR\aenvFile\"t\n" +
+	"\x1bStreamDeploymentLogsRequest\x12'\n" +
+	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\x12\x16\n" +
 	"\x06follow\x18\x02 \x01(\bR\x06follow\x12\x14\n" +
 	"\x05lines\x18\x03 \x01(\x05R\x05lines\"L\n" +
 	"\x12DeploymentLogEntry\x12\x1c\n" +
@@ -2421,22 +2421,22 @@ const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"\n" +
 	"deployment\x18\x01 \x01(\v2\x18.deployctl.v1.DeploymentR\n" +
 	"deployment\x12\x14\n" +
-	"\x05state\x18\x02 \x01(\tR\x05state\"-\n" +
-	"\x17DeleteDeploymentRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\",\n" +
-	"\x16BuildDeploymentRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"C\n" +
-	"\x17UpdateDeploymentRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05build\x18\x02 \x01(\bR\x05build\"C\n" +
-	"\x17DeployDeploymentRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05build\x18\x02 \x01(\bR\x05build\"D\n" +
-	"\x18RestartDeploymentRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05build\x18\x02 \x01(\bR\x05build\"+\n" +
-	"\x15StopDeploymentRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"Y\n" +
+	"\x05state\x18\x02 \x01(\tR\x05state\"B\n" +
+	"\x17DeleteDeploymentRequest\x12'\n" +
+	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\"A\n" +
+	"\x16BuildDeploymentRequest\x12'\n" +
+	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\"X\n" +
+	"\x17UpdateDeploymentRequest\x12'\n" +
+	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\x12\x14\n" +
+	"\x05build\x18\x02 \x01(\bR\x05build\"X\n" +
+	"\x17DeployDeploymentRequest\x12'\n" +
+	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\x12\x14\n" +
+	"\x05build\x18\x02 \x01(\bR\x05build\"Y\n" +
+	"\x18RestartDeploymentRequest\x12'\n" +
+	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\x12\x14\n" +
+	"\x05build\x18\x02 \x01(\bR\x05build\"@\n" +
+	"\x15StopDeploymentRequest\x12'\n" +
+	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\"Y\n" +
 	"\x13ListEnvNamesRequest\x12'\n" +
 	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\x12\x19\n" +
 	"\benv_file\x18\x02 \x01(\tR\aenvFile\",\n" +
@@ -2477,22 +2477,22 @@ const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"\x05error\x18\x05 \x01(\tR\x05error\x12&\n" +
 	"\x0fcreated_at_unix\x18\x06 \x01(\x03R\rcreatedAtUnix\x12&\n" +
 	"\x0fstarted_at_unix\x18\a \x01(\x03R\rstartedAtUnix\x12(\n" +
-	"\x10finished_at_unix\x18\b \x01(\x03R\x0efinishedAtUnix\"\x1f\n" +
-	"\rGetJobRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\":\n" +
+	"\x10finished_at_unix\x18\b \x01(\x03R\x0efinishedAtUnix\"&\n" +
+	"\rGetJobRequest\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\":\n" +
 	"\x0fListJobsRequest\x12'\n" +
 	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\"9\n" +
 	"\x10ListJobsResponse\x12%\n" +
-	"\x04jobs\x18\x01 \x03(\v2\x11.deployctl.v1.JobR\x04jobs\"$\n" +
-	"\x12ListJobLogsRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"?\n" +
+	"\x04jobs\x18\x01 \x03(\v2\x11.deployctl.v1.JobR\x04jobs\"+\n" +
+	"\x12ListJobLogsRequest\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\"?\n" +
 	"\x13ListJobLogsResponse\x12(\n" +
-	"\x04logs\x18\x01 \x03(\v2\x14.deployctl.v1.JobLogR\x04logs\"H\n" +
-	"\x0fWatchJobRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12%\n" +
-	"\x0eafter_sequence\x18\x02 \x01(\x03R\rafterSequence\"\"\n" +
-	"\x10CancelJobRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"}\n" +
+	"\x04logs\x18\x01 \x03(\v2\x14.deployctl.v1.JobLogR\x04logs\"O\n" +
+	"\x0fWatchJobRequest\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12%\n" +
+	"\x0eafter_sequence\x18\x02 \x01(\x03R\rafterSequence\")\n" +
+	"\x10CancelJobRequest\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\"}\n" +
 	"\x06JobLog\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x1a\n" +
 	"\bsequence\x18\x02 \x01(\x03R\bsequence\x12\x18\n" +

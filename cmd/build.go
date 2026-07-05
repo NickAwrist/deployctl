@@ -29,7 +29,7 @@ var buildCmd = &cobra.Command{
 		}
 
 		return runWithClient(cmd, func(client *daemonClient) error {
-			response, err := client.Deployment.BuildDeployment(cmd.Context(), &rpc.BuildDeploymentRequest{Name: repositoryName})
+			response, err := client.Deployment.BuildDeployment(cmd.Context(), &rpc.BuildDeploymentRequest{DeploymentName: repositoryName})
 			if err != nil {
 				return err
 			}

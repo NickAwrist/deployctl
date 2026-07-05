@@ -10,7 +10,7 @@ func (s *Server) StreamDeploymentLogs(req *rpc.StreamDeploymentLogsRequest, stre
 		return normalizeRPCError(invalidArgument("lines must be greater than or equal to 0"))
 	}
 
-	repository, err := s.getRepository(stream.Context(), req.Name)
+	repository, err := s.getRepository(stream.Context(), req.DeploymentName)
 	if err != nil {
 		return normalizeRPCError(err)
 	}

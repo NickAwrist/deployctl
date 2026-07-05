@@ -15,7 +15,11 @@ func CloneRepo(ctx context.Context, repoURL string, name string, log func(string
 	if name == "" {
 		name = repoNameFromURL(repoURL)
 	}
-	repoPath := filepath.Join(internal.GetRepositoryDirectory(), name)
+	repositoryDirectory, err := internal.RepositoryDirectory()
+	if err != nil {
+		return "", err
+	}
+	repoPath := filepath.Join(repositoryDirectory, name)
 
 	if err := runGitCommand(ctx, "", log, "clone", repoURL, repoPath); err != nil {
 		return "", cloneError(repoURL, err)

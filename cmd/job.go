@@ -25,7 +25,7 @@ var jobCmd = &cobra.Command{
 		}
 
 		return runWithClient(cmd, func(client *daemonClient) error {
-			job, err := client.Job.GetJob(cmd.Context(), &rpc.GetJobRequest{Id: jobID})
+			job, err := client.Job.GetJob(cmd.Context(), &rpc.GetJobRequest{JobId: jobID})
 			if err != nil {
 				return err
 			}
@@ -33,7 +33,7 @@ var jobCmd = &cobra.Command{
 			if !includeLogs {
 				return nil
 			}
-			response, err := client.Job.ListJobLogs(cmd.Context(), &rpc.ListJobLogsRequest{Id: jobID})
+			response, err := client.Job.ListJobLogs(cmd.Context(), &rpc.ListJobLogsRequest{JobId: jobID})
 			if err != nil {
 				return err
 			}

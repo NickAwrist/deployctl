@@ -30,8 +30,8 @@ var statusCmd = &cobra.Command{
 
 		return runWithClient(cmd, func(client *daemonClient) error {
 			response, err := client.Deployment.GetDeploymentStatus(cmd.Context(), &rpc.GetDeploymentStatusRequest{
-				Name:    repositoryName,
-				EnvFile: envFile,
+				DeploymentName: repositoryName,
+				EnvFile:        envFile,
 			})
 			if err != nil {
 				return err

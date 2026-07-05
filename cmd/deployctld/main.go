@@ -9,14 +9,25 @@ import (
 )
 
 func main() {
-	internal.InitializeDirectoryStructure()
+	if err := internal.InitializeDirectoryStructure(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 
-	socketPath := internal.GetSocketPath()
+	socketPath, err := internal.SocketPath()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	if len(os.Args) > 1 {
 		socketPath = os.Args[1]
 	}
 
-	logger := service.NewDaemonLogger()
+	logger, err := service.NewDaemonLogger()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	listener, err := service.ListenUnix(socketPath)
 	if err != nil {
 		logger.Printf("listen on %s failed: %v", socketPath, err)

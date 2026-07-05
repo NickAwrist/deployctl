@@ -25,7 +25,7 @@ func dialClient(ctx context.Context) (*deployclient.Client, error) {
 }
 
 func waitForJob(cmd *cobra.Command, client *deployclient.Client, jobID string) error {
-	stream, err := client.Job.WatchJob(cmd.Context(), &rpc.WatchJobRequest{Id: jobID})
+	stream, err := client.Job.WatchJob(cmd.Context(), &rpc.WatchJobRequest{JobId: jobID})
 	if err != nil {
 		return err
 	}

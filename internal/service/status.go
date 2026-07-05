@@ -18,7 +18,7 @@ const (
 )
 
 func (s *Server) GetDeploymentStatus(ctx context.Context, req *rpc.GetDeploymentStatusRequest) (*rpc.DeploymentStatus, error) {
-	repository, err := s.getRepository(ctx, req.Name)
+	repository, err := s.getRepository(ctx, req.DeploymentName)
 	if err != nil {
 		return nil, err
 	}

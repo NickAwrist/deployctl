@@ -41,9 +41,9 @@ var logsCmd = &cobra.Command{
 
 		return runWithClient(cmd, func(client *daemonClient) error {
 			stream, err := client.Deployment.StreamDeploymentLogs(cmd.Context(), &rpc.StreamDeploymentLogsRequest{
-				Name:   repositoryName,
-				Follow: follow,
-				Lines:  int32(lines),
+				DeploymentName: repositoryName,
+				Follow:         follow,
+				Lines:          int32(lines),
 			})
 			if err != nil {
 				return err

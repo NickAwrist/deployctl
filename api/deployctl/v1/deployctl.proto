@@ -51,15 +51,15 @@ message Deployment {
 
 message CreateDeploymentRequest {
   string repo_url = 1;
-  string name = 2;
+  string deployment_name = 2;
   string compose_file = 3;
   string env_file = 4;
 }
 
-message GetDeploymentRequest { string name = 1; }
-message GetDeploymentStatusRequest { string name = 1; string env_file = 2; }
+message GetDeploymentRequest { string deployment_name = 1; }
+message GetDeploymentStatusRequest { string deployment_name = 1; string env_file = 2; }
 message StreamDeploymentLogsRequest {
-  string name = 1;
+  string deployment_name = 1;
   bool follow = 2;
   int32 lines = 3;
 }
@@ -97,12 +97,12 @@ message DeploymentListItem {
   Deployment deployment = 1;
   string state = 2;
 }
-message DeleteDeploymentRequest { string name = 1; }
-message BuildDeploymentRequest { string name = 1; }
-message UpdateDeploymentRequest { string name = 1; bool build = 2; }
-message DeployDeploymentRequest { string name = 1; bool build = 2; }
-message RestartDeploymentRequest { string name = 1; bool build = 2; }
-message StopDeploymentRequest { string name = 1; }
+message DeleteDeploymentRequest { string deployment_name = 1; }
+message BuildDeploymentRequest { string deployment_name = 1; }
+message UpdateDeploymentRequest { string deployment_name = 1; bool build = 2; }
+message DeployDeploymentRequest { string deployment_name = 1; bool build = 2; }
+message RestartDeploymentRequest { string deployment_name = 1; bool build = 2; }
+message StopDeploymentRequest { string deployment_name = 1; }
 
 message ListEnvNamesRequest { string deployment_name = 1; string env_file = 2; }
 message ListEnvNamesResponse { repeated string names = 1; }
@@ -144,13 +144,13 @@ message Job {
   int64 finished_at_unix = 8;
 }
 
-message GetJobRequest { string id = 1; }
+message GetJobRequest { string job_id = 1; }
 message ListJobsRequest { string deployment_name = 1; }
 message ListJobsResponse { repeated Job jobs = 1; }
-message ListJobLogsRequest { string id = 1; }
+message ListJobLogsRequest { string job_id = 1; }
 message ListJobLogsResponse { repeated JobLog logs = 1; }
-message WatchJobRequest { string id = 1; int64 after_sequence = 2; }
-message CancelJobRequest { string id = 1; }
+message WatchJobRequest { string job_id = 1; int64 after_sequence = 2; }
+message CancelJobRequest { string job_id = 1; }
 
 message JobLog {
   string job_id = 1;

@@ -25,7 +25,11 @@ type Server struct {
 }
 
 func NewServer() (*Server, error) {
-	return NewServerWithLogger(NewDaemonLogger())
+	logger, err := NewDaemonLogger()
+	if err != nil {
+		return nil, err
+	}
+	return NewServerWithLogger(logger)
 }
 
 func NewServerWithLogger(logger *Logger) (*Server, error) {

@@ -15,8 +15,12 @@ type Logger struct {
 	mu   sync.Mutex
 }
 
-func NewDaemonLogger() *Logger {
-	return &Logger{path: internal.GetDaemonLogPath()}
+func NewDaemonLogger() (*Logger, error) {
+	path, err := internal.DaemonLogPath()
+	if err != nil {
+		return nil, err
+	}
+	return &Logger{path: path}, nil
 }
 
 func (l *Logger) Printf(format string, args ...any) {

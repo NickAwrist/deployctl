@@ -29,7 +29,7 @@ var stopCmd = &cobra.Command{
 		}
 
 		return runWithClient(cmd, func(client *daemonClient) error {
-			response, err := client.Deployment.StopDeployment(cmd.Context(), &rpc.StopDeploymentRequest{Name: repositoryName})
+			response, err := client.Deployment.StopDeployment(cmd.Context(), &rpc.StopDeploymentRequest{DeploymentName: repositoryName})
 			if err != nil {
 				return err
 			}
