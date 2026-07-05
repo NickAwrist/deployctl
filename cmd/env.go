@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -23,9 +22,9 @@ var envSetCmd = &cobra.Command{
 	Args:              cobra.MinimumNArgs(2),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName := args[0]
-		if repositoryName == "" {
-			return errors.New("repository name is required")
+		repositoryName, err := deploymentNameArg(args)
+		if err != nil {
+			return err
 		}
 
 		targetEnvFile, values := resolveEnvSetArgs(args[1:])
@@ -59,9 +58,9 @@ var envImportCmd = &cobra.Command{
 	Args:              cobra.RangeArgs(2, 3),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName := args[0]
-		if repositoryName == "" {
-			return errors.New("repository name is required")
+		repositoryName, err := deploymentNameArg(args)
+		if err != nil {
+			return err
 		}
 
 		targetEnvFile, sourcePath := resolveEnvImportArgs(args[1:])
@@ -86,9 +85,9 @@ var envUnsetCmd = &cobra.Command{
 	Args:              cobra.MinimumNArgs(2),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName := args[0]
-		if repositoryName == "" {
-			return errors.New("repository name is required")
+		repositoryName, err := deploymentNameArg(args)
+		if err != nil {
+			return err
 		}
 
 		targetEnvFile, names := resolveEnvUnsetArgs(args[1:])
@@ -118,9 +117,9 @@ var envListCmd = &cobra.Command{
 	Args:              cobra.RangeArgs(1, 2),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName := args[0]
-		if repositoryName == "" {
-			return errors.New("repository name is required")
+		repositoryName, err := deploymentNameArg(args)
+		if err != nil {
+			return err
 		}
 
 		envFile := ""

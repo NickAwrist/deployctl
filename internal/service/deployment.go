@@ -43,14 +43,7 @@ func (s *Server) ListDeployments(ctx context.Context, _ *rpc.ListDeploymentsRequ
 }
 
 func (s *Server) DeleteDeployment(ctx context.Context, req *rpc.DeleteDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.DeploymentName == "" {
-		return nil, invalidArgument("deployment name is required")
-	}
-	return s.runner.Enqueue(ctx, "delete", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.DeploymentName)
-		if err != nil {
-			return err
-		}
+	return s.enqueueRepositoryJob(ctx, "delete", req.DeploymentName, func(ctx context.Context, repository store.Repository, log func(string)) error {
 		log(fmt.Sprintf("Deleting deployment %s", repository.Name))
 		repositoryDirectory, err := internal.RepositoryDirectory()
 		if err != nil {
@@ -64,27 +57,13 @@ func (s *Server) DeleteDeployment(ctx context.Context, req *rpc.DeleteDeployment
 }
 
 func (s *Server) BuildDeployment(ctx context.Context, req *rpc.BuildDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.DeploymentName == "" {
-		return nil, invalidArgument("deployment name is required")
-	}
-	return s.runner.Enqueue(ctx, "build", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.DeploymentName)
-		if err != nil {
-			return err
-		}
+	return s.enqueueRepositoryJob(ctx, "build", req.DeploymentName, func(ctx context.Context, repository store.Repository, log func(string)) error {
 		return docker.ComposeBuild(ctx, &repository, log)
 	})
 }
 
 func (s *Server) UpdateDeployment(ctx context.Context, req *rpc.UpdateDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.DeploymentName == "" {
-		return nil, invalidArgument("deployment name is required")
-	}
-	return s.runner.Enqueue(ctx, "update", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.DeploymentName)
-		if err != nil {
-			return err
-		}
+	return s.enqueueRepositoryJob(ctx, "update", req.DeploymentName, func(ctx context.Context, repository store.Repository, log func(string)) error {
 		log("Pulling latest repository changes")
 		if err := internalgit.PullRepo(ctx, repository.Location, log); err != nil {
 			return err
@@ -97,14 +76,7 @@ func (s *Server) UpdateDeployment(ctx context.Context, req *rpc.UpdateDeployment
 }
 
 func (s *Server) DeployDeployment(ctx context.Context, req *rpc.DeployDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.DeploymentName == "" {
-		return nil, invalidArgument("deployment name is required")
-	}
-	return s.runner.Enqueue(ctx, "deploy", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.DeploymentName)
-		if err != nil {
-			return err
-		}
+	return s.enqueueRepositoryJob(ctx, "deploy", req.DeploymentName, func(ctx context.Context, repository store.Repository, log func(string)) error {
 		if !req.Build {
 			status, err := docker.ComposeStatus(ctx, &repository)
 			if err != nil {
@@ -129,14 +101,7 @@ func (s *Server) DeployDeployment(ctx context.Context, req *rpc.DeployDeployment
 }
 
 func (s *Server) RestartDeployment(ctx context.Context, req *rpc.RestartDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.DeploymentName == "" {
-		return nil, invalidArgument("deployment name is required")
-	}
-	return s.runner.Enqueue(ctx, "restart", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.DeploymentName)
-		if err != nil {
-			return err
-		}
+	return s.enqueueRepositoryJob(ctx, "restart", req.DeploymentName, func(ctx context.Context, repository store.Repository, log func(string)) error {
 		status, err := docker.ComposeStatus(ctx, &repository)
 		if err != nil {
 			return err
@@ -161,14 +126,7 @@ func (s *Server) RestartDeployment(ctx context.Context, req *rpc.RestartDeployme
 }
 
 func (s *Server) StopDeployment(ctx context.Context, req *rpc.StopDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.DeploymentName == "" {
-		return nil, invalidArgument("deployment name is required")
-	}
-	return s.runner.Enqueue(ctx, "stop", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.DeploymentName)
-		if err != nil {
-			return err
-		}
+	return s.enqueueRepositoryJob(ctx, "stop", req.DeploymentName, func(ctx context.Context, repository store.Repository, log func(string)) error {
 		status, err := docker.ComposeStatus(ctx, &repository)
 		if err != nil {
 			return err

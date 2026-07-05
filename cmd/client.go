@@ -77,6 +77,33 @@ func handleJob(cmd *cobra.Command, client *deployclient.Client, response *rpc.Jo
 	return nil
 }
 
+func deploymentNameArg(args []string) (string, error) {
+	if len(args) == 0 || args[0] == "" {
+		return "", errors.New("repository name is required")
+	}
+	return args[0], nil
+}
+
+func runDeploymentJob(
+	cmd *cobra.Command,
+	args []string,
+	success string,
+	call func(*daemonClient, string) (*rpc.JobResponse, error),
+) error {
+	repositoryName, err := deploymentNameArg(args)
+	if err != nil {
+		return err
+	}
+
+	return runWithClient(cmd, func(client *daemonClient) error {
+		response, err := call(client, repositoryName)
+		if err != nil {
+			return err
+		}
+		return handleJob(cmd, client, response, success)
+	})
+}
+
 func addJobFlags(command *cobra.Command) {
 	command.Flags().Bool("detach", false, "Start the daemon job and return immediately")
 }

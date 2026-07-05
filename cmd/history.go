@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io"
 
@@ -16,9 +15,9 @@ var historyCmd = &cobra.Command{
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName := args[0]
-		if repositoryName == "" {
-			return errors.New("repository name is required")
+		repositoryName, err := deploymentNameArg(args)
+		if err != nil {
+			return err
 		}
 
 		return runWithClient(cmd, func(client *daemonClient) error {

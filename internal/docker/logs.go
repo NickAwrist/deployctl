@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"sync"
 
@@ -41,10 +40,7 @@ func ComposeLogs(ctx context.Context, repository *store.Repository, options LogO
 		if consumerErr := consumer.err(); consumerErr != nil {
 			return consumerErr
 		}
-		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
-			return unavailable
-		}
-		return fmt.Errorf("read compose logs: %w", err)
+		return composeOperationError(dockerCLI, "read compose logs", err)
 	}
 
 	return consumer.err()

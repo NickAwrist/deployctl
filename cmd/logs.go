@@ -19,9 +19,9 @@ var logsCmd = &cobra.Command{
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		repositoryName := args[0]
-		if repositoryName == "" {
-			return errors.New("repository name is required")
+		repositoryName, err := deploymentNameArg(args)
+		if err != nil {
+			return err
 		}
 
 		follow, err := cmd.Flags().GetBool("follow")

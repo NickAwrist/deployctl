@@ -161,22 +161,17 @@ func CheckConnection(ctx context.Context) ConnectionStatus {
 }
 
 func ComposeUp(ctx context.Context, repository *store.Repository, log Logger) error {
-	// Load the project
 	service, project, dockerCLI, err := loadProject(ctx, repository)
 	if err != nil {
 		return err
 	}
 
-	// Start the project
 	logf(log, "Starting Compose project")
 	if err := service.Up(ctx, project, api.UpOptions{
 		Create: api.CreateOptions{},
 		Start:  api.StartOptions{},
 	}); err != nil {
-		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
-			return unavailable
-		}
-		return fmt.Errorf("start compose project: %w", err)
+		return composeOperationError(dockerCLI, "start compose project", err)
 	}
 
 	return nil
@@ -206,10 +201,7 @@ func ComposeStatus(ctx context.Context, repository *store.Repository) (Deploymen
 			Add("label", api.ContainerNumberLabel),
 	})
 	if err != nil {
-		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
-			return DeploymentStatus{}, unavailable
-		}
-		return DeploymentStatus{}, fmt.Errorf("list compose containers: %w", err)
+		return DeploymentStatus{}, composeOperationError(dockerCLI, "list compose containers", err)
 	}
 
 	var status DeploymentStatus
@@ -275,19 +267,14 @@ func fromUnix(seconds int64) time.Time {
 }
 
 func ComposeBuild(ctx context.Context, repository *store.Repository, log Logger) error {
-	// Load the project
 	service, project, dockerCLI, err := loadProject(ctx, repository)
 	if err != nil {
 		return err
 	}
 
-	// Rebuild project images
 	logf(log, "Building Compose images")
 	if err := service.Build(ctx, project, api.BuildOptions{}); err != nil {
-		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
-			return unavailable
-		}
-		return fmt.Errorf("build compose project: %w", err)
+		return composeOperationError(dockerCLI, "build compose project", err)
 	}
 
 	return nil
@@ -333,11 +320,7 @@ func ComposeBuildCache(ctx context.Context, repository *store.Repository) (Build
 				cache.Missing = append(cache.Missing, tag)
 				continue
 			}
-			if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
-				return BuildCache{}, unavailable
-			}
-
-			return BuildCache{}, fmt.Errorf("inspect build image %s: %w", tag, err)
+			return BuildCache{}, composeOperationError(dockerCLI, fmt.Sprintf("inspect build image %s", tag), err)
 		}
 	}
 
@@ -347,21 +330,16 @@ func ComposeBuildCache(ctx context.Context, repository *store.Repository) (Build
 }
 
 func ComposeDown(ctx context.Context, repository *store.Repository, log Logger) error {
-	// Load the project
 	service, project, dockerCLI, err := loadProject(ctx, repository)
 	if err != nil {
 		return err
 	}
 
-	// Stop the project
 	logf(log, "Stopping Compose project")
 	if err := service.Down(ctx, project.Name, api.DownOptions{
 		Project: project,
 	}); err != nil {
-		if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
-			return unavailable
-		}
-		return fmt.Errorf("stop compose project: %w", err)
+		return composeOperationError(dockerCLI, "stop compose project", err)
 	}
 
 	return nil
@@ -374,30 +352,32 @@ func logf(log Logger, format string, args ...any) {
 	log(fmt.Sprintf(format, args...))
 }
 
+func composeOperationError(dockerCLI *command.DockerCli, operation string, err error) error {
+	if unavailable := dockerUnavailableError(dockerCLI, err); unavailable != nil {
+		return unavailable
+	}
+	return fmt.Errorf("%s: %w", operation, err)
+}
+
 func loadProject(ctx context.Context, repository *store.Repository) (api.Compose, *types.Project, *command.DockerCli, error) {
-	// Check if the repository has a compose file configured
 	if repository.ComposePath == "" {
 		return nil, nil, nil, errors.New("repository does not have a compose file configured")
 	}
 
-	// Create a new docker CLI
 	dockerCLI, err := command.NewDockerCli()
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("create docker CLI: %w", err)
 	}
 
-	// Initialize the docker CLI
 	if err := dockerCLI.Initialize(&flags.ClientOptions{}); err != nil {
 		return nil, nil, nil, fmt.Errorf("initialize docker CLI: %w", err)
 	}
 
-	// Create a new compose service
 	service, err := compose.NewComposeService(dockerCLI)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("create compose service: %w", err)
 	}
 
-	// Load the project
 	loadOptions := api.ProjectLoadOptions{
 		ConfigPaths: []string{repository.ComposePath},
 		WorkingDir:  repository.Location,

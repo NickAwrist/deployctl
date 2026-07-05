@@ -160,19 +160,12 @@ func listEnvNamesFromPath(path string) ([]string, error) {
 }
 
 func (s *Server) SetEnv(ctx context.Context, req *rpc.SetEnvRequest) (*rpc.JobResponse, error) {
-	if req.DeploymentName == "" {
-		return nil, invalidArgument("deployment name is required")
-	}
 	for name := range req.Variables {
 		if err := envfile.ValidateName(name); err != nil {
 			return nil, invalidArgument(err.Error())
 		}
 	}
-	return s.runner.Enqueue(ctx, "env.set", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.DeploymentName)
-		if err != nil {
-			return err
-		}
+	return s.enqueueRepositoryJob(ctx, "env.set", req.DeploymentName, func(ctx context.Context, repository store.Repository, log func(string)) error {
 		targetEnvPath := resolveEnvTargetPath(repository, req.EnvFile)
 		variables, err := envfile.Read(targetEnvPath)
 		if err != nil {
@@ -196,17 +189,10 @@ func (s *Server) SetEnv(ctx context.Context, req *rpc.SetEnvRequest) (*rpc.JobRe
 }
 
 func (s *Server) ImportEnvFile(ctx context.Context, req *rpc.ImportEnvFileRequest) (*rpc.JobResponse, error) {
-	if req.DeploymentName == "" {
-		return nil, invalidArgument("deployment name is required")
-	}
 	if req.SourcePath == "" {
 		return nil, invalidArgument("source path is required")
 	}
-	return s.runner.Enqueue(ctx, "env.import", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.DeploymentName)
-		if err != nil {
-			return err
-		}
+	return s.enqueueRepositoryJob(ctx, "env.import", req.DeploymentName, func(ctx context.Context, repository store.Repository, log func(string)) error {
 		source, ok := internalfile.ExistingFile(req.SourcePath)
 		if !ok {
 			return fmt.Errorf("env file %q was not found", req.SourcePath)
@@ -227,19 +213,12 @@ func (s *Server) ImportEnvFile(ctx context.Context, req *rpc.ImportEnvFileReques
 }
 
 func (s *Server) UnsetEnv(ctx context.Context, req *rpc.UnsetEnvRequest) (*rpc.JobResponse, error) {
-	if req.DeploymentName == "" {
-		return nil, invalidArgument("deployment name is required")
-	}
 	for _, name := range req.Names {
 		if err := envfile.ValidateName(name); err != nil {
 			return nil, invalidArgument(err.Error())
 		}
 	}
-	return s.runner.Enqueue(ctx, "env.unset", req.DeploymentName, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.DeploymentName)
-		if err != nil {
-			return err
-		}
+	return s.enqueueRepositoryJob(ctx, "env.unset", req.DeploymentName, func(ctx context.Context, repository store.Repository, log func(string)) error {
 		targetEnvPath := resolveEnvTargetPath(repository, req.EnvFile)
 		variables, err := envfile.Read(targetEnvPath)
 		if err != nil {

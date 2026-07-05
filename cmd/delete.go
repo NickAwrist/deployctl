@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -28,13 +27,9 @@ var deleteCmd = &cobra.Command{
 	Args:              cobra.ExactArgs(1),
 	ValidArgsFunction: completeDeploymentNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Get the repository name from the command line arguments or flags
-		repositoryName := ""
-		if len(args) > 0 {
-			repositoryName = args[0]
-			if repositoryName == "" {
-				return errors.New("repository name is required")
-			}
+		repositoryName, err := deploymentNameArg(args)
+		if err != nil {
+			return err
 		}
 
 		// Get the force flag from the command line arguments or flags
@@ -53,12 +48,8 @@ var deleteCmd = &cobra.Command{
 			return nil
 		}
 
-		return runWithClient(cmd, func(client *daemonClient) error {
-			response, err := client.Deployment.DeleteDeployment(cmd.Context(), &rpc.DeleteDeploymentRequest{DeploymentName: repositoryName})
-			if err != nil {
-				return err
-			}
-			return handleJob(cmd, client, response, fmt.Sprintf("Deleted deployment %s", repositoryName))
+		return runDeploymentJob(cmd, args, fmt.Sprintf("Deleted deployment %s", repositoryName), func(client *daemonClient, repositoryName string) (*rpc.JobResponse, error) {
+			return client.Deployment.DeleteDeployment(cmd.Context(), &rpc.DeleteDeploymentRequest{DeploymentName: repositoryName})
 		})
 	},
 }
