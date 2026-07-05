@@ -1,3 +1,4 @@
 deployctl
+bin/
 *.test
 coverage.out

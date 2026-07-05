@@ -25,6 +25,17 @@ go build -o deployctl .
 go build -o deployctld ./cmd/deployctld
 ```
 
+Or use the repository task runner:
+
+```sh
+make test
+make generate
+make build
+```
+
+`make generate` installs the protobuf generator plugins into `./bin` and
+regenerates the gRPC stubs from `api/deployctl/v1/deployctl.proto`.
+
 On Windows PowerShell, build an `.exe`:
 
 ```powershell

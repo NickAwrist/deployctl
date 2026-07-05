@@ -33,33 +33,11 @@ type JobLog struct {
 }
 
 type JobStore struct {
-	storage storage
-}
-
-func NewJobStore() *JobStore {
-	return &JobStore{storage: newStorage()}
-}
-
-func (s *JobStore) openDatabase() (*sql.DB, error) {
-	db, err := s.storage.open()
-	if err != nil {
-		return nil, err
-	}
-	if err := migrateJobs(db); err != nil {
-		_ = db.Close()
-		return nil, err
-	}
-	return db, nil
+	db *sql.DB
 }
 
 func (s *JobStore) Insert(ctx context.Context, job Job) error {
-	db, err := s.openDatabase()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	_, err = db.ExecContext(ctx, `
+	_, err := s.db.ExecContext(ctx, `
 		INSERT INTO jobs (id, type, deployment_name, status, error, created_at_unix, started_at_unix, finished_at_unix)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`, job.ID, job.Type, job.DeploymentName, job.Status, job.Error, unix(job.CreatedAt), unix(job.StartedAt), unix(job.FinishedAt))
@@ -67,13 +45,7 @@ func (s *JobStore) Insert(ctx context.Context, job Job) error {
 }
 
 func (s *JobStore) Update(ctx context.Context, job Job) error {
-	db, err := s.openDatabase()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	result, err := db.ExecContext(ctx, `
+	result, err := s.db.ExecContext(ctx, `
 		UPDATE jobs
 		SET status = ?, error = ?, started_at_unix = ?, finished_at_unix = ?
 		WHERE id = ?
@@ -85,15 +57,9 @@ func (s *JobStore) Update(ctx context.Context, job Job) error {
 }
 
 func (s *JobStore) Get(ctx context.Context, id string) (Job, error) {
-	db, err := s.openDatabase()
-	if err != nil {
-		return Job{}, err
-	}
-	defer db.Close()
-
 	var job Job
 	var createdAt, startedAt, finishedAt int64
-	err = db.QueryRowContext(ctx, `
+	err := s.db.QueryRowContext(ctx, `
 		SELECT id, type, deployment_name, status, error, created_at_unix, started_at_unix, finished_at_unix
 		FROM jobs
 		WHERE id = ?
@@ -108,12 +74,6 @@ func (s *JobStore) Get(ctx context.Context, id string) (Job, error) {
 }
 
 func (s *JobStore) List(ctx context.Context, deploymentName string) ([]Job, error) {
-	db, err := s.openDatabase()
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
 	query := `
 		SELECT id, type, deployment_name, status, error, created_at_unix, started_at_unix, finished_at_unix
 		FROM jobs
@@ -125,7 +85,7 @@ func (s *JobStore) List(ctx context.Context, deploymentName string) ([]Job, erro
 	}
 	query += " ORDER BY created_at_unix DESC, id DESC"
 
-	rows, err := db.QueryContext(ctx, query, args...)
+	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -150,14 +110,8 @@ func (s *JobStore) List(ctx context.Context, deploymentName string) ([]Job, erro
 }
 
 func (s *JobStore) AddLog(ctx context.Context, jobID string, message string) (JobLog, error) {
-	db, err := s.openDatabase()
-	if err != nil {
-		return JobLog{}, err
-	}
-	defer db.Close()
-
 	now := time.Now()
-	result, err := db.ExecContext(ctx, `
+	result, err := s.db.ExecContext(ctx, `
 		INSERT INTO job_logs (job_id, message, created_at_unix)
 		VALUES (?, ?, ?)
 	`, jobID, message, unix(now))
@@ -173,13 +127,7 @@ func (s *JobStore) AddLog(ctx context.Context, jobID string, message string) (Jo
 }
 
 func (s *JobStore) LogsAfter(ctx context.Context, jobID string, afterSequence int64) ([]JobLog, error) {
-	db, err := s.openDatabase()
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	rows, err := db.QueryContext(ctx, `
+	rows, err := s.db.QueryContext(ctx, `
 		SELECT job_id, sequence, message, created_at_unix
 		FROM job_logs
 		WHERE job_id = ? AND sequence > ?

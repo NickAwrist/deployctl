@@ -11,24 +11,50 @@ import (
 
 const databaseFileName = "deployctl.db"
 
-type storage struct {
-	path string
+type Store struct {
+	db           *sql.DB
+	Repositories *RepositoryStore
+	Jobs         *JobStore
 }
 
-func newStorage() storage {
-	return storage{
-		path: filepath.Join(internal.GetMainDirectory(), databaseFileName),
-	}
+func OpenDefault() (*Store, error) {
+	return Open(filepath.Join(internal.GetMainDirectory(), databaseFileName))
 }
 
-func (s storage) open() (*sql.DB, error) {
-	db, err := sql.Open("sqlite", s.path)
+func Open(path string) (*Store, error) {
+	db, err := sql.Open("sqlite", path)
 	if err != nil {
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+
 	if _, err := db.Exec("PRAGMA busy_timeout = 5000"); err != nil {
 		_ = db.Close()
 		return nil, err
 	}
-	return db, nil
+	if err := migrate(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+
+	return &Store{
+		db:           db,
+		Repositories: &RepositoryStore{db: db},
+		Jobs:         &JobStore{db: db},
+	}, nil
+}
+
+func (s *Store) Close() error {
+	if s == nil || s.db == nil {
+		return nil
+	}
+	return s.db.Close()
+}
+
+func migrate(db *sql.DB) error {
+	if err := migrateRepositories(db); err != nil {
+		return err
+	}
+	return migrateJobs(db)
 }

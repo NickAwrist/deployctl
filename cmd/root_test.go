@@ -104,7 +104,7 @@ func TestCreateCommandClonesRepoAndStoresDeployment(t *testing.T) {
 		t.Fatalf("create command: %v", err)
 	}
 
-	repository, err := store.NewRepositoryStore().Get(context.Background(), "api")
+	repository, err := getRepository(t, "api")
 	if err != nil {
 		t.Fatalf("get repository: %v", err)
 	}
@@ -165,7 +165,7 @@ func TestStatusCommandShowsMaskedEnvAndLatestUpdate(t *testing.T) {
 		EnvPath:  envPath,
 	})
 	finishedAt := time.Unix(1_800_000_000, 0)
-	if err := store.NewJobStore().Insert(context.Background(), store.Job{
+	insertJob(t, store.Job{
 		ID:             "job-1",
 		Type:           "update",
 		DeploymentName: "api_prod",
@@ -174,9 +174,7 @@ func TestStatusCommandShowsMaskedEnvAndLatestUpdate(t *testing.T) {
 		StartedAt:      finishedAt.Add(-30 * time.Second),
 		FinishedAt:     finishedAt,
 		Error:          "bad PORT=8080",
-	}); err != nil {
-		t.Fatalf("insert job: %v", err)
-	}
+	})
 
 	output, err := executeRoot(t, []string{"status", "api_prod"}, "")
 	if err != nil {
@@ -289,7 +287,7 @@ func TestEnvCommandsSetListAndUnsetVariables(t *testing.T) {
 		t.Fatalf("env set command: %v", err)
 	}
 
-	repository, err := store.NewRepositoryStore().Get(context.Background(), "api")
+	repository, err := getRepository(t, "api")
 	if err != nil {
 		t.Fatalf("get repository: %v", err)
 	}
@@ -344,7 +342,7 @@ func TestEnvSetCopiesEnvFile(t *testing.T) {
 		t.Fatalf("env set file command: %v", err)
 	}
 
-	repository, err := store.NewRepositoryStore().Get(context.Background(), "api")
+	repository, err := getRepository(t, "api")
 	if err != nil {
 		t.Fatalf("get repository: %v", err)
 	}
@@ -383,7 +381,7 @@ func TestEnvSetUpdatesExplicitComposeEnvFile(t *testing.T) {
 		t.Fatalf("variables after set = %#v", variables)
 	}
 
-	repository, err := store.NewRepositoryStore().Get(context.Background(), "api")
+	repository, err := getRepository(t, "api")
 	if err != nil {
 		t.Fatalf("get repository: %v", err)
 	}
@@ -472,7 +470,7 @@ func TestDeleteCommandCancelsAndForceDeletesDeployment(t *testing.T) {
 	if _, err := os.Stat(location); !os.IsNotExist(err) {
 		t.Fatalf("repository directory still exists or stat failed unexpectedly: %v", err)
 	}
-	if _, err := store.NewRepositoryStore().Get(context.Background(), "api"); err != sql.ErrNoRows {
+	if _, err := getRepository(t, "api"); err != sql.ErrNoRows {
 		t.Fatalf("repository lookup after delete error = %v, want sql.ErrNoRows", err)
 	}
 }
@@ -569,7 +567,14 @@ func startTestDaemon(t *testing.T) {
 	if err != nil {
 		t.Fatalf("listen test daemon: %v", err)
 	}
-	grpcServer := service.NewGRPCServer(service.NewServer())
+	server, err := service.NewServer()
+	if err != nil {
+		t.Fatalf("new test server: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = server.Close()
+	})
+	grpcServer := service.NewGRPCServer(server)
 	t.Cleanup(grpcServer.Stop)
 	go func() {
 		_ = grpcServer.Serve(listener)
@@ -587,8 +592,38 @@ func startTestDaemon(t *testing.T) {
 func insertRepository(t *testing.T, repository store.Repository) {
 	t.Helper()
 
-	if err := store.NewRepositoryStore().Insert(context.Background(), repository); err != nil {
+	dataStore := openTestStore(t)
+	defer dataStore.Close()
+	if err := dataStore.Repositories.Insert(context.Background(), repository); err != nil {
 		t.Fatalf("insert repository: %v", err)
+	}
+}
+
+func openTestStore(t *testing.T) *store.Store {
+	t.Helper()
+
+	dataStore, err := store.OpenDefault()
+	if err != nil {
+		t.Fatalf("open store: %v", err)
+	}
+	return dataStore
+}
+
+func getRepository(t *testing.T, name string) (store.Repository, error) {
+	t.Helper()
+
+	dataStore := openTestStore(t)
+	defer dataStore.Close()
+	return dataStore.Repositories.Get(context.Background(), name)
+}
+
+func insertJob(t *testing.T, job store.Job) {
+	t.Helper()
+
+	dataStore := openTestStore(t)
+	defer dataStore.Close()
+	if err := dataStore.Jobs.Insert(context.Background(), job); err != nil {
+		t.Fatalf("insert job: %v", err)
 	}
 }
 

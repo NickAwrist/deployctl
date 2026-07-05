@@ -14,7 +14,14 @@ func TestRunnerSerializesJobsPerDeployment(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	internal.InitializeDirectoryStructure()
 
-	runner := NewRunner(store.NewJobStore(), nil)
+	dataStore, err := store.OpenDefault()
+	if err != nil {
+		t.Fatalf("open store: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = dataStore.Close()
+	})
+	runner := NewRunner(dataStore.Jobs, nil)
 	firstStarted := make(chan struct{})
 	releaseFirst := make(chan struct{})
 	secondStarted := make(chan struct{})
@@ -68,7 +75,13 @@ func TestCancelJobCancelsRunningJob(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	internal.InitializeDirectoryStructure()
 
-	server := NewServerWithLogger(nil)
+	server, err := NewServerWithLogger(nil)
+	if err != nil {
+		t.Fatalf("new server: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = server.Close()
+	})
 	response, err := server.runner.Enqueue(context.Background(), "deploy", "api", func(ctx context.Context, log func(string)) error {
 		<-ctx.Done()
 		return ctx.Err()
@@ -89,7 +102,12 @@ func TestCancelJobCancelsRunningJob(t *testing.T) {
 func assertJobStatus(t *testing.T, id string, status string) {
 	t.Helper()
 
-	jobs := store.NewJobStore()
+	dataStore, err := store.OpenDefault()
+	if err != nil {
+		t.Fatalf("open store: %v", err)
+	}
+	defer dataStore.Close()
+	jobs := dataStore.Jobs
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
 		job, err := jobs.Get(context.Background(), id)

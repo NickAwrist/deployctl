@@ -17,7 +17,14 @@ func TestRepositoryStoreCRUD(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	store := NewRepositoryStore()
+	dataStore, err := OpenDefault()
+	if err != nil {
+		t.Fatalf("open store: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = dataStore.Close()
+	})
+	repositories := dataStore.Repositories
 
 	repository := Repository{
 		Name:        "api",
@@ -26,11 +33,11 @@ func TestRepositoryStoreCRUD(t *testing.T) {
 		ComposePath: "compose.yml",
 		EnvPath:     ".env",
 	}
-	if err := store.Insert(ctx, repository); err != nil {
+	if err := repositories.Insert(ctx, repository); err != nil {
 		t.Fatalf("insert repository: %v", err)
 	}
 
-	got, err := store.Get(ctx, "api")
+	got, err := repositories.Get(ctx, "api")
 	if err != nil {
 		t.Fatalf("get repository: %v", err)
 	}
@@ -39,22 +46,22 @@ func TestRepositoryStoreCRUD(t *testing.T) {
 	}
 
 	repository.EnvPath = "production.env"
-	if err := store.Update(ctx, repository); err != nil {
+	if err := repositories.Update(ctx, repository); err != nil {
 		t.Fatalf("update repository: %v", err)
 	}
 
-	repositories, err := store.GetAll(ctx)
+	gotRepositories, err := repositories.GetAll(ctx)
 	if err != nil {
 		t.Fatalf("get all repositories: %v", err)
 	}
-	if len(repositories) != 1 || repositories[0].EnvPath != "production.env" {
-		t.Fatalf("repositories = %+v", repositories)
+	if len(gotRepositories) != 1 || gotRepositories[0].EnvPath != "production.env" {
+		t.Fatalf("repositories = %+v", gotRepositories)
 	}
 
-	if err := store.Delete(ctx, "api"); err != nil {
+	if err := repositories.Delete(ctx, "api"); err != nil {
 		t.Fatalf("delete repository: %v", err)
 	}
-	if _, err := store.Get(ctx, "api"); err != sql.ErrNoRows {
+	if _, err := repositories.Get(ctx, "api"); err != sql.ErrNoRows {
 		t.Fatalf("get deleted repository error = %v, want sql.ErrNoRows", err)
 	}
 }

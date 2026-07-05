@@ -24,7 +24,14 @@ func main() {
 		os.Exit(1)
 	}
 	logger.Printf("deployctld listening on %s", socketPath)
-	if err := service.NewServerWithLogger(logger).Serve(listener); err != nil {
+	server, err := service.NewServerWithLogger(logger)
+	if err != nil {
+		logger.Printf("open server failed: %v", err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	defer server.Close()
+	if err := server.Serve(listener); err != nil {
 		logger.Printf("serve failed: %v", err)
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

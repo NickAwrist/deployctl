@@ -17,24 +17,37 @@ type Server struct {
 	rpc.UnimplementedJobServiceServer
 	rpc.UnimplementedSystemServiceServer
 
+	store        *store.Store
 	repositories *store.RepositoryStore
 	jobs         *store.JobStore
 	runner       *Runner
 	logger       *Logger
 }
 
-func NewServer() *Server {
+func NewServer() (*Server, error) {
 	return NewServerWithLogger(NewDaemonLogger())
 }
 
-func NewServerWithLogger(logger *Logger) *Server {
-	jobs := store.NewJobStore()
+func NewServerWithLogger(logger *Logger) (*Server, error) {
+	dataStore, err := store.OpenDefault()
+	if err != nil {
+		return nil, err
+	}
+	jobs := dataStore.Jobs
 	return &Server{
-		repositories: store.NewRepositoryStore(),
+		store:        dataStore,
+		repositories: dataStore.Repositories,
 		jobs:         jobs,
 		runner:       NewRunner(jobs, logger),
 		logger:       logger,
+	}, nil
+}
+
+func (s *Server) Close() error {
+	if s == nil || s.store == nil {
+		return nil
 	}
+	return s.store.Close()
 }
 
 func NewGRPCServer(server *Server) *grpc.Server {

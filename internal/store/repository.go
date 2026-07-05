@@ -15,37 +15,11 @@ type Repository struct {
 }
 
 type RepositoryStore struct {
-	storage storage
-}
-
-func NewRepositoryStore() *RepositoryStore {
-	return &RepositoryStore{
-		storage: newStorage(),
-	}
-}
-
-func (s *RepositoryStore) openDatabase() (*sql.DB, error) {
-	db, err := s.storage.open()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := migrateRepositories(db); err != nil {
-		_ = db.Close()
-		return nil, err
-	}
-
-	return db, nil
+	db *sql.DB
 }
 
 func (s *RepositoryStore) Insert(ctx context.Context, repository Repository) error {
-	db, err := s.openDatabase()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	_, err = db.ExecContext(
+	_, err := s.db.ExecContext(
 		ctx,
 		"INSERT INTO repositories (name, url, location, compose_path, env_path) VALUES (?, ?, ?, ?, ?)",
 		repository.Name,
@@ -58,13 +32,7 @@ func (s *RepositoryStore) Insert(ctx context.Context, repository Repository) err
 }
 
 func (s *RepositoryStore) Update(ctx context.Context, repository Repository) error {
-	db, err := s.openDatabase()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	result, err := db.ExecContext(
+	result, err := s.db.ExecContext(
 		ctx,
 		"UPDATE repositories SET url = ?, location = ?, compose_path = ?, env_path = ? WHERE name = ?",
 		repository.URL,
@@ -81,13 +49,7 @@ func (s *RepositoryStore) Update(ctx context.Context, repository Repository) err
 }
 
 func (s *RepositoryStore) Delete(ctx context.Context, name string) error {
-	db, err := s.openDatabase()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	result, err := db.ExecContext(ctx, "DELETE FROM repositories WHERE name = ?", name)
+	result, err := s.db.ExecContext(ctx, "DELETE FROM repositories WHERE name = ?", name)
 	if err != nil {
 		return err
 	}
@@ -96,14 +58,8 @@ func (s *RepositoryStore) Delete(ctx context.Context, name string) error {
 }
 
 func (s *RepositoryStore) Get(ctx context.Context, name string) (Repository, error) {
-	db, err := s.openDatabase()
-	if err != nil {
-		return Repository{}, err
-	}
-	defer db.Close()
-
 	var repository Repository
-	err = db.QueryRowContext(
+	err := s.db.QueryRowContext(
 		ctx,
 		"SELECT name, url, location, compose_path, env_path FROM repositories WHERE name = ?",
 		name,
@@ -116,13 +72,7 @@ func (s *RepositoryStore) Get(ctx context.Context, name string) (Repository, err
 }
 
 func (s *RepositoryStore) GetAll(ctx context.Context) ([]Repository, error) {
-	db, err := s.openDatabase()
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	rows, err := db.QueryContext(ctx, "SELECT name, url, location, compose_path, env_path FROM repositories ORDER BY name")
+	rows, err := s.db.QueryContext(ctx, "SELECT name, url, location, compose_path, env_path FROM repositories ORDER BY name")
 	if err != nil {
 		return nil, err
 	}
