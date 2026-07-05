@@ -25,7 +25,7 @@ func dialClient(ctx context.Context) (*deployclient.Client, error) {
 }
 
 func waitForJob(cmd *cobra.Command, client *deployclient.Client, jobID string) error {
-	stream, err := client.Job.WatchJob(cmd.Context(), &rpc.WatchJobRequest{Id: jobID})
+	stream, err := client.Job.WatchJob(cmd.Context(), &rpc.WatchJobRequest{JobId: jobID})
 	if err != nil {
 		return err
 	}
@@ -93,6 +93,37 @@ func runWithClient(cmd *cobra.Command, fn func(*deployclient.Client) error) erro
 func printMaskedEnv(output io.Writer, names []string) {
 	for _, name := range names {
 		fmt.Fprintf(output, "%s=*****\n", name)
+	}
+}
+
+func printMaskedEnvFile(output io.Writer, envFile string, names []string) {
+	fmt.Fprintln(output, envFile)
+	printMaskedEnv(output, names)
+}
+
+func printEnvFiles(output io.Writer, repositoryName string, explicitFile bool, response *rpc.ListEnvFilesResponse) {
+	if len(response.GetMissingEnvFiles()) > 0 {
+		if explicitFile {
+			fmt.Fprintln(output, "Warning: env file was not found:")
+		} else {
+			fmt.Fprintln(output, "Warning: compose references missing env files:")
+		}
+		for _, envFile := range response.GetMissingEnvFiles() {
+			fmt.Fprintf(output, "  %s\n", envFile)
+		}
+	}
+	if len(response.GetMissingEnvFiles()) > 0 {
+		fmt.Fprintln(output)
+	}
+	if len(response.GetEnvFiles()) == 0 {
+		fmt.Fprintf(output, "No env files found for %s\n", repositoryName)
+		return
+	}
+	for i, envFile := range response.GetEnvFiles() {
+		if i > 0 {
+			fmt.Fprintln(output)
+		}
+		printMaskedEnvFile(output, envFile.GetEnvFile(), envFile.GetNames())
 	}
 }
 

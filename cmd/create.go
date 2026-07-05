@@ -57,10 +57,10 @@ var createCmd = &cobra.Command{
 
 		return runWithClient(cmd, func(client *daemonClient) error {
 			response, err := client.Deployment.CreateDeployment(cmd.Context(), &rpc.CreateDeploymentRequest{
-				RepoUrl:     repoURL,
-				Name:        name,
-				ComposeFile: composeFile,
-				EnvFile:     envFile,
+				RepoUrl:        repoURL,
+				DeploymentName: name,
+				ComposeFile:    composeFile,
+				EnvFile:        envFile,
 			})
 			if err != nil {
 				return err

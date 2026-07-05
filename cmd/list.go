@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 
 	"deployctl/internal/rpc"
 
@@ -19,7 +20,7 @@ var listCmd = &cobra.Command{
 	Aliases: []string{"ls"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runWithClient(cmd, func(client *daemonClient) error {
-			response, err := client.Deployment.ListDeployments(cmd.Context(), &rpc.ListDeploymentsRequest{})
+			response, err := client.Deployment.ListDeploymentStatuses(cmd.Context(), &rpc.ListDeploymentStatusesRequest{})
 			if err != nil {
 				return err
 			}
@@ -27,20 +28,29 @@ var listCmd = &cobra.Command{
 				fmt.Fprintln(cmd.OutOrStdout(), "No deployments found")
 				return nil
 			}
-			for _, deployment := range response.Deployments {
-				composePath := deployment.ComposePath
-				if composePath == "" {
-					composePath = "none"
-				}
-				envPath := deployment.EnvPath
-				if envPath == "" {
-					envPath = "none"
-				}
-				fmt.Fprintf(cmd.OutOrStdout(), "%s:\n- %s\n- %s\n- %s\n- %s\n", deployment.Name, deployment.Url, deployment.Location, composePath, envPath)
-			}
+			printDeploymentList(cmd.OutOrStdout(), response.Deployments)
 			return nil
 		})
 	},
+}
+
+func printDeploymentList(output io.Writer, deployments []*rpc.DeploymentListItem) {
+	table := newTableWriter(output)
+	fmt.Fprintln(table, "NAME\tSTATUS\tREPOSITORY\tLOCATION\tCOMPOSE\tENV")
+	for _, item := range deployments {
+		deployment := item.GetDeployment()
+		fmt.Fprintf(
+			table,
+			"%s\t%s\t%s\t%s\t%s\t%s\n",
+			deployment.GetName(),
+			emptyAs(item.GetState(), "unknown"),
+			emptyAs(deployment.GetUrl(), "unknown"),
+			emptyAs(deployment.GetLocation(), "unknown"),
+			emptyAs(deployment.GetComposePath(), "none"),
+			emptyAs(deployment.GetEnvPath(), "none"),
+		)
+	}
+	_ = table.Flush()
 }
 
 func init() {

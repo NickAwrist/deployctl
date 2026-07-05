@@ -17,13 +17,13 @@ func (s *Server) CreateDeployment(ctx context.Context, req *rpc.CreateDeployment
 	if req.RepoUrl == "" {
 		return nil, invalidArgument("repo URL is required")
 	}
-	return s.runner.Enqueue(ctx, "create", req.Name, func(ctx context.Context, log func(string)) error {
+	return s.runner.Enqueue(ctx, "create", req.DeploymentName, func(ctx context.Context, log func(string)) error {
 		return s.createDeployment(ctx, req, log)
 	})
 }
 
 func (s *Server) GetDeployment(ctx context.Context, req *rpc.GetDeploymentRequest) (*rpc.Deployment, error) {
-	repository, err := s.getRepository(ctx, req.Name)
+	repository, err := s.getRepository(ctx, req.DeploymentName)
 	if err != nil {
 		return nil, err
 	}
@@ -43,16 +43,20 @@ func (s *Server) ListDeployments(ctx context.Context, _ *rpc.ListDeploymentsRequ
 }
 
 func (s *Server) DeleteDeployment(ctx context.Context, req *rpc.DeleteDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.Name == "" {
+	if req.DeploymentName == "" {
 		return nil, invalidArgument("deployment name is required")
 	}
-	return s.runner.Enqueue(ctx, "delete", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.Name)
+	return s.runner.Enqueue(ctx, "delete", req.DeploymentName, func(ctx context.Context, log func(string)) error {
+		repository, err := s.getRepository(ctx, req.DeploymentName)
 		if err != nil {
 			return err
 		}
 		log(fmt.Sprintf("Deleting deployment %s", repository.Name))
-		if err := internalfile.RemoveAllInside(internal.GetRepositoryDirectory(), repository.Location); err != nil {
+		repositoryDirectory, err := internal.RepositoryDirectory()
+		if err != nil {
+			return err
+		}
+		if err := internalfile.RemoveAllInside(repositoryDirectory, repository.Location); err != nil {
 			return err
 		}
 		return s.deleteRepository(ctx, repository.Name)
@@ -60,11 +64,11 @@ func (s *Server) DeleteDeployment(ctx context.Context, req *rpc.DeleteDeployment
 }
 
 func (s *Server) BuildDeployment(ctx context.Context, req *rpc.BuildDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.Name == "" {
+	if req.DeploymentName == "" {
 		return nil, invalidArgument("deployment name is required")
 	}
-	return s.runner.Enqueue(ctx, "build", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.Name)
+	return s.runner.Enqueue(ctx, "build", req.DeploymentName, func(ctx context.Context, log func(string)) error {
+		repository, err := s.getRepository(ctx, req.DeploymentName)
 		if err != nil {
 			return err
 		}
@@ -73,11 +77,11 @@ func (s *Server) BuildDeployment(ctx context.Context, req *rpc.BuildDeploymentRe
 }
 
 func (s *Server) UpdateDeployment(ctx context.Context, req *rpc.UpdateDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.Name == "" {
+	if req.DeploymentName == "" {
 		return nil, invalidArgument("deployment name is required")
 	}
-	return s.runner.Enqueue(ctx, "update", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.Name)
+	return s.runner.Enqueue(ctx, "update", req.DeploymentName, func(ctx context.Context, log func(string)) error {
+		repository, err := s.getRepository(ctx, req.DeploymentName)
 		if err != nil {
 			return err
 		}
@@ -93,11 +97,11 @@ func (s *Server) UpdateDeployment(ctx context.Context, req *rpc.UpdateDeployment
 }
 
 func (s *Server) DeployDeployment(ctx context.Context, req *rpc.DeployDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.Name == "" {
+	if req.DeploymentName == "" {
 		return nil, invalidArgument("deployment name is required")
 	}
-	return s.runner.Enqueue(ctx, "deploy", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.Name)
+	return s.runner.Enqueue(ctx, "deploy", req.DeploymentName, func(ctx context.Context, log func(string)) error {
+		repository, err := s.getRepository(ctx, req.DeploymentName)
 		if err != nil {
 			return err
 		}
@@ -125,11 +129,11 @@ func (s *Server) DeployDeployment(ctx context.Context, req *rpc.DeployDeployment
 }
 
 func (s *Server) RestartDeployment(ctx context.Context, req *rpc.RestartDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.Name == "" {
+	if req.DeploymentName == "" {
 		return nil, invalidArgument("deployment name is required")
 	}
-	return s.runner.Enqueue(ctx, "restart", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.Name)
+	return s.runner.Enqueue(ctx, "restart", req.DeploymentName, func(ctx context.Context, log func(string)) error {
+		repository, err := s.getRepository(ctx, req.DeploymentName)
 		if err != nil {
 			return err
 		}
@@ -157,11 +161,11 @@ func (s *Server) RestartDeployment(ctx context.Context, req *rpc.RestartDeployme
 }
 
 func (s *Server) StopDeployment(ctx context.Context, req *rpc.StopDeploymentRequest) (*rpc.JobResponse, error) {
-	if req.Name == "" {
+	if req.DeploymentName == "" {
 		return nil, invalidArgument("deployment name is required")
 	}
-	return s.runner.Enqueue(ctx, "stop", req.Name, func(ctx context.Context, log func(string)) error {
-		repository, err := s.getRepository(ctx, req.Name)
+	return s.runner.Enqueue(ctx, "stop", req.DeploymentName, func(ctx context.Context, log func(string)) error {
+		repository, err := s.getRepository(ctx, req.DeploymentName)
 		if err != nil {
 			return err
 		}
@@ -179,11 +183,11 @@ func (s *Server) StopDeployment(ctx context.Context, req *rpc.StopDeploymentRequ
 
 func (s *Server) createDeployment(ctx context.Context, req *rpc.CreateDeploymentRequest, log func(string)) error {
 	log("Cloning repository")
-	location, err := internalgit.CloneRepo(ctx, req.RepoUrl, req.Name, log)
+	location, err := internalgit.CloneRepo(ctx, req.RepoUrl, req.DeploymentName, log)
 	if err != nil {
 		return err
 	}
-	name := req.Name
+	name := req.DeploymentName
 	if name == "" {
 		name = filepath.Base(location)
 	}

@@ -36,8 +36,8 @@ var updateCmd = &cobra.Command{
 
 		return runWithClient(cmd, func(client *daemonClient) error {
 			response, err := client.Deployment.UpdateDeployment(cmd.Context(), &rpc.UpdateDeploymentRequest{
-				Name:  repositoryName,
-				Build: build,
+				DeploymentName: repositoryName,
+				Build:          build,
 			})
 			if err != nil {
 				return err

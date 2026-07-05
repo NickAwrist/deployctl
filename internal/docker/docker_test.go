@@ -1,6 +1,13 @@
 package docker
 
-import "testing"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/compose-spec/compose-go/v2/types"
+)
 
 func TestDeploymentStatusAllRunningAndSummary(t *testing.T) {
 	status := DeploymentStatus{
@@ -50,5 +57,47 @@ func TestDeploymentStatusAnyRunningWithStoppedContainer(t *testing.T) {
 	}
 	if got := status.Summary(); got != "" {
 		t.Fatalf("summary = %q, want empty", got)
+	}
+}
+
+func TestMissingConfigFileIsNotDockerUnavailable(t *testing.T) {
+	err := fmt.Errorf("read env file: %w", os.ErrNotExist)
+	if isDockerConnectionError(err) {
+		t.Fatal("missing config files should not be classified as Docker connection errors")
+	}
+}
+
+func TestResolveServiceEnvFilesTreatsMissingFilesAsEmpty(t *testing.T) {
+	directory := t.TempDir()
+	existingEnvPath := filepath.Join(directory, "app.env")
+	if err := os.WriteFile(existingEnvPath, []byte("PORT=3000\n"), 0600); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+	missingEnvPath := filepath.Join(directory, ".env")
+	project := &types.Project{
+		Services: types.Services{
+			"api": {
+				Name: "api",
+				EnvFiles: []types.EnvFile{
+					{Path: missingEnvPath, Required: types.OptOut(true)},
+					{Path: existingEnvPath, Required: types.OptOut(true)},
+				},
+			},
+		},
+	}
+
+	resolved, err := resolveServiceEnvFiles(project)
+	if err != nil {
+		t.Fatalf("resolve service env files: %v", err)
+	}
+	service := resolved.Services["api"]
+	if service.EnvFiles[0].Required {
+		t.Fatalf("missing env file was left required: %#v", service.EnvFiles[0])
+	}
+	if !service.EnvFiles[1].Required {
+		t.Fatalf("existing env file was marked optional: %#v", service.EnvFiles[1])
+	}
+	if got := service.Environment["PORT"]; got == nil || *got != "3000" {
+		t.Fatalf("PORT = %v, want 3000", got)
 	}
 }

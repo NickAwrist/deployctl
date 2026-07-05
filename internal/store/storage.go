@@ -18,7 +18,11 @@ type Store struct {
 }
 
 func OpenDefault() (*Store, error) {
-	return Open(filepath.Join(internal.GetMainDirectory(), databaseFileName))
+	mainDirectory, err := internal.MainDirectory()
+	if err != nil {
+		return nil, err
+	}
+	return Open(filepath.Join(mainDirectory, databaseFileName))
 }
 
 func Open(path string) (*Store, error) {

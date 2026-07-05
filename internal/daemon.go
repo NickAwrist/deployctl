@@ -8,16 +8,24 @@ import (
 const SocketFileName = "deployctld.sock"
 const DaemonLogFileName = "deployctld.log"
 
-func GetSocketPath() string {
+func SocketPath() (string, error) {
 	if path := os.Getenv("DEPLOYCTL_SOCKET_PATH"); path != "" {
-		return path
+		return path, nil
 	}
-	return filepath.Join(GetMainDirectory(), SocketFileName)
+	mainDirectory, err := MainDirectory()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(mainDirectory, SocketFileName), nil
 }
 
-func GetDaemonLogPath() string {
+func DaemonLogPath() (string, error) {
 	if path := os.Getenv("DEPLOYCTL_LOG_PATH"); path != "" {
-		return path
+		return path, nil
 	}
-	return filepath.Join(GetMainDirectory(), DaemonLogFileName)
+	mainDirectory, err := MainDirectory()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(mainDirectory, DaemonLogFileName), nil
 }

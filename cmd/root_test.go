@@ -15,6 +15,7 @@ import (
 	"deployctl/internal"
 	deployclient "deployctl/internal/client"
 	"deployctl/internal/envfile"
+	"deployctl/internal/rpc"
 	"deployctl/internal/service"
 	"deployctl/internal/store"
 )
@@ -108,7 +109,11 @@ func TestCreateCommandClonesRepoAndStoresDeployment(t *testing.T) {
 		t.Fatalf("get repository: %v", err)
 	}
 
-	wantLocation := filepath.Join(internal.GetRepositoryDirectory(), "api")
+	repositoryDirectory, err := internal.RepositoryDirectory()
+	if err != nil {
+		t.Fatalf("repository directory: %v", err)
+	}
+	wantLocation := filepath.Join(repositoryDirectory, "api")
 	if repository.URL != sourceRepo || repository.Location != wantLocation {
 		t.Fatalf("stored repository = %+v", repository)
 	}
@@ -131,11 +136,10 @@ func TestCreateCommandClonesRepoAndStoresDeployment(t *testing.T) {
 func TestListCommandShowsDeployments(t *testing.T) {
 	setupTestHome(t)
 	insertRepository(t, store.Repository{
-		Name:        "api",
-		URL:         "https://example.test/api.git",
-		Location:    "/tmp/api",
-		ComposePath: "/tmp/api/compose.yml",
-		EnvPath:     "/tmp/api/.env",
+		Name:     "api",
+		URL:      "https://example.test/api.git",
+		Location: "/tmp/api",
+		EnvPath:  "/tmp/api/.env",
 	})
 
 	output, err := executeRoot(t, []string{"list"}, "")
@@ -143,9 +147,83 @@ func TestListCommandShowsDeployments(t *testing.T) {
 		t.Fatalf("list command: %v", err)
 	}
 
-	for _, want := range []string{"api:", "https://example.test/api.git", "/tmp/api/compose.yml", "/tmp/api/.env"} {
+	for _, want := range []string{"NAME", "STATUS", "REPOSITORY", "api", "not_configured", "https://example.test/api.git", "/tmp/api", "none", "/tmp/api/.env"} {
 		if !strings.Contains(output, want) {
 			t.Fatalf("list output %q does not contain %q", output, want)
+		}
+	}
+	if strings.Contains(output, "ERROR") {
+		t.Fatalf("list output %q should not contain an error column", output)
+	}
+}
+
+func TestHistoryCommandShowsDeploymentJobs(t *testing.T) {
+	setupTestHome(t)
+	insertRepository(t, store.Repository{Name: "api", URL: "https://example.test/api.git", Location: "/tmp/api"})
+	finishedAt := time.Unix(1_800_000_000, 0)
+	insertJob(t, store.Job{
+		ID:             "job-1",
+		Type:           "update",
+		DeploymentName: "api",
+		Status:         store.JobStatusFailed,
+		CreatedAt:      finishedAt.Add(-time.Minute),
+		StartedAt:      finishedAt.Add(-30 * time.Second),
+		FinishedAt:     finishedAt,
+		Error:          "pull failed",
+	})
+
+	output, err := executeRoot(t, []string{"history", "api"}, "")
+	if err != nil {
+		t.Fatalf("history command: %v", err)
+	}
+
+	for _, want := range []string{"JOB ID", "TYPE", "STATUS", "DATE", "ERROR", "job-1", "update", "failed", formatUnixTime(finishedAt.Unix()), "pull failed"} {
+		if !strings.Contains(output, want) {
+			t.Fatalf("history output %q does not contain %q", output, want)
+		}
+	}
+}
+
+func TestHistoryCommandReportsMissingDeploymentCleanly(t *testing.T) {
+	setupTestHome(t)
+
+	output, err := executeRoot(t, []string{"history", "missing-api"}, "")
+	if err == nil {
+		t.Fatal("history command succeeded with missing deployment")
+	}
+	if !strings.Contains(output, `deployment "missing-api" not found`) {
+		t.Fatalf("history output %q does not contain clean not-found message", output)
+	}
+	for _, unwanted := range []string{"sql: no rows", "rpc error:", "code ="} {
+		if strings.Contains(output, unwanted) {
+			t.Fatalf("history output %q contains %q", output, unwanted)
+		}
+	}
+}
+
+func TestJobCommandShowsDetailsAndLogs(t *testing.T) {
+	setupTestHome(t)
+	finishedAt := time.Unix(1_800_000_000, 0)
+	insertJob(t, store.Job{
+		ID:             "job-1",
+		Type:           "deploy",
+		DeploymentName: "api",
+		Status:         store.JobStatusSucceeded,
+		CreatedAt:      finishedAt.Add(-time.Minute),
+		StartedAt:      finishedAt.Add(-30 * time.Second),
+		FinishedAt:     finishedAt,
+	})
+	insertJobLog(t, "job-1", "Building api")
+	insertJobLog(t, "job-1", "Deployment ready")
+
+	output, err := executeRoot(t, []string{"job", "job-1", "--logs"}, "")
+	if err != nil {
+		t.Fatalf("job command: %v", err)
+	}
+
+	for _, want := range []string{"Job: job-1", "Type: deploy", "Deployment: api", "Status: succeeded", "Finished: " + formatUnixTime(finishedAt.Unix()), "Logs:", "Building api", "Deployment ready"} {
+		if !strings.Contains(output, want) {
+			t.Fatalf("job output %q does not contain %q", output, want)
 		}
 	}
 }
@@ -230,6 +308,60 @@ func TestStatusCommandReportsMissingDeploymentCleanly(t *testing.T) {
 	}
 }
 
+func TestPrintDeploymentLogsShowsEntriesAndHint(t *testing.T) {
+	stream := &fakeDeploymentLogStream{entries: []*rpc.DeploymentLogEntry{
+		{Container: "api-1", Message: "ready"},
+		{Container: "worker-1", Message: "processed job"},
+	}}
+
+	var output bytes.Buffer
+	if err := printDeploymentLogs(&output, stream, false); err != nil {
+		t.Fatalf("print logs: %v", err)
+	}
+
+	for _, want := range []string{
+		"api-1 | ready",
+		"worker-1 | processed job",
+		"Use --follow for live logs or --lines N for more history.",
+	} {
+		if !strings.Contains(output.String(), want) {
+			t.Fatalf("logs output %q does not contain %q", output.String(), want)
+		}
+	}
+}
+
+func TestLogsCommandRejectsNegativeLines(t *testing.T) {
+	t.Cleanup(func() {
+		if err := logsCmd.Flags().Set("lines", fmt.Sprint(defaultLogLines)); err != nil {
+			t.Fatalf("reset logs lines flag: %v", err)
+		}
+	})
+
+	output, err := executeRoot(t, []string{"logs", "api", "--lines", "-1"}, "")
+	if err == nil {
+		t.Fatal("logs command succeeded with negative lines")
+	}
+	if !strings.Contains(output, "lines must be greater than or equal to 0") {
+		t.Fatalf("logs output %q does not contain validation error", output)
+	}
+	if strings.Contains(output, "Usage:") {
+		t.Fatalf("logs output %q unexpectedly contains usage", output)
+	}
+}
+
+func TestLogsCommandReportsDockerUnavailableCleanly(t *testing.T) {
+	setupTestHome(t)
+	t.Setenv("DOCKER_HOST", fakeDockerHost())
+	insertComposeRepository(t, "api")
+
+	output, err := executeRoot(t, []string{"logs", "api"}, "")
+	if err == nil {
+		t.Fatal("logs command succeeded with unavailable Docker")
+	}
+
+	assertCleanDockerUnavailableOutput(t, output)
+}
+
 func TestDockerBackedJobCommandsReportDockerUnavailableCleanly(t *testing.T) {
 	for _, tc := range []struct {
 		name string
@@ -303,6 +435,9 @@ func TestEnvCommandsSetListAndUnsetVariables(t *testing.T) {
 	if _, err := executeRoot(t, []string{"env", "set", "api", "FOO=bar", "BAZ=qux"}, ""); err != nil {
 		t.Fatalf("env set command: %v", err)
 	}
+	if _, err := executeRoot(t, []string{"env", "add", "api", "EXTRA=value"}, ""); err != nil {
+		t.Fatalf("env add command: %v", err)
+	}
 
 	repository, err := getRepository(t, "api")
 	if err != nil {
@@ -316,7 +451,7 @@ func TestEnvCommandsSetListAndUnsetVariables(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read env file: %v", err)
 	}
-	if variables["FOO"] != "bar" || variables["BAZ"] != "qux" {
+	if variables["FOO"] != "bar" || variables["BAZ"] != "qux" || variables["EXTRA"] != "value" {
 		t.Fatalf("variables after set = %#v", variables)
 	}
 
@@ -339,12 +474,12 @@ func TestEnvCommandsSetListAndUnsetVariables(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read env file after unset: %v", err)
 	}
-	if _, ok := variables["FOO"]; ok || variables["BAZ"] != "qux" {
+	if _, ok := variables["FOO"]; ok || variables["BAZ"] != "qux" || variables["EXTRA"] != "value" {
 		t.Fatalf("variables after unset = %#v", variables)
 	}
 }
 
-func TestEnvSetCopiesEnvFile(t *testing.T) {
+func TestEnvImportCopiesEnvFile(t *testing.T) {
 	setupTestHome(t)
 	location := t.TempDir()
 	insertRepository(t, store.Repository{Name: "api", URL: "https://example.test/api.git", Location: location})
@@ -355,8 +490,8 @@ func TestEnvSetCopiesEnvFile(t *testing.T) {
 		t.Fatalf("write env file: %v", err)
 	}
 
-	if _, err := executeRoot(t, []string{"env", "set", "api", envPath}, ""); err != nil {
-		t.Fatalf("env set file command: %v", err)
+	if _, err := executeRoot(t, []string{"env", "import", "api", envPath}, ""); err != nil {
+		t.Fatalf("env import file command: %v", err)
 	}
 
 	repository, err := getRepository(t, "api")
@@ -373,6 +508,25 @@ func TestEnvSetCopiesEnvFile(t *testing.T) {
 	}
 	if string(got) != envContents {
 		t.Fatalf("copied env file = %q, want %q", got, envContents)
+	}
+}
+
+func TestEnvSetRejectsEnvFileWithoutImport(t *testing.T) {
+	setupTestHome(t)
+	location := t.TempDir()
+	insertRepository(t, store.Repository{Name: "api", URL: "https://example.test/api.git", Location: location})
+
+	envPath := filepath.Join(t.TempDir(), ".env")
+	if err := os.WriteFile(envPath, []byte("FOO=bar\n"), 0600); err != nil {
+		t.Fatalf("write env file: %v", err)
+	}
+
+	output, err := executeRoot(t, []string{"env", "set", "api", envPath}, "")
+	if err == nil {
+		t.Fatal("env set file command succeeded")
+	}
+	if !strings.Contains(output, "must use KEY=VALUE") {
+		t.Fatalf("env set file output = %q", output)
 	}
 }
 
@@ -407,7 +561,7 @@ func TestEnvSetUpdatesExplicitComposeEnvFile(t *testing.T) {
 	}
 }
 
-func TestEnvSetCopiesExplicitComposeEnvFile(t *testing.T) {
+func TestEnvImportCopiesExplicitComposeEnvFile(t *testing.T) {
 	setupTestHome(t)
 	location := t.TempDir()
 	insertRepository(t, store.Repository{
@@ -423,8 +577,8 @@ func TestEnvSetCopiesExplicitComposeEnvFile(t *testing.T) {
 		t.Fatalf("write source env file: %v", err)
 	}
 
-	if _, err := executeRoot(t, []string{"env", "set", "api", "backend.env", source}, ""); err != nil {
-		t.Fatalf("env set explicit file copy command: %v", err)
+	if _, err := executeRoot(t, []string{"env", "import", "api", "backend.env", source}, ""); err != nil {
+		t.Fatalf("env import explicit file copy command: %v", err)
 	}
 
 	got, err := os.ReadFile(filepath.Join(location, "backend.env"))
@@ -449,6 +603,9 @@ func TestEnvListAndUnsetUseExplicitComposeEnvFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("env list explicit file command: %v", err)
 	}
+	if !strings.Contains(output, "app.env\n") {
+		t.Fatalf("env list output = %q", output)
+	}
 	if !strings.Contains(output, "BAZ=*****") || !strings.Contains(output, "FOO=*****") {
 		t.Fatalf("env list output = %q", output)
 	}
@@ -466,9 +623,70 @@ func TestEnvListAndUnsetUseExplicitComposeEnvFile(t *testing.T) {
 	}
 }
 
+func TestEnvListDiscoversMultipleEnvFiles(t *testing.T) {
+	setupTestHome(t)
+	location := t.TempDir()
+	insertRepository(t, store.Repository{
+		Name:        "api",
+		URL:         "https://example.test/api.git",
+		Location:    location,
+		ComposePath: filepath.Join(location, "compose.yml"),
+	})
+	compose := `services:
+  api:
+    image: example/api
+    env_file:
+      - .env.api
+      - env.missing
+`
+	if err := os.WriteFile(filepath.Join(location, "compose.yml"), []byte(compose), 0600); err != nil {
+		t.Fatalf("write compose file: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(location, ".env.example"), []byte("EXAMPLE_ONLY=true\n"), 0600); err != nil {
+		t.Fatalf("write example env file: %v", err)
+	}
+
+	if _, err := executeRoot(t, []string{"env", "set", "api", "PORT=8080"}, ""); err != nil {
+		t.Fatalf("env set default command: %v", err)
+	}
+	if _, err := executeRoot(t, []string{"env", "set", "api", ".env.api", "API_KEY=token-value"}, ""); err != nil {
+		t.Fatalf("env set api env command: %v", err)
+	}
+	if _, err := executeRoot(t, []string{"env", "set", "api", "env.secrets", "DATABASE_URL=postgres://example"}, ""); err != nil {
+		t.Fatalf("env set secrets env command: %v", err)
+	}
+
+	output, err := executeRoot(t, []string{"env", "list", "api"}, "")
+	if err != nil {
+		t.Fatalf("env list command: %v", err)
+	}
+	for _, want := range []string{".env\n", "PORT=*****", ".env.api\n", "API_KEY=*****", "env.secrets\n", "DATABASE_URL=*****"} {
+		if !strings.Contains(output, want) {
+			t.Fatalf("env list output %q does not contain %q", output, want)
+		}
+	}
+	for _, want := range []string{"Warning: compose references missing env files:", "env.missing"} {
+		if !strings.Contains(output, want) {
+			t.Fatalf("env list output %q does not contain %q", output, want)
+		}
+	}
+	for _, leaked := range []string{"8080", "token-value", "postgres://example"} {
+		if strings.Contains(output, leaked) {
+			t.Fatalf("env list leaked value %q in output %q", leaked, output)
+		}
+	}
+	if strings.Contains(output, ".env.example") || strings.Contains(output, "EXAMPLE_ONLY") {
+		t.Fatalf("env list output included example env file: %q", output)
+	}
+}
+
 func TestDeleteCommandCancelsAndForceDeletesDeployment(t *testing.T) {
 	setupTestHome(t)
-	location := filepath.Join(internal.GetRepositoryDirectory(), "api")
+	repositoryDirectory, err := internal.RepositoryDirectory()
+	if err != nil {
+		t.Fatalf("repository directory: %v", err)
+	}
+	location := filepath.Join(repositoryDirectory, "api")
 	if err := os.MkdirAll(location, 0755); err != nil {
 		t.Fatalf("create repository directory: %v", err)
 	}
@@ -573,14 +791,20 @@ func setupTestHome(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Remove(socketPath)
 	})
-	internal.InitializeDirectoryStructure()
+	if err := internal.InitializeDirectoryStructure(); err != nil {
+		t.Fatalf("initialize directory structure: %v", err)
+	}
 	startTestDaemon(t)
 }
 
 func startTestDaemon(t *testing.T) {
 	t.Helper()
 
-	listener, err := service.ListenUnix(internal.GetSocketPath())
+	socketPath, err := internal.SocketPath()
+	if err != nil {
+		t.Fatalf("socket path: %v", err)
+	}
+	listener, err := service.ListenUnix(socketPath)
 	if err != nil {
 		t.Fatalf("listen test daemon: %v", err)
 	}
@@ -641,6 +865,16 @@ func insertJob(t *testing.T, job store.Job) {
 	defer dataStore.Close()
 	if err := dataStore.Jobs.Insert(context.Background(), job); err != nil {
 		t.Fatalf("insert job: %v", err)
+	}
+}
+
+func insertJobLog(t *testing.T, jobID string, message string) {
+	t.Helper()
+
+	dataStore := openTestStore(t)
+	defer dataStore.Close()
+	if _, err := dataStore.Jobs.AddLog(context.Background(), jobID, message); err != nil {
+		t.Fatalf("insert job log: %v", err)
 	}
 }
 
@@ -707,4 +941,17 @@ func runGit(t *testing.T, directory string, args ...string) {
 	if err != nil {
 		t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, output)
 	}
+}
+
+type fakeDeploymentLogStream struct {
+	entries []*rpc.DeploymentLogEntry
+}
+
+func (s *fakeDeploymentLogStream) Recv() (*rpc.DeploymentLogEntry, error) {
+	if len(s.entries) == 0 {
+		return nil, io.EOF
+	}
+	entry := s.entries[0]
+	s.entries = s.entries[1:]
+	return entry, nil
 }

@@ -35,8 +35,8 @@ var restartCmd = &cobra.Command{
 
 		return runWithClient(cmd, func(client *daemonClient) error {
 			response, err := client.Deployment.RestartDeployment(cmd.Context(), &rpc.RestartDeploymentRequest{
-				Name:  repositoryName,
-				Build: build,
+				DeploymentName: repositoryName,
+				Build:          build,
 			})
 			if err != nil {
 				return err

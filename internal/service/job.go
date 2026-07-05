@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Server) GetJob(ctx context.Context, req *rpc.GetJobRequest) (*rpc.Job, error) {
-	job, err := s.getJob(ctx, req.Id)
+	job, err := s.getJob(ctx, req.JobId)
 	if err != nil {
 		return nil, err
 	}
@@ -17,6 +17,11 @@ func (s *Server) GetJob(ctx context.Context, req *rpc.GetJobRequest) (*rpc.Job, 
 }
 
 func (s *Server) ListJobs(ctx context.Context, req *rpc.ListJobsRequest) (*rpc.ListJobsResponse, error) {
+	if req.DeploymentName != "" {
+		if _, err := s.getRepository(ctx, req.DeploymentName); err != nil {
+			return nil, err
+		}
+	}
 	jobs, err := s.jobs.List(ctx, req.DeploymentName)
 	if err != nil {
 		return nil, err
@@ -28,13 +33,28 @@ func (s *Server) ListJobs(ctx context.Context, req *rpc.ListJobsRequest) (*rpc.L
 	return response, nil
 }
 
+func (s *Server) ListJobLogs(ctx context.Context, req *rpc.ListJobLogsRequest) (*rpc.ListJobLogsResponse, error) {
+	if _, err := s.getJob(ctx, req.JobId); err != nil {
+		return nil, err
+	}
+	logs, err := s.jobs.LogsAfter(ctx, req.JobId, 0)
+	if err != nil {
+		return nil, err
+	}
+	response := &rpc.ListJobLogsResponse{Logs: make([]*rpc.JobLog, 0, len(logs))}
+	for _, log := range logs {
+		response.Logs = append(response.Logs, jobLogToRPC(log))
+	}
+	return response, nil
+}
+
 func (s *Server) WatchJob(req *rpc.WatchJobRequest, stream rpc.JobService_WatchJobServer) error {
 	after := req.AfterSequence
 	ticker := time.NewTicker(200 * time.Millisecond)
 	defer ticker.Stop()
 
 	for {
-		logs, err := s.jobs.LogsAfter(stream.Context(), req.Id, after)
+		logs, err := s.jobs.LogsAfter(stream.Context(), req.JobId, after)
 		if err != nil {
 			return normalizeRPCError(err)
 		}
@@ -49,7 +69,7 @@ func (s *Server) WatchJob(req *rpc.WatchJobRequest, stream rpc.JobService_WatchJ
 			}
 		}
 
-		job, err := s.getJob(stream.Context(), req.Id)
+		job, err := s.getJob(stream.Context(), req.JobId)
 		if err != nil {
 			return normalizeRPCError(err)
 		}
@@ -66,7 +86,7 @@ func (s *Server) WatchJob(req *rpc.WatchJobRequest, stream rpc.JobService_WatchJ
 }
 
 func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc.Job, error) {
-	job, err := s.getJob(ctx, req.Id)
+	job, err := s.getJob(ctx, req.JobId)
 	if err != nil {
 		return nil, err
 	}
@@ -74,13 +94,13 @@ func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc
 		return jobToRPC(job), nil
 	}
 
-	if !s.runner.Cancel(req.Id) {
+	if !s.runner.Cancel(req.JobId) {
 		return jobToRPC(job), nil
 	}
 
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
-		job, err = s.getJob(ctx, req.Id)
+		job, err = s.getJob(ctx, req.JobId)
 		if err != nil {
 			return nil, err
 		}
@@ -94,11 +114,20 @@ func (s *Server) CancelJob(ctx context.Context, req *rpc.CancelJobRequest) (*rpc
 		}
 	}
 
-	job, err = s.getJob(ctx, req.Id)
+	job, err = s.getJob(ctx, req.JobId)
 	if err != nil {
 		return nil, err
 	}
 	return jobToRPC(job), nil
+}
+
+func jobLogToRPC(log store.JobLog) *rpc.JobLog {
+	return &rpc.JobLog{
+		JobId:         log.JobID,
+		Sequence:      log.Sequence,
+		Message:       log.Message,
+		CreatedAtUnix: unix(log.CreatedAt),
+	}
 }
 
 func jobToRPC(job store.Job) *rpc.Job {

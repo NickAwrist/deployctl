@@ -16,7 +16,9 @@ import (
 
 func TestRunnerSerializesJobsPerDeployment(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	internal.InitializeDirectoryStructure()
+	if err := internal.InitializeDirectoryStructure(); err != nil {
+		t.Fatalf("initialize directory structure: %v", err)
+	}
 
 	dataStore, err := store.OpenDefault()
 	if err != nil {
@@ -77,7 +79,9 @@ func TestRunnerSerializesJobsPerDeployment(t *testing.T) {
 
 func TestCancelJobCancelsRunningJob(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	internal.InitializeDirectoryStructure()
+	if err := internal.InitializeDirectoryStructure(); err != nil {
+		t.Fatalf("initialize directory structure: %v", err)
+	}
 
 	server, err := NewServerWithLogger(nil)
 	if err != nil {
@@ -94,7 +98,7 @@ func TestCancelJobCancelsRunningJob(t *testing.T) {
 		t.Fatalf("enqueue job: %v", err)
 	}
 
-	job, err := server.CancelJob(context.Background(), &rpc.CancelJobRequest{Id: response.JobId})
+	job, err := server.CancelJob(context.Background(), &rpc.CancelJobRequest{JobId: response.JobId})
 	if err != nil {
 		t.Fatalf("cancel job: %v", err)
 	}
@@ -105,7 +109,9 @@ func TestCancelJobCancelsRunningJob(t *testing.T) {
 
 func TestMissingJobUsesScopedNotFoundError(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	internal.InitializeDirectoryStructure()
+	if err := internal.InitializeDirectoryStructure(); err != nil {
+		t.Fatalf("initialize directory structure: %v", err)
+	}
 
 	server, err := NewServerWithLogger(nil)
 	if err != nil {
@@ -115,7 +121,7 @@ func TestMissingJobUsesScopedNotFoundError(t *testing.T) {
 		_ = server.Close()
 	})
 
-	_, err = server.GetJob(context.Background(), &rpc.GetJobRequest{Id: "missing-job"})
+	_, err = server.GetJob(context.Background(), &rpc.GetJobRequest{JobId: "missing-job"})
 	if err == nil {
 		t.Fatal("missing job lookup succeeded")
 	}

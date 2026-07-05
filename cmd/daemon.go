@@ -26,7 +26,10 @@ var daemonStartCmd = &cobra.Command{
 			return err
 		}
 		if socketPath == "" {
-			socketPath = internal.GetSocketPath()
+			socketPath, err = internal.SocketPath()
+			if err != nil {
+				return err
+			}
 		}
 
 		listener, err := service.ListenUnix(socketPath)
@@ -34,7 +37,12 @@ var daemonStartCmd = &cobra.Command{
 			return err
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "deployctld listening on %s\n", socketPath)
-		server, err := service.NewServerWithLogger(service.NewDaemonLogger())
+		logger, err := service.NewDaemonLogger()
+		if err != nil {
+			_ = listener.Close()
+			return err
+		}
+		server, err := service.NewServerWithLogger(logger)
 		if err != nil {
 			_ = listener.Close()
 			return err
@@ -54,9 +62,13 @@ var daemonStatusCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
+			socketPath, err := internal.SocketPath()
+			if err != nil {
+				return err
+			}
 			fmt.Fprintln(cmd.OutOrStdout(), "Daemon")
 			fmt.Fprintln(cmd.OutOrStdout(), "  Status: reachable")
-			fmt.Fprintf(cmd.OutOrStdout(), "  Socket: %s\n\n", internal.GetSocketPath())
+			fmt.Fprintf(cmd.OutOrStdout(), "  Socket: %s\n\n", socketPath)
 			if strings.TrimSpace(response.Status) == "ok" {
 				fmt.Fprintln(cmd.OutOrStdout(), "Health")
 				fmt.Fprintln(cmd.OutOrStdout(), "  Status: ok")
