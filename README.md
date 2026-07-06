@@ -112,8 +112,8 @@ deployctl update my-deployment
 deployctl delete my-deployment
 ```
 
-`deployctl status` shows container state, image details, recent job timing, the
-latest update job, and env variable names with values masked.
+`deployctl status` shows container state, image details, recent job timing, and
+the latest update job.
 
 ## Environment
 

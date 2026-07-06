@@ -14,7 +14,7 @@ func (s *Server) GetDeploymentStatus(ctx context.Context, req *rpc.GetDeployment
 	if err != nil {
 		return nil, err
 	}
-	return s.deploymentStatus(ctx, repository, req.EnvFile)
+	return s.deploymentStatus(ctx, repository)
 }
 
 func (s *Server) ListDeploymentSummaries(ctx context.Context, _ *rpc.ListDeploymentSummariesRequest) (*rpc.ListDeploymentSummariesResponse, error) {
@@ -33,16 +33,10 @@ func (s *Server) ListDeploymentSummaries(ctx context.Context, _ *rpc.ListDeploym
 	return response, nil
 }
 
-func (s *Server) deploymentStatus(ctx context.Context, repository store.Repository, envFile string) (*rpc.DeploymentStatus, error) {
-	envNames, err := listEnvNames(repository, envFile)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *Server) deploymentStatus(ctx context.Context, repository store.Repository) (*rpc.DeploymentStatus, error) {
 	response := &rpc.DeploymentStatus{
 		Deployment: deploymentFromRepository(repository),
 		State:      rpc.DeploymentState_DEPLOYMENT_STATE_NOT_CONFIGURED,
-		EnvNames:   envNames,
 	}
 
 	jobs, err := s.jobs.List(ctx, repository.Name)

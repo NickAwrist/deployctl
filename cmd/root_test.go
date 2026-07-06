@@ -228,7 +228,7 @@ func TestJobCommandShowsDetailsAndLogs(t *testing.T) {
 	}
 }
 
-func TestStatusCommandShowsMaskedEnvAndLatestUpdate(t *testing.T) {
+func TestStatusCommandOmitsEnvAndShowsLatestUpdate(t *testing.T) {
 	setupTestHome(t)
 	location := t.TempDir()
 	envPath := filepath.Join(location, ".env")
@@ -263,16 +263,14 @@ func TestStatusCommandShowsMaskedEnvAndLatestUpdate(t *testing.T) {
 		"State: not_configured",
 		"Latest update: update succeeded",
 		"Containers:\n  none",
-		"  AUTH_URI=*****",
-		"  PORT=*****",
 	} {
 		if !strings.Contains(output, want) {
 			t.Fatalf("status output %q does not contain %q", output, want)
 		}
 	}
-	for _, leaked := range []string{"8080", "https://example.test\n"} {
+	for _, leaked := range []string{"AUTH_URI", "PORT", "8080", "https://example.test\n"} {
 		if strings.Contains(output, leaked) {
-			t.Fatalf("status output leaked env value %q: %q", leaked, output)
+			t.Fatalf("status output leaked env detail %q: %q", leaked, output)
 		}
 	}
 }

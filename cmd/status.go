@@ -22,15 +22,9 @@ var statusCmd = &cobra.Command{
 			return err
 		}
 
-		envFile, err := cmd.Flags().GetString("env-file")
-		if err != nil {
-			return err
-		}
-
 		return runWithClient(cmd, func(client *daemonClient) error {
 			response, err := client.Deployment.GetDeploymentStatus(cmd.Context(), &rpc.GetDeploymentStatusRequest{
 				DeploymentName: deploymentName,
-				EnvFile:        envFile,
 			})
 			if err != nil {
 				return err
@@ -43,7 +37,6 @@ var statusCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(statusCmd)
-	statusCmd.Flags().String("env-file", "", "Show masked names from a specific env file")
 }
 
 func printDeploymentStatus(output io.Writer, status *rpc.DeploymentStatus) {
@@ -98,14 +91,6 @@ func printDeploymentStatus(output io.Writer, status *rpc.DeploymentStatus) {
 		}
 	}
 
-	fmt.Fprintln(output, "Env:")
-	if len(status.GetEnvNames()) == 0 {
-		fmt.Fprintf(output, "  %s\n", noneValue)
-		return
-	}
-	for _, name := range status.GetEnvNames() {
-		fmt.Fprintf(output, "  %s=%s\n", name, maskedValue)
-	}
 }
 
 func formatJob(job *rpc.Job) string {
