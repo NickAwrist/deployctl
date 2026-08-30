@@ -134,6 +134,53 @@ func TestMissingJobUsesScopedNotFoundError(t *testing.T) {
 	}
 }
 
+func TestListJobLogsStartsAfterRequestedSequence(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	if err := internal.InitializeDirectoryStructure(); err != nil {
+		t.Fatalf("initialize directory structure: %v", err)
+	}
+
+	server, err := NewServerWithLogger(nil)
+	if err != nil {
+		t.Fatalf("new server: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = server.Close()
+	})
+
+	job := store.Job{
+		ID:        "job-with-logs",
+		Type:      "deploy",
+		Status:    store.JobStatusRunning,
+		CreatedAt: time.Now(),
+	}
+	if err := server.jobs.Insert(context.Background(), job); err != nil {
+		t.Fatalf("insert job: %v", err)
+	}
+	first, err := server.jobs.AddLog(context.Background(), job.ID, "first")
+	if err != nil {
+		t.Fatalf("add first log: %v", err)
+	}
+	second, err := server.jobs.AddLog(context.Background(), job.ID, "second")
+	if err != nil {
+		t.Fatalf("add second log: %v", err)
+	}
+
+	response, err := server.ListJobLogs(context.Background(), &rpc.ListJobLogsRequest{
+		JobId:         job.ID,
+		AfterSequence: first.Sequence,
+	})
+	if err != nil {
+		t.Fatalf("list job logs: %v", err)
+	}
+	if len(response.Logs) != 1 {
+		t.Fatalf("log count = %d, want 1", len(response.Logs))
+	}
+	if got := response.Logs[0]; got.GetSequence() != second.Sequence || got.GetMessage() != second.Message {
+		t.Fatalf("log = %+v, want sequence %d and message %q", got, second.Sequence, second.Message)
+	}
+}
+
 func TestNormalizeRPCErrorMapsScopedErrors(t *testing.T) {
 	err := normalizeRPCError(deploymentNotFound("missing-api"))
 	got, ok := status.FromError(err)

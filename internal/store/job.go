@@ -174,13 +174,20 @@ func migrateJobs(db *sql.DB) error {
 		return err
 	}
 
-	_, err := db.Exec(`
+	if _, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS job_logs (
 			sequence INTEGER PRIMARY KEY AUTOINCREMENT,
 			job_id TEXT NOT NULL,
 			message TEXT NOT NULL,
 			created_at_unix INTEGER NOT NULL
 		)
+	`); err != nil {
+		return err
+	}
+
+	_, err := db.Exec(`
+		CREATE INDEX IF NOT EXISTS job_logs_job_id_sequence_idx
+		ON job_logs (job_id, sequence)
 	`)
 	return err
 }

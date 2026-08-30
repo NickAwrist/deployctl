@@ -3,10 +3,12 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"net"
 
 	"deployctl/internal"
 	"deployctl/internal/rpc"
 	"deployctl/internal/service"
+	"deployctl/internal/web"
 
 	"github.com/spf13/cobra"
 )
@@ -32,10 +34,20 @@ var daemonStartCmd = &cobra.Command{
 			}
 		}
 
+		httpAddr, err := cmd.Flags().GetString("http-addr")
+		if err != nil {
+			return err
+		}
+		if httpAddr == "" {
+			httpAddr = internal.HTTPAddr()
+		}
+
 		listener, err := service.ListenUnix(socketPath)
 		if err != nil {
 			return err
 		}
+		defer listener.Close()
+
 		fmt.Fprintf(cmd.OutOrStdout(), "deployctld listening: %s\n", socketPath)
 		logger, err := service.NewDaemonLogger()
 		if err != nil {
@@ -48,6 +60,23 @@ var daemonStartCmd = &cobra.Command{
 			return err
 		}
 		defer server.Close()
+
+		if httpAddr != "" && httpAddr != "none" && httpAddr != "disabled" {
+			httpListener, err := net.Listen("tcp", httpAddr)
+			if err != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "warning: failed to start web server on %s: %v\n", httpAddr, err)
+			} else {
+				defer httpListener.Close()
+				fmt.Fprintf(cmd.OutOrStdout(), "deployctl web UI listening: http://%s\n", httpAddr)
+				webServer := web.NewServer(server)
+				go func() {
+					if err := webServer.Serve(httpListener); err != nil {
+						logger.Printf("web server stopped: %v", err)
+					}
+				}()
+			}
+		}
+
 		return server.Serve(listener)
 	},
 }
@@ -107,6 +136,7 @@ func init() {
 	rootCmd.AddCommand(daemonCmd)
 	daemonCmd.AddCommand(daemonStartCmd, daemonStatusCmd, daemonRestartCmd)
 	daemonStartCmd.Flags().String("socket", "", "Unix socket path")
+	daemonStartCmd.Flags().String("http-addr", "", "HTTP address for web dashboard (e.g. 127.0.0.1:7123)")
 	daemonRestartCmd.Flags().Bool("user", false, "Restart the user systemd service")
 	daemonRestartCmd.Flags().Bool("system", false, "Restart the system systemd service")
 }

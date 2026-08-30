@@ -1,4 +1,6 @@
 deployctl
 bin/
+/deployctld
 *.test
 coverage.out
+web/node_modules/
