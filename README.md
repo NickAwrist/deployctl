@@ -84,6 +84,34 @@ Daemon logs default to `~/.deployctl/deployctld.log`; override with
 Deployment commands run as daemon jobs. Pass `--detach` to start a job and
 return immediately.
 
+## Web dashboard
+
+`deployctld` serves an embedded web UI at:
+
+```
+http://127.0.0.1:7123
+```
+
+The dashboard shows deployment status, uptime, metadata, job history, and live
+job logs. It also supports deployment actions and environment variable
+configuration.
+
+To customize the HTTP binding address or disable the web server:
+
+```sh
+DEPLOYCTL_HTTP_ADDR=127.0.0.1:9090 deployctl daemon start
+deployctl daemon start --http-addr none
+```
+
+For frontend development, run the daemon and Vite in separate terminals:
+
+```sh
+deployctl daemon start
+cd web
+npm install
+npm run dev
+```
+
 ## Deployment Flow
 
 ```sh
