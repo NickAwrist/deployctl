@@ -31,8 +31,8 @@ type DeploymentListItem struct {
 	ComposePath string                     `json:"compose_path"`
 	EnvPath     string                     `json:"env_path"`
 	Status      DeploymentContainersStatus `json:"status"`
-	AllRunning  bool                       `json:"all_running"`
-	AnyRunning  bool                       `json:"any_running"`
+	State       string                     `json:"state"`
+	StatusError string                     `json:"status_error,omitempty"`
 	Summary     string                     `json:"summary"`
 }
 
@@ -77,10 +77,10 @@ func (s *Server) handleListDeployments(w http.ResponseWriter, r *http.Request) {
 
 	items := make([]DeploymentListItem, 0, len(response.Deployments))
 	for _, deployment := range response.Deployments {
-		status, _ := s.service.GetDeploymentStatus(r.Context(), &rpc.GetDeploymentStatusRequest{
+		status, statusErr := s.service.GetDeploymentStatus(r.Context(), &rpc.GetDeploymentStatusRequest{
 			DeploymentName: deployment.Name,
 		})
-		items = append(items, deploymentListItem(deployment, status))
+		items = append(items, deploymentListItem(deployment, status, statusErr))
 	}
 
 	writeJSON(w, http.StatusOK, items)
@@ -99,7 +99,7 @@ func (s *Server) handleGetDeployment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status, _ := s.service.GetDeploymentStatus(r.Context(), &rpc.GetDeploymentStatusRequest{
+	status, statusErr := s.service.GetDeploymentStatus(r.Context(), &rpc.GetDeploymentStatusRequest{
 		DeploymentName: name,
 	})
 	cache, _ := docker.ComposeBuildCache(r.Context(), repositoryFromDeployment(deployment))
@@ -113,7 +113,7 @@ func (s *Server) handleGetDeployment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, DeploymentDetailResponse{
-		DeploymentListItem: deploymentListItem(deployment, status),
+		DeploymentListItem: deploymentListItem(deployment, status, statusErr),
 		BuildCache: BuildCacheResponse{
 			Tags:    cache.Tags,
 			Missing: cache.Missing,
@@ -238,7 +238,7 @@ func (s *Server) handleUnsetEnv(w http.ResponseWriter, r *http.Request) {
 	writeJobResponse(w, response, err)
 }
 
-func deploymentListItem(deployment *rpc.Deployment, status *rpc.DeploymentStatus) DeploymentListItem {
+func deploymentListItem(deployment *rpc.Deployment, status *rpc.DeploymentStatus, statusErr error) DeploymentListItem {
 	item := DeploymentListItem{
 		Name:        deployment.GetName(),
 		URL:         deployment.GetRepoUrl(),
@@ -249,6 +249,15 @@ func deploymentListItem(deployment *rpc.Deployment, status *rpc.DeploymentStatus
 			Containers: []ContainerStatus{},
 			Missing:    []string{},
 		},
+		State: "unknown",
+	}
+	if statusErr != nil {
+		item.State = "unavailable"
+		item.StatusError = statusErr.Error()
+		if message, ok := docker.UnavailableMessage(statusErr); ok {
+			item.StatusError = message
+		}
+		return item
 	}
 	if status == nil {
 		return item
@@ -265,10 +274,26 @@ func deploymentListItem(deployment *rpc.Deployment, status *rpc.DeploymentStatus
 			Created: container.GetStartedAtUnix(),
 		})
 	}
-	item.AllRunning = status.GetState() == rpc.DeploymentState_DEPLOYMENT_STATE_RUNNING
-	item.AnyRunning = item.AllRunning || status.GetState() == rpc.DeploymentState_DEPLOYMENT_STATE_PARTIAL
+	item.State = deploymentStateName(status.GetState())
 	item.Summary = deploymentSummary(item.Status.Containers)
 	return item
+}
+
+func deploymentStateName(state rpc.DeploymentState) string {
+	switch state {
+	case rpc.DeploymentState_DEPLOYMENT_STATE_NOT_CONFIGURED:
+		return "not_configured"
+	case rpc.DeploymentState_DEPLOYMENT_STATE_NOT_CREATED:
+		return "not_created"
+	case rpc.DeploymentState_DEPLOYMENT_STATE_RUNNING:
+		return "running"
+	case rpc.DeploymentState_DEPLOYMENT_STATE_PARTIAL:
+		return "partial"
+	case rpc.DeploymentState_DEPLOYMENT_STATE_STOPPED:
+		return "stopped"
+	default:
+		return "unknown"
+	}
 }
 
 func deploymentSummary(containers []ContainerStatus) string {

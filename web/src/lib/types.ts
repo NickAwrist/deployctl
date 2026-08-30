@@ -26,6 +26,15 @@ export interface DeploymentContainersStatus {
   missing: string[] | null;
 }
 
+export type DeploymentState =
+  | 'not_configured'
+  | 'not_created'
+  | 'running'
+  | 'partial'
+  | 'stopped'
+  | 'unavailable'
+  | 'unknown';
+
 export interface DeploymentListItem {
   name: string;
   url: string;
@@ -33,8 +42,8 @@ export interface DeploymentListItem {
   compose_path: string;
   env_path: string;
   status: DeploymentContainersStatus;
-  all_running: boolean;
-  any_running: boolean;
+  state: DeploymentState;
+  status_error?: string;
   summary: string;
 }
 

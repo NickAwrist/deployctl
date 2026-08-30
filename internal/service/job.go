@@ -37,7 +37,7 @@ func (s *Server) ListJobLogs(ctx context.Context, req *rpc.ListJobLogsRequest) (
 	if _, err := s.getJob(ctx, req.JobId); err != nil {
 		return nil, err
 	}
-	logs, err := s.jobs.LogsAfter(ctx, req.JobId, 0)
+	logs, err := s.jobs.LogsAfter(ctx, req.JobId, req.AfterSequence)
 	if err != nil {
 		return nil, err
 	}

@@ -109,6 +109,10 @@ func (s *Server) handleJobEvents(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "job id is required")
 		return
 	}
+	if _, err := s.service.GetJob(r.Context(), &rpc.GetJobRequest{JobId: id}); err != nil {
+		writeError(w, http.StatusNotFound, "job not found")
+		return
+	}
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -120,26 +124,30 @@ func (s *Server) handleJobEvents(w http.ResponseWriter, r *http.Request) {
 	defer ticker.Stop()
 
 	for {
-		logs, err := s.service.ListJobLogs(r.Context(), &rpc.ListJobLogsRequest{JobId: id})
-		if err == nil {
-			for _, log := range logs.Logs {
-				if log.GetSequence() <= after {
-					continue
-				}
-				after = log.GetSequence()
-				logData, _ := json.Marshal(map[string]any{
-					"job_id":     log.GetJobId(),
-					"sequence":   log.GetSequence(),
-					"message":    log.GetMessage(),
-					"created_at": timeFromUnix(log.GetCreatedAtUnix()),
-				})
-				fmt.Fprintf(w, "event: log\ndata: %s\n\n", logData)
-				flusher.Flush()
-			}
+		logs, err := s.service.ListJobLogs(r.Context(), &rpc.ListJobLogsRequest{
+			JobId:         id,
+			AfterSequence: after,
+		})
+		if err != nil {
+			return
+		}
+		for _, log := range logs.Logs {
+			after = log.GetSequence()
+			logData, _ := json.Marshal(map[string]any{
+				"job_id":     log.GetJobId(),
+				"sequence":   log.GetSequence(),
+				"message":    log.GetMessage(),
+				"created_at": timeFromUnix(log.GetCreatedAtUnix()),
+			})
+			fmt.Fprintf(w, "event: log\ndata: %s\n\n", logData)
+			flusher.Flush()
 		}
 
 		job, err := s.service.GetJob(r.Context(), &rpc.GetJobRequest{JobId: id})
-		if err == nil && isTerminalJobStatus(job.GetStatus()) {
+		if err != nil {
+			return
+		}
+		if isTerminalJobStatus(job.GetStatus()) {
 			statusData, _ := json.Marshal(jobToResponse(job))
 			fmt.Fprintf(w, "event: status\ndata: %s\n\n", statusData)
 			fmt.Fprintf(w, "event: done\ndata: {\"status\": %q}\n\n", jobStatus(job.GetStatus()))

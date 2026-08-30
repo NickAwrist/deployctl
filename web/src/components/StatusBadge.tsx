@@ -26,8 +26,10 @@ function statusStyle(status: string): StatusStyle {
     case 'failed':
     case 'dead':
     case 'error':
+    case 'unavailable':
       return { dot: 'bg-rose-400', text: 'text-rose-300', label: status };
     case 'degraded':
+    case 'partial':
     case 'paused':
     case 'cancelled':
       return { dot: 'bg-amber-300', text: 'text-amber-200', label: status };

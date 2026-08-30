@@ -120,6 +120,7 @@ export function DeploymentDetailView({
   }
 
   const state = deploymentState(deployment);
+  const hasRunningServices = state === 'running' || state === 'partial';
   const containers = deployment.status.containers ?? [];
   const missing = deployment.status.missing ?? [];
 
@@ -151,13 +152,17 @@ export function DeploymentDetailView({
             Rebuild images
           </label>
           {state !== 'running' && <ActionButton icon={Play} label="Deploy" primary onClick={() => void onDeploy(deployment.name, rebuild)} />}
-          {state !== 'stopped' && <ActionButton icon={RotateCw} label="Restart" onClick={() => void onRestart(deployment.name, rebuild)} />}
+          {hasRunningServices && <ActionButton icon={RotateCw} label="Restart" onClick={() => void onRestart(deployment.name, rebuild)} />}
           <ActionButton icon={ArrowDownToLine} label="Pull" onClick={() => void onUpdate(deployment.name, rebuild)} />
-          {state !== 'stopped' && <ActionButton icon={Square} label="Stop" danger onClick={() => void onStop(deployment.name)} />}
+          {hasRunningServices && <ActionButton icon={Square} label="Stop" danger onClick={() => void onStop(deployment.name)} />}
         </div>
       </section>
 
-      {error && <p className="mt-4 border-l-2 border-rose-500 pl-3 text-xs text-rose-300">{error}</p>}
+      {(error || deployment.status_error) && (
+        <p className="mt-4 border-l-2 border-rose-500 pl-3 text-xs text-rose-300">
+          {error ?? deployment.status_error}
+        </p>
+      )}
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[270px_minmax(0,1fr)]">
         <aside>

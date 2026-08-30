@@ -12,7 +12,7 @@ import {
   Search,
   Square,
 } from 'lucide-react';
-import { DeploymentListItem, Job } from '../lib/types';
+import { DeploymentListItem, DeploymentState, Job } from '../lib/types';
 import {
   deploymentState,
   deploymentUptime,
@@ -86,13 +86,14 @@ export function Dashboard({
     const matchesFilter =
       filter === 'all' ||
       filter === state ||
-      (filter === 'attention' && state === 'degraded');
+      (filter === 'attention' && state !== 'running' && state !== 'stopped');
     return matchesQuery && matchesFilter;
   });
 
-  const runningDeployments = deployments.filter((deployment) => deployment.all_running).length;
+  const runningDeployments = deployments.filter((deployment) => deployment.state === 'running').length;
   const runningServices = deployments.reduce(
-    (total, deployment) => total + (deployment.status.containers?.length ?? 0),
+    (total, deployment) =>
+      total + (deployment.status.containers?.filter((container) => container.state === 'running').length ?? 0),
     0,
   );
   const recentJobs = jobs.slice(0, 9);
@@ -184,7 +185,7 @@ export function Dashboard({
                       </div>
                     </div>
 
-                    <div><StatusBadge status={state} /></div>
+                    <div title={deployment.status_error}><StatusBadge status={state} /></div>
 
                     <div className="flex items-center gap-2 text-xs text-stone-300">
                       <Clock3 className="h-3.5 w-3.5 text-stone-700 md:hidden" />
@@ -336,7 +337,7 @@ function EmptyState({ hasDeployments, onNewDeployment }: { hasDeployments: boole
 }
 
 interface ActionMenuProps {
-  state: 'running' | 'degraded' | 'stopped';
+  state: DeploymentState;
   onClose: () => void;
   onDeploy: () => Promise<void>;
   onRestart: () => Promise<void>;
@@ -350,13 +351,14 @@ function ActionMenu({ state, onClose, onDeploy, onRestart, onUpdate, onStop, onD
     onClose();
     void action();
   };
+  const hasRunningServices = state === 'running' || state === 'partial';
 
   return (
     <div className="absolute right-0 z-20 mt-1 w-44 border border-white/[0.1] bg-[#181917] py-1 shadow-2xl shadow-black/60">
       {state !== 'running' && <MenuAction icon={Play} label="Deploy" onClick={() => run(onDeploy)} />}
-      {state !== 'stopped' && <MenuAction icon={RotateCw} label="Restart" onClick={() => run(onRestart)} />}
+      {hasRunningServices && <MenuAction icon={RotateCw} label="Restart" onClick={() => run(onRestart)} />}
       <MenuAction icon={ArrowDownToLine} label="Pull update" onClick={() => run(onUpdate)} />
-      {state !== 'stopped' && <MenuAction icon={Square} label="Stop" danger onClick={() => run(onStop)} />}
+      {hasRunningServices && <MenuAction icon={Square} label="Stop" danger onClick={() => run(onStop)} />}
       <div className="my-1 h-px bg-white/[0.08]" />
       <MenuAction icon={ChevronRight} label="View details" onClick={() => run(onDetails)} />
     </div>

@@ -197,7 +197,7 @@ message Job {
 message GetJobRequest { string job_id = 1; }
 message ListJobsRequest { string deployment_name = 1; }
 message ListJobsResponse { repeated Job jobs = 1; }
-message ListJobLogsRequest { string job_id = 1; }
+message ListJobLogsRequest { string job_id = 1; int64 after_sequence = 2; }
 message ListJobLogsResponse { repeated JobLog logs = 1; }
 message WatchJobRequest { string job_id = 1; int64 after_sequence = 2; }
 message CancelJobRequest { string job_id = 1; }

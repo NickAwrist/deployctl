@@ -2,12 +2,14 @@ package web
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"deployctl/internal/rpc"
 	"deployctl/internal/service"
 )
 
@@ -88,6 +90,40 @@ func TestDeploymentsEndpoints(t *testing.T) {
 	})
 }
 
+func TestDeploymentListItemPreservesState(t *testing.T) {
+	deployment := &rpc.Deployment{Name: "api"}
+	tests := []struct {
+		name  string
+		state rpc.DeploymentState
+		want  string
+	}{
+		{name: "not configured", state: rpc.DeploymentState_DEPLOYMENT_STATE_NOT_CONFIGURED, want: "not_configured"},
+		{name: "not created", state: rpc.DeploymentState_DEPLOYMENT_STATE_NOT_CREATED, want: "not_created"},
+		{name: "running", state: rpc.DeploymentState_DEPLOYMENT_STATE_RUNNING, want: "running"},
+		{name: "partial", state: rpc.DeploymentState_DEPLOYMENT_STATE_PARTIAL, want: "partial"},
+		{name: "stopped", state: rpc.DeploymentState_DEPLOYMENT_STATE_STOPPED, want: "stopped"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			item := deploymentListItem(deployment, &rpc.DeploymentStatus{State: test.state}, nil)
+			if item.State != test.want {
+				t.Fatalf("state = %q, want %q", item.State, test.want)
+			}
+		})
+	}
+
+	t.Run("status error", func(t *testing.T) {
+		item := deploymentListItem(deployment, nil, errors.New("docker unavailable"))
+		if item.State != "unavailable" {
+			t.Fatalf("state = %q, want unavailable", item.State)
+		}
+		if item.StatusError != "docker unavailable" {
+			t.Fatalf("status error = %q, want docker unavailable", item.StatusError)
+		}
+	})
+}
+
 func TestJobsEndpoints(t *testing.T) {
 	server := setupTestServer(t)
 
@@ -108,6 +144,17 @@ func TestJobsEndpoints(t *testing.T) {
 
 		if len(jobs) != 0 {
 			t.Fatalf("expected 0 jobs, got %d", len(jobs))
+		}
+	})
+
+	t.Run("streaming an unknown job returns not found", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/jobs/missing/events", nil)
+		rec := httptest.NewRecorder()
+
+		server.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("expected status %d, got %d", http.StatusNotFound, rec.Code)
 		}
 	})
 }

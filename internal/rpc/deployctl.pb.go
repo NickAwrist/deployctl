@@ -2105,6 +2105,7 @@ func (x *ListJobsResponse) GetJobs() []*Job {
 type ListJobLogsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	AfterSequence int64                  `protobuf:"varint,2,opt,name=after_sequence,json=afterSequence,proto3" json:"after_sequence,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2144,6 +2145,13 @@ func (x *ListJobLogsRequest) GetJobId() string {
 		return x.JobId
 	}
 	return ""
+}
+
+func (x *ListJobLogsRequest) GetAfterSequence() int64 {
+	if x != nil {
+		return x.AfterSequence
+	}
+	return 0
 }
 
 type ListJobLogsResponse struct {
@@ -2880,9 +2888,10 @@ const file_api_deployctl_v1_deployctl_proto_rawDesc = "" +
 	"\x0fListJobsRequest\x12'\n" +
 	"\x0fdeployment_name\x18\x01 \x01(\tR\x0edeploymentName\"9\n" +
 	"\x10ListJobsResponse\x12%\n" +
-	"\x04jobs\x18\x01 \x03(\v2\x11.deployctl.v1.JobR\x04jobs\"+\n" +
+	"\x04jobs\x18\x01 \x03(\v2\x11.deployctl.v1.JobR\x04jobs\"R\n" +
 	"\x12ListJobLogsRequest\x12\x15\n" +
-	"\x06job_id\x18\x01 \x01(\tR\x05jobId\"?\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12%\n" +
+	"\x0eafter_sequence\x18\x02 \x01(\x03R\rafterSequence\"?\n" +
 	"\x13ListJobLogsResponse\x12(\n" +
 	"\x04logs\x18\x01 \x03(\v2\x14.deployctl.v1.JobLogR\x04logs\"O\n" +
 	"\x0fWatchJobRequest\x12\x15\n" +

@@ -1,11 +1,7 @@
-import { ContainerStatus, DeploymentListItem, Job } from './types';
-
-export type DeploymentState = 'running' | 'degraded' | 'stopped';
+import { ContainerStatus, DeploymentListItem, DeploymentState, Job } from './types';
 
 export function deploymentState(deployment: DeploymentListItem): DeploymentState {
-  if (deployment.all_running) return 'running';
-  if (deployment.any_running) return 'degraded';
-  return 'stopped';
+  return deployment.state;
 }
 
 export function formatDuration(durationMs: number): string {
